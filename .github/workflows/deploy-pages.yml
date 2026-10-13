@@ -25,8 +25,10 @@ jobs:
       - name: Compilar Angular com caminho do repositório
         run: npx ng build --configuration production --base-href "/${{ github.event.repository.name }}/"
         working-directory: frontend
-      - name: Preparar Pages
+      - name: Preparar ou habilitar GitHub Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - name: Publicar artefato
         uses: actions/upload-pages-artifact@v3
         with:
