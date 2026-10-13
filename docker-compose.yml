@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: diaconato
+      POSTGRES_USER: diaconato
+      POSTGRES_PASSWORD: diaconato
+    volumes:
+      - diaconato_pgdata:/var/lib/postgresql/data
+      - ./api/sql/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U diaconato -d diaconato"]
+      interval: 4s
+      retries: 10
+  api:
+    build: ./api
+    ports:
+      - "8080:80"
+    environment:
+      DATABASE_URL: postgresql://diaconato:diaconato@db:5432/diaconato
+      ALLOWED_ORIGINS: http://localhost:4200
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  diaconato_pgdata:
