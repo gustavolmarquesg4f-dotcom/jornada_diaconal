@@ -203,6 +203,11 @@ export class AppComponent implements OnInit {
    await this.loadIntercession();
   },'Substituição feita no rascunho. Confirme com a pessoa antes de publicar.');
  }
+  canPublish(draw:IntercessionDraw):boolean{
+  return draw.status==='draft'&&!!draw.service?.people_per_service&&
+    draw.assignments.length===draw.service.people_per_service&&
+    draw.assignments.every(a=>a.status==='confirmed');
+ }
   async publishIntercession(d:IntercessionDraw):Promise<void>{
   await this.run(async()=>{
    await this.api.publishIntercession(d.id);
