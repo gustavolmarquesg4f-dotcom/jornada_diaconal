@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiService, User, Deacon, RegistryDetails, ObservationEntry, Group, Followup, Dashboard, IntercessionTemplate, IntercessionDraw, PastoralSlot } from './api.service';
+import { ApiService, User, Deacon, RegistryDetails, ObservationEntry, Group, Followup, Dashboard, IntercessionTemplate, IntercessionDraw, IntercessionCandidate, PastoralSlot } from './api.service';
 
 type Page = 'dashboard'|'deacons'|'observations'|'groups'|'leadership'|'intercession'|'pastoral'|'followups'|'settings';
 @Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule],templateUrl:'./app.component.html'})
@@ -12,7 +12,9 @@ export class AppComponent implements OnInit {
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
  deacons:Deacon[]=[];groups:Group[]=[];users:User[]=[];followups:Followup[]=[];
  observations:ObservationEntry[]=[];observationsLoading=false;observationsLoaded=false;observationSearch='';observationFilter:'all'|'with'|'without'='all';
- intercessionTemplates:IntercessionTemplate[]=[];intercessionDraws:IntercessionDraw[]=[];
+ intercessionCandidates:Record<string,IntercessionCandidate[]>={};
+ intercessionReplacements:Record<string,string>={};
+  intercessionTemplates:IntercessionTemplate[]=[];intercessionDraws:IntercessionDraw[]=[];
  intercessionWeekStart='2026-10-26';intercessionCapacity:Record<string,number>={};
  intercessionLoaded=false;intercessionLoading=false;
  pastoralSlots:PastoralSlot[]=[];pastoralLoaded=false;pastoralLoading=false;
@@ -161,6 +163,10 @@ export class AppComponent implements OnInit {
    ]);
    this.intercessionTemplates=ts;
    this.intercessionDraws=week.items;
+   this.intercessionCandidates={};
+   const drafts=week.items.filter(d=>d.status==='draft');
+   const lists=await Promise.all(drafts.map(d=>this.api.intercessionCandidates(d.id).catch(()=>[])));
+   drafts.forEach((d,i)=>{this.intercessionCandidates[d.id]=lists[i]});
    this.intercessionCapacity={};
    for(const t of ts)this.intercessionCapacity[t.id]=t.people_per_service||0;
    this.intercessionLoaded=true;
@@ -182,7 +188,22 @@ export class AppComponent implements OnInit {
    if(!result.complete)this.notice='Rascunho criado, mas alguns cultos ficaram com vagas em aberto. Não publique sem completar as vagas.';
   },'Sorteio realizado como rascunho. Revise antes de publicar.');
  }
- async publishIntercession(d:IntercessionDraw):Promise<void>{
+
+ async confirmIntercession(aId:string,status:'proposed'|'confirmed'|'declined'):Promise<void>{
+  await this.run(async()=>{
+   await this.api.confirmIntercessor(aId,status);
+   await this.loadIntercession();
+  },'Confirmação da escala atualizada.');
+ }
+ async replaceIntercession(drawId:string,assignmentId:string):Promise<void>{
+  const candidate=this.intercessionReplacements[assignmentId];
+  if(!candidate){this.error='Escolha primeiro um diácono disponível.';return}
+  await this.run(async()=>{
+   await this.api.replaceIntercessor(drawId,assignmentId,candidate);
+   await this.loadIntercession();
+  },'Substituição feita no rascunho. Confirme com a pessoa antes de publicar.');
+ }
+  async publishIntercession(d:IntercessionDraw):Promise<void>{
   await this.run(async()=>{
    await this.api.publishIntercession(d.id);
    await this.loadIntercession();
