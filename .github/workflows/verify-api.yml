@@ -1,0 +1,30 @@
+name: Validar API Jornada Diaconal
+on:
+  push:
+    paths:
+      - ".github/workflows/verify-api.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validar saúde da API
+        run: |
+          set -euo pipefail
+          API="https://wscvdtrmplqokceaztrv.supabase.co/functions/v1/jornada-gestao-api"
+          curl -fsS --retry 3 --retry-delay 3 --max-time 20 "$API/health" | tee /tmp/jd-health.json
+          grep -q '"ok":true' /tmp/jd-health.json
+      - name: Verificar acesso protegido
+        run: |
+          set -euo pipefail
+          API="https://wscvdtrmplqokceaztrv.supabase.co/functions/v1/jornada-gestao-api"
+          STATUS=$(curl -sS -o /tmp/jd-protected.json -w "%{http_code}" --max-time 20 "$API/dashboard")
+          test "$STATUS" = "401"
+      - name: Validar CORS do site
+        run: |
+          set -euo pipefail
+          API="https://wscvdtrmplqokceaztrv.supabase.co/functions/v1/jornada-gestao-api"
+          curl -fsSI --max-time 20 -X OPTIONS -H "Origin: https://gustavolmarquesg4f-dotcom.github.io" -H "Access-Control-Request-Method: POST" "$API/auth/login" | grep -i 'access-control-allow-origin: https://gustavolmarquesg4f-dotcom.github.io'
