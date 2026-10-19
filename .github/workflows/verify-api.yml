@@ -23,6 +23,12 @@ jobs:
           API="https://wscvdtrmplqokceaztrv.supabase.co/functions/v1/jornada-gestao-api"
           STATUS=$(curl -sS -o /tmp/jd-protected.json -w "%{http_code}" --max-time 20 "$API/dashboard")
           test "$STATUS" = "401"
+      - name: Verificar login inválido e comunicação com o banco
+        run: |
+          set -euo pipefail
+          API="https://wscvdtrmplqokceaztrv.supabase.co/functions/v1/jornada-gestao-api"
+          STATUS=$(curl -sS -o /tmp/jd-login.json -w "%{http_code}" --max-time 20 -X POST -H "Content-Type: application/json" -H "Origin: https://gustavolmarquesg4f-dotcom.github.io" --data '{"email":"teste.inexistente@exemplo.invalid","password":"teste-incorreto"}' "$API/auth/login")
+          test "$STATUS" = "401" || { cat /tmp/jd-login.json; exit 1; }
       - name: Validar CORS do site
         run: |
           set -euo pipefail
