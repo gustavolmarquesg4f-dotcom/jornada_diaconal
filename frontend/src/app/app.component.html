@@ -251,6 +251,64 @@
         </div>
       </section>
 
+
+      <section *ngIf="page==='pastoral' && canManage" class="pastoral-schedule">
+        <div class="page-heading"><div>
+          <span class="eyebrow">PROPOSTA DE ATENDIMENTO · 26/10 A 20/11</span>
+          <h1>Agenda pastoral — Pr. Sato</h1>
+          <p>Encontros individuais de acolhimento, escuta e aproximação, com duração de uma hora.</p>
+        </div><button type="button" class="outline" (click)="loadPastoral()" [disabled]="pastoralLoading">↻ Atualizar</button></div>
+        <div class="registry-summary">
+          <div><strong>{{pastoralSlots.length}}</strong><span>Vagas propostas</span></div>
+          <div><strong>{{pastoralBooked}}</strong><span>Pessoas indicadas</span></div>
+          <div><strong>{{pastoralApproved}}</strong><span>Horários aprovados</span></div>
+        </div>
+        <div class="context-strip"><span>♡</span><div>
+          <strong>Dois atendimentos de 60 minutos por dia, quatro dias por semana.</strong>
+          <p>Segundas, terças, quintas e sextas, de 26 de outubro a 20 de novembro de 2026. Os horários ainda devem ser definidos com o Pr. Sato. Não há envio automático de convites ou registro de confidências.</p>
+        </div></div>
+        <div class="surface">
+          <div class="surface-head"><h3>Agenda para validação pastoral</h3><span class="pill">32 VAGAS · 4 SEMANAS</span></div>
+          <p class="modal-hint">A pesquisa é anônima. Ela orienta a proposta geral, mas não identifica quem respondeu. A participação nas conversas será voluntária, mediante convite da liderança.</p>
+          <p *ngIf="pastoralLoading">Carregando os horários...</p>
+          <div class="pastoral-list" *ngIf="!pastoralLoading">
+            <div class="pastoral-row" *ngFor="let slot of pastoralSlots">
+              <div class="pastoral-date"><strong>{{slot.appointment_date | date:'dd/MM/yyyy'}}</strong>
+                <small>Atendimento {{slot.slot_order}} · 1 hora</small></div>
+              <label>Horário
+                <input type="time" [name]="'pastoralTime'+slot.id"
+                  [(ngModel)]="pastoralDraft[slot.id].start_time" [disabled]="busy">
+              </label>
+              <label>Diácono(a)
+                <select [name]="'pastoralDeacon'+slot.id"
+                  [(ngModel)]="pastoralDraft[slot.id].deacon_id" [disabled]="busy">
+                  <option value="">A definir</option>
+                  <option *ngFor="let person of deacons" [value]="person.id">{{person.full_name}} ({{cohortLabel(person.cohort)}})</option>
+                </select>
+              </label>
+              <label>Situação
+                <select [name]="'pastoralStatus'+slot.id"
+                  [(ngModel)]="pastoralDraft[slot.id].status" [disabled]="busy">
+                  <option value="proposed">Proposto</option>
+                  <option value="invited">Convidado</option>
+                  <option value="confirmed">Confirmado</option>
+                  <option value="completed">Realizado</option>
+                  <option value="cancelled">Cancelado</option>
+                </select>
+              </label>
+              <label class="pastoral-approval">
+                <input type="checkbox" [name]="'pastoralApproval'+slot.id"
+                  [ngModel]="pastoralDraft[slot.id].approval_status==='approved'"
+                  (ngModelChange)="pastoralDraft[slot.id].approval_status=$event?'approved':'awaiting_pastor'"
+                  [disabled]="busy">
+                Aprovação do Pr. Sato confirmada
+              </label>
+              <button type="button" class="small-primary" (click)="savePastoral(slot)" [disabled]="busy">Salvar</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section *ngIf="page==='groups'">
         <div class="page-heading"><div><span class="eyebrow">CUIDADO DE PROXIMIDADE</span><h1>Grupos de cuidado</h1><p>Organize pequenos grupos com responsáveis de referência. Dez pessoas é um ponto de partida, não uma regra.</p></div><button *ngIf="canManage" class="primary" (click)="showNewGroup=true">+ Novo grupo</button></div>
         <div class="context-strip"><span>♡</span><div><strong>Cuidado, não fiscalização.</strong><p>O responsável mantém contato, percebe necessidades e encaminha assuntos pastorais à liderança quando necessário.</p></div></div>
