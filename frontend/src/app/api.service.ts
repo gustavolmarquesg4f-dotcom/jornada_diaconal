@@ -28,6 +28,24 @@ export interface ObservationEntry {
 }
 export interface Group { id: string; name: string; leader_id: string|null; leader_name: string|null; members: number; target_size: number }
 export interface Followup { id: string; contacted_at: string; author: string; method: string; outcome: string; summary: string; next_contact_on?: string; needs_pastoral_attention: boolean }
+export interface IntercessionTemplate {
+ id:string;label:string;weekday:number;start_time:string;people_per_service:number|null;active:boolean;
+}
+export interface IntercessionAssignment {
+ id:string;draw_id:string;deacon_id:string;status:'proposed'|'confirmed'|'declined';
+ deacon:{id:string;full_name:string;phone:string|null}|null;
+}
+export interface IntercessionDraw {
+ id:string; template_id:string;service_date:string;status:'draft'|'published';
+ service:IntercessionTemplate|null;assignments:IntercessionAssignment[];
+}
+export interface PastoralSlot {
+ id:string;appointment_date:string;slot_order:number;start_time:string|null;
+ duration_minutes:number;deacon_id:string|null;
+ status:'proposed'|'invited'|'confirmed'|'completed'|'cancelled';
+ approval_status:'awaiting_pastor'|'approved';
+ deacon:{id:string;full_name:string;phone:string|null;status:string;cohort:string}|null;
+}
 export interface Dashboard { totals: {deacons:number;without_group:number;contacted_30_days:number;without_recent_contact:number};groups:Group[] }
 @Injectable({providedIn:'root'})
 export class ApiService {
@@ -69,4 +87,26 @@ export class ApiService {
  createUser(u:unknown):Promise<{item:User}>{return this.send('POST','/users',u)}
  async followups(deaconId:string):Promise<Followup[]>{return (await this.send<{items:Followup[]}>('GET',`/followups?deacon_id=${encodeURIComponent(deaconId)}`)).items}
  createFollowup(f:unknown):Promise<{id:string}>{return this.send('POST','/followups',f)}
+ pastoralSlots():Promise<{items:PastoralSlot[];pastor:string}>{
+   return this.send('GET','/pastoral/slots');
+ }
+ updatePastoralSlot(id:string, changes:Partial<PastoralSlot>):Promise<{item:PastoralSlot}>{
+   return this.send('PATCH',`/pastoral/slots/${encodeURIComponent(id)}`,changes);
+ }
+ async intercessionTemplates():Promise<IntercessionTemplate[]>{
+   return (await this.send<{items:IntercessionTemplate[]}>('GET','/intercession/templates')).items;
+ }
+ updateIntercessionTemplate(id:string,num:number):Promise<{item:IntercessionTemplate}>{
+   return this.send('PATCH',`/intercession/templates/${encodeURIComponent(id)}`,{people_per_service:num});
+ }
+ intercessionWeek(start:string):Promise<{templates:IntercessionTemplate[];items:IntercessionDraw[]}>{
+   return this.send('GET',`/intercession/week?start=${encodeURIComponent(start)}`);
+ }
+ raffleIntercession(start:string):Promise<{items:{date:string;label:string;selected:number;required:number;draw_id:string}[];complete:boolean}>{
+   return this.send('POST','/intercession/raffle',{start_date:start});
+ }
+ publishIntercession(id:string):Promise<{ok:boolean}>{
+   return this.send('POST',`/intercession/draws/${encodeURIComponent(id)}/publish`,{});
+ }
+
 }
