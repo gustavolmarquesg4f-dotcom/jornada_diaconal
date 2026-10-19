@@ -37,6 +37,9 @@
       <button [class.active]="page==='dashboard'" (click)="goto('dashboard')"><span class="nav-icon">◫</span> Visão geral</button>
       <button [class.active]="page==='deacons'" (click)="goto('deacons')"><span class="nav-icon">♙</span> Diáconos</button>
       <button *ngIf="admin" [class.active]="page==='observations'" (click)="goto('observations')"><span class="nav-icon">☷</span> Observações</button>
+      <button [class.active]="page==='leadership'" (click)="goto('leadership')"><span class="nav-icon">♧</span> Liderança e grupos</button>
+      <button *ngIf="canManage" [class.active]="page==='intercession'" (click)="goto('intercession')"><span class="nav-icon">✦</span> Escala de intercessão</button>
+      <button *ngIf="canManage" [class.active]="page==='pastoral'" (click)="goto('pastoral')"><span class="nav-icon">▤</span> Agenda do Pr. Sato</button>
       <button [class.active]="page==='groups'" (click)="goto('groups')"><span class="nav-icon">▦</span> Grupos de cuidado</button>
       <button [class.active]="page==='followups'" (click)="goto('followups')"><span class="nav-icon">♡</span> Acompanhamento</button>
       <button *ngIf="admin" [class.active]="page==='settings'" (click)="goto('settings')"><span class="nav-icon">⚙</span> Usuários e acesso</button>
@@ -146,6 +149,42 @@
             Mostrando {{filteredObservations.length}} de {{observations.length}} cadastros · Texto completo da fonte
           </div>
         </div>
+      </section>
+
+
+      <section *ngIf="page==='leadership'">
+        <div class="page-heading"><div>
+          <span class="eyebrow">REDE DE CUIDADO</span><h1>Liderança do diaconato</h1>
+          <p>Grupos menores, responsáveis de referência e orientação pastoral centralizada.</p>
+        </div><button *ngIf="admin" class="primary" type="button" (click)="openNewLeader()">+ Cadastrar líder</button></div>
+        <div class="ministry-hierarchy">
+          <div class="hierarchy-pastor"><span class="eyebrow">LIDERANÇA PASTORAL</span>
+            <h2>Pr. Sato</h2><p>Responsável geral pelo diaconato e pela orientação dos líderes dos grupos.</p>
+          </div>
+          <div class="leadership-stats">
+            <div><strong>{{groups.length}}</strong><span>Grupos criados</span></div>
+            <div><strong>{{dashboard.totals.without_group}}</strong><span>Diáconos sem grupo</span></div>
+          </div>
+        </div>
+        <div class="context-strip"><span>♡</span><div>
+          <strong>Proposta de piloto: 90 dias, 3–4 referências e 30–40 participantes.</strong>
+          <p>Em média 8–12 pessoas por líder, com contato próximo e encaminhamento pastoral quando necessário. A nomeação dos responsáveis depende da aprovação do Pr. Sato.</p>
+        </div></div>
+        <div class="group-cards">
+          <div class="group-card" *ngFor="let g of groups">
+            <div class="group-card-top"><div class="group-initial large">{{g.name.charAt(0)}}</div><span class="pill">{{g.members}} / {{g.target_size}}</span></div>
+            <h3>{{g.name}}</h3>
+            <p>Responsável: <strong>{{g.leader_name||'Aguardando designação'}}</strong></p>
+            <div class="capacity"><span [style.width.%]="capacityPercent(g)"></span></div>
+            <small>{{g.members}} pessoas vinculadas.</small>
+          </div>
+        </div>
+        <div *ngIf="!groups.length" class="surface empty-inline big-empty">
+          <span>♧</span><h3>Líderes e grupos ainda não designados</h3>
+          <p>Cadastre primeiro os líderes autorizados e configure os grupos menores.</p>
+          <button *ngIf="canManage" class="primary" type="button" (click)="goto('groups');showNewGroup=true">Criar primeiro grupo</button>
+        </div>
+        <button *ngIf="canManage && groups.length" class="outline" type="button" (click)="goto('groups')">Administrar grupos e vínculos →</button>
       </section>
 
       <section *ngIf="page==='groups'">
