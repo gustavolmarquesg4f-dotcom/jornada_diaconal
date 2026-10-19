@@ -10,6 +10,9 @@ export interface User { id: string; name: string; email: string; role: Role; act
 export interface Deacon { id: string; full_name: string; cohort: Cohort; status: DeaconStatus; phone?: string; email?: string; availability?: string; group_id?: string; group_name?: string; last_contact?: string }
 export interface Group { id: string; name: string; leader_id: string|null; leader_name: string|null; members: number; target_size: number }
 export interface Followup { id: string; contacted_at: string; author: string; method: string; outcome: string; summary: string; next_contact_on?: string; needs_pastoral_attention: boolean }
+export type AttendanceStatus = 'present'|'unable'|'unreported';
+export interface DiscipleshipMeeting { id:string; title:string; scheduled_at:string; location?:string; status:'planned'|'completed'|'cancelled'; present_count:number; unable_count:number }
+export interface DiscipleshipAttendance { deacon_id:string; full_name:string; cohort:Cohort; deacon_status:DeaconStatus; attendance:AttendanceStatus }
 export interface Dashboard { totals: {deacons:number;without_group:number;contacted_30_days:number;without_recent_contact:number};groups:Group[] }
 @Injectable({providedIn:'root'})
 export class ApiService {
@@ -40,4 +43,10 @@ export class ApiService {
  createUser(u:unknown):Promise<{item:User}>{return this.send('POST','/users',u)}
  async followups(deaconId:string):Promise<Followup[]>{return (await this.send<{items:Followup[]}>('GET',`/followups?deacon_id=${encodeURIComponent(deaconId)}`)).items}
  createFollowup(f:unknown):Promise<{id:string}>{return this.send('POST','/followups',f)}
+ async discipleships():Promise<DiscipleshipMeeting[]>{return (await this.send<{items:DiscipleshipMeeting[]}>('GET','/discipleships')).items}
+ createDiscipleship(data:{title:string;scheduled_at:string;location:string}):Promise<{id:string}>{return this.send('POST','/discipleships',data)}
+ async discipleshipAttendance(meetingId:string):Promise<DiscipleshipAttendance[]>{return (await this.send<{items:DiscipleshipAttendance[]}>('GET',`/discipleships/${encodeURIComponent(meetingId)}/attendance`)).items}
+ setDiscipleshipAttendance(meetingId:string,deaconId:string,attendance:AttendanceStatus):Promise<{ok:boolean}>{
+  return this.send('POST',`/discipleships/${encodeURIComponent(meetingId)}/attendance`,{deacon_id:deaconId,attendance});
+ }
 }
