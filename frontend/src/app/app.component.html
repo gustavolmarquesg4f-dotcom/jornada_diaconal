@@ -12,7 +12,7 @@
     <label for="pwd">Senha</label><input id="pwd" name="pwd" [(ngModel)]="password" type="password" placeholder="Sua senha" autocomplete="current-password" required>
     <p *ngIf="error" class="alert error">{{error}}</p>
     <button type="submit" class="primary full" [disabled]="busy || !email || !password">{{busy?'Entrando...':'Entrar no sistema'}} <span aria-hidden="true">→</span></button>
-    <p class="privacy-line">🔒 Acesso restrito aos responsáveis autorizados.</p>
+    <p class="privacy-line">🔒 Acesso restrito aos responsáveis autorizados.</p><div style="margin-top:20px;padding-top:16px;border-top:1px solid #e1e9e2"><a href="demo.html" style="display:block;text-align:center;background:#f7f0e0;color:#22553d;border:1px solid #d6bf8b;padding:12px;border-radius:10px;text-decoration:none;font-weight:750">Explorar demonstração sem login →</a><p style="font-size:11px;color:#718373;text-align:center;margin-top:8px">A demonstração utiliza apenas dados fictícios, salvos neste navegador.</p></div>
   </form></div>
 </div>
 
