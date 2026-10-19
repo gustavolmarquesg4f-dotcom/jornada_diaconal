@@ -237,14 +237,35 @@
               </span>
             </div>
             <div class="ministry-person" *ngFor="let a of draw.assignments">
-              <strong>{{a.deacon?.full_name||'Cadastro não localizado'}}</strong>
-              <span>{{a.deacon?.phone||'Telefone não informado'}}</span>
+              <div><strong>{{a.deacon?.full_name||'Cadastro não localizado'}}</strong>
+                <span>{{a.deacon?.phone||'Telefone não informado'}}</span></div>
+              <div *ngIf="draw.status==='draft'" class="assignment-tools">
+                <label>Confirmação:
+                  <select [name]="'status'+a.id" [ngModel]="a.status"
+                    (ngModelChange)="confirmIntercession(a.id,$event)" [disabled]="busy">
+                    <option value="proposed">A confirmar</option>
+                    <option value="confirmed">Confirmou</option>
+                    <option value="declined">Não poderá</option>
+                  </select>
+                </label>
+                <label>Substituir por:
+                  <select [name]="'replacement'+a.id" [(ngModel)]="intercessionReplacements[a.id]" [disabled]="busy">
+                    <option value="">Selecionar disponível</option>
+                    <option *ngFor="let person of intercessionCandidates[draw.id]||[]" [value]="person.id">
+                      {{person.full_name}}
+                    </option>
+                  </select>
+                </label>
+                <button class="outline" type="button" (click)="replaceIntercession(draw.id,a.id)"
+                  [disabled]="busy||!intercessionReplacements[a.id]">Substituir</button>
+              </div>
+              <span *ngIf="draw.status==='published'" class="status-pill">{{a.status==='confirmed'?'Confirmado':'A conferir'}}</span>
             </div>
             <p class="ministry-warning" *ngIf="draw.assignments.length<(draw.service?.people_per_service||0)">
               Existem vagas sem pessoa elegível. Revise as disponibilidades antes de publicar.
             </p>
             <button *ngIf="draw.status==='draft'" class="outline" type="button"
-              (click)="publishIntercession(draw)" [disabled]="busy||draw.assignments.length!==(draw.service?.people_per_service||0)">
+              (click)="publishIntercession(draw)" [disabled]="busy||!canPublish(draw)">
               Publicar escala no sistema
             </button>
           </div>
