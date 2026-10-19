@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Ativação do administrador · Jornada Diaconal</title>
+  <style>
+    :root{color-scheme:light;--ink:#20344d;--muted:#607086;--dark:#102b48;--mint:#d5f1ea;--teal:#1e806d;--white:#fff;--line:#dce5ed}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
+    body{background:radial-gradient(circle at 90% 10%,#d6efe8 0,transparent 38%),linear-gradient(140deg,#f4f7fa,#eaf2f5);min-height:100vh;display:grid;place-items:center;padding:30px 18px}
+    main{width:100%;max-width:520px}
+    .brand{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+    .mark{width:45px;height:45px;background:var(--dark);border-radius:13px;color:#fff;display:grid;place-items:center;font:bold 28px Georgia,serif}
+    .brand strong{display:block;letter-spacing:-.5px;font-size:18px;color:var(--dark)}
+    .brand small{display:block;font-size:12px;letter-spacing:1.5px;color:var(--teal);font-weight:700}
+    .panel{background:var(--white);border:1px solid #dde7ed;border-radius:20px;box-shadow:0 20px 55px rgba(27,62,88,.09);padding:clamp(24px,5vw,37px)}
+    .eyebrow{font-size:11px;letter-spacing:1.7px;text-transform:uppercase;color:var(--teal);font-weight:800}
+    h1{font-size:clamp(26px,5vw,33px);letter-spacing:-1.2px;line-height:1.17;margin:11px 0}
+    p{color:var(--muted);font-size:14px;line-height:1.65;margin:12px 0 23px}
+    .email{background:#f1f5f7;border:1px solid #e5edf0;border-radius:10px;padding:13px 15px;margin:20px 0;font-size:14px;word-break:break-word}
+    .email small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:3px}
+    label{display:block;font-size:13px;font-weight:700;margin-bottom:8px}
+    input{width:100%;padding:14px 15px;border:1px solid #bdccd8;border-radius:10px;background:#fff;color:var(--dark);font:inherit;font-size:15px;transition:box-shadow .2s,border-color .2s}
+    input:focus{outline:0;border-color:var(--teal);box-shadow:0 0 0 4px #d6f1ea}
+    .field{margin-top:18px}
+    .hint{display:block;color:var(--muted);font-size:12px;line-height:1.5;margin-top:7px}
+    button{width:100%;background:var(--dark);color:white;border:0;border-radius:11px;padding:15px 18px;font-size:15px;font-weight:700;cursor:pointer;margin-top:23px}
+    button:hover{background:#1b4965}button:disabled{opacity:.65;cursor:wait}
+    .msg{padding:14px;border-radius:10px;font-size:13px;line-height:1.55;margin-top:18px;display:none}
+    .msg.error{display:block;background:#fff0ed;color:#982f23;border:1px solid #f5c8bf}
+    .msg.good{display:block;background:#e8f8f2;color:#145c48;border:1px solid #abd8c6}
+    .after{margin-top:19px;display:none}
+    .after a{display:block;background:var(--teal);padding:15px;border-radius:11px;color:#fff;font-weight:700;text-align:center;text-decoration:none}
+    .after a:hover{background:#156653}
+    footer{margin-top:20px;text-align:center;color:var(--muted);font-size:12px;line-height:1.6}
+    @media(max-width:430px){.panel{border-radius:16px}}
+  </style>
+</head>
+<body>
+<main>
+  <div class="brand"><div class="mark" aria-hidden="true">J</div><div><strong>Jornada Diaconal</strong><small>GESTÃO E CUIDADO</small></div></div>
+  <section class="panel">
+    <span class="eyebrow">Primeiro acesso · Administrador</span>
+    <h1>Defina sua senha de acesso.</h1>
+    <p>Este convite é pessoal, de uso único e válido por 24 horas. Sua senha será enviada diretamente ao serviço seguro de ativação e não será exibida ou armazenada nesta página.</p>
+    <div class="email"><small>Conta administrativa</small><strong>gustavo.marques.lopes@gmail.com</strong></div>
+    <form id="activationForm">
+      <div class="field">
+        <label for="password">Nova senha</label>
+        <input id="password" name="new-password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+        <span class="hint">Mínimo de 12 caracteres. Prefira uma frase longa e exclusiva, não utilizada em outros sites.</span>
+      </div>
+      <div class="field">
+        <label for="confirm">Confirme a nova senha</label>
+        <input id="confirm" name="confirm-password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+      </div>
+      <button id="submit" type="submit">Ativar minha conta</button>
+    </form>
+    <div id="message" class="msg" role="status" aria-live="polite"></div>
+    <div id="after" class="after"><a href="./">Entrar na Jornada Diaconal →</a></div>
+  </section>
+  <footer>Igreja de Deus no Guará I · Plataforma administrativa restrita</footer>
+</main>
+<script>
+  (() => {
+    "use strict";
+    const API = "https://wscvdtrmplqokceaztrv.supabase.co/functions/v1/jornada-ativacao-api";
+    const form = document.getElementById("activationForm");
+    const message = document.getElementById("message");
+    const after = document.getElementById("after");
+    const submit = document.getElementById("submit");
+    const pwd = document.getElementById("password");
+    const confirm = document.getElementById("confirm");
+    const token = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("token") || "";
+    const show = (txt, good = false) => {
+      message.textContent = txt;
+      message.className = "msg " + (good ? "good" : "error");
+    };
+    if (!/^[A-Za-z0-9_-]{40,80}$/.test(token)) {
+      form.style.display = "none";
+      show("Este endereço não contém um convite válido. Abra o link completo recebido por e-mail.");
+      return;
+    }
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (pwd.value.length < 12 || pwd.value.length > 128) {
+        show("Escolha uma senha entre 12 e 128 caracteres."); return;
+      }
+      if (pwd.value !== confirm.value) {
+        show("As senhas não coincidem. Tente novamente."); return;
+      }
+      submit.disabled = true;
+      submit.textContent = "Ativando...";
+      message.className = "msg";
+      try {
+        const response = await fetch(API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, password: pwd.value }),
+          cache: "no-store",
+          referrerPolicy: "no-referrer"
+        });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok || body.ok !== true) throw new Error(body.error || "Falha na ativação. Tente novamente.");
+        pwd.value = ""; confirm.value = "";
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+        form.style.display = "none";
+        show("Sua conta administrativa foi ativada. Agora você pode entrar no sistema com o e-mail e a senha que acabou de escolher.", true);
+        after.style.display = "block";
+      } catch (error) {
+        show(error instanceof Error ? error.message : "Falha de conexão. Tente novamente.");
+      } finally {
+        submit.disabled = false;
+        submit.textContent = "Ativar minha conta";
+      }
+    });
+  })();
+</script>
+</body>
+</html>
