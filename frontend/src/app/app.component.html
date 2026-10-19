@@ -25,6 +25,7 @@
       <button [class.active]="page==='deacons'" (click)="goto('deacons')"><span class="nav-icon">♙</span> Diáconos</button>
       <button [class.active]="page==='groups'" (click)="goto('groups')"><span class="nav-icon">▦</span> Grupos de cuidado</button>
       <button [class.active]="page==='followups'" (click)="goto('followups')"><span class="nav-icon">♡</span> Acompanhamento</button>
+      <button [class.active]="page==='discipleships'" (click)="goto('discipleships')"><span class="nav-icon">✦</span> Discipulados</button>
       <button *ngIf="admin" [class.active]="page==='settings'" (click)="goto('settings')"><span class="nav-icon">⚙</span> Usuários e acesso</button>
     </nav>
     <div class="sidebar-note"><span class="note-icon">✦</span><p>Mais que uma escala.<strong>Uma caminhada de cuidado.</strong></p></div>
@@ -48,7 +49,7 @@
         <div class="columns dashboard-cols"><div class="surface"><div class="surface-head"><h3>Grupos de cuidado</h3><button class="text-button" (click)="goto('groups')">Ver todos →</button></div>
           <div *ngIf="!dashboard.groups.length" class="empty-inline"><span>♧</span><strong>Nenhum grupo cadastrado</strong><p>Comece criando um grupo de cuidado com um responsável.</p><button *ngIf="canManage" class="small-primary" (click)="goto('groups');showNewGroup=true">Criar primeiro grupo</button></div>
           <div *ngFor="let g of dashboard.groups" class="group-line"><div class="group-initial">{{g.name.charAt(0)}}</div><div><strong>{{g.name}}</strong><span>{{g.leader_name||'Sem responsável definido'}}</span></div><div class="group-count">{{g.members}} / {{g.target_size}}</div></div>
-        </div><div class="surface"><div class="surface-head"><h3>Como estamos cuidando?</h3><span class="pill">ÚLTIMOS 30 DIAS</span></div><div class="progress-ring"><div class="ring" [style.--coverage]="coverage+'%'">{{coverage}}<small>%</small></div><div><strong>Diáconos com registro de contato</strong><p>O indicador mostra registros, não a qualidade do cuidado. A conversa e a proximidade continuam sendo essenciais.</p></div></div><div class="advice-box"><strong>Próximo passo</strong><p>Comece com poucos grupos, avalie o acompanhamento e ajuste a quantidade de pessoas por responsável.</p></div></div></div>
+        </div><div class="surface"><div class="surface-head"><h3>Como estamos cuidando?</h3><span class="pill">ÚLTIMOS 30 DIAS</span></div><div class="progress-ring"><div class="ring" [style.--coverage]="coverage+'%'">{{coverage}}<small>%</small></div><div><strong>Diáconos com registro de contato</strong><p>O indicador mostra registros, não a qualidade do cuidado. A conversa e a proximidade continuam sendo essenciais.</p></div></div><div class="advice-box"><strong>Próximo passo</strong><p>Organize o acompanhamento de todos os diáconos e ajuste a quantidade de pessoas por responsável à realidade do ministério.</p></div></div></div>
       </section>
 
       <section *ngIf="page==='deacons'">
@@ -67,7 +68,7 @@
               <option value="">Ainda não definido</option><option *ngFor="let u of users" [value]="u.id" [disabled]="u.role!=='leader'">{{u.name}}</option>
             </select>
           </label><div class="capacity"><span [style.width.%]="capacityPercent(g)"></span></div><small>Quantidade ajustável segundo a realidade do grupo</small><div class="group-card-bottom"><span>{{g.members}} diáconos acompanhados</span><button (click)="goto('deacons');filter='unassigned'">Ver diáconos →</button></div></div></div>
-        <div *ngIf="!groups.length" class="surface empty-inline big-empty"><span>♧</span><h3>Ainda não temos grupos de cuidado</h3><p>Crie os primeiros grupos e atribua responsáveis. A equipe poderá começar com um projeto-piloto antes de ampliar.</p><button *ngIf="canManage" class="primary" (click)="showNewGroup=true">Criar um grupo</button></div>
+        <div *ngIf="!groups.length" class="surface empty-inline big-empty"><span>♧</span><h3>Ainda não temos grupos de cuidado</h3><p>Crie os primeiros grupos e atribua responsáveis. Organize o acompanhamento por grupos de referência, incluindo todos os diáconos.</p><button *ngIf="canManage" class="primary" (click)="showNewGroup=true">Criar um grupo</button></div>
         <div *ngIf="canManage && unassigned.length && groups.length" class="surface assignment"><div class="surface-head"><h3>Vincular diáconos a grupos</h3><span class="pill">{{unassigned.length}} SEM GRUPO</span></div><div *ngFor="let d of unassigned" class="assignment-row"><div class="person"><span class="person-circle">{{d.full_name.charAt(0)}}</span><strong>{{d.full_name}}</strong></div><select #chosen aria-label="Escolher grupo" [disabled]="busy"><option value="">Escolher grupo...</option><option *ngFor="let g of groups" [value]="g.id">{{g.name}} ({{g.members}}/{{g.target_size}})</option></select><button class="small-primary" (click)="assign(d.id,chosen.value)" [disabled]="busy || !chosen.value">Vincular</button></div></div>
       </section>
 
@@ -78,12 +79,76 @@
           <div class="surface"><div class="surface-head"><h3>Histórico de contato</h3><span class="pill">{{followups.length}} REGISTROS</span></div><div *ngIf="!followups.length" class="empty-inline"><span>✎</span><strong>Sem registros ainda</strong><p>O primeiro contato pode ser uma conversa simples para conhecer a pessoa.</p></div><div *ngFor="let f of followups" class="timeline-item"><span class="timeline-dot"></span><div><div class="timeline-head"><strong>{{outcomeLabel(f.outcome)}}</strong><span>{{f.contacted_at | date:'dd/MM/yyyy'}}</span></div><p>{{f.summary||'Sem observações adicionais.'}}</p><small>Por {{f.author}} · {{f.method}}</small><div *ngIf="f.needs_pastoral_attention" class="referral">↗ Atenção pastoral solicitada</div></div></div></div></div>
       </section>
 
+
+      <section *ngIf="page==='discipleships'">
+        <div class="page-heading">
+          <div><span class="eyebrow">UM CAMINHO PARA TODO O CORPO</span><h1>Discipulados</h1><p>Encontros de Palavra, proximidade e prática para diáconos antigos e novos.</p></div>
+          <button *ngIf="canManage && !selectedMeeting" class="primary" (click)="showNewMeeting=true">+ Agendar encontro</button>
+          <button *ngIf="selectedMeeting" class="outline" (click)="selectedMeeting=null">← Voltar aos encontros</button>
+        </div>
+        <div class="context-strip"><span>♡</span><div><strong>Para todos os diáconos.</strong><p>Um impedimento real deve ser acolhido. Sem registro significa apenas que a participação ainda não foi informada — nunca uma falta presumida.</p></div></div>
+        <div *ngIf="!selectedMeeting" class="group-cards">
+          <div *ngFor="let m of meetings" class="group-card">
+            <div class="group-card-top"><div class="group-initial large">✦</div><span class="pill">{{m.status==='planned'?'PROGRAMADO':m.status==='completed'?'REALIZADO':'CANCELADO'}}</span></div>
+            <h3>{{m.title}}</h3>
+            <p><strong>{{m.scheduled_at | date:'dd/MM/yyyy, HH:mm':'-0300'}}</strong></p>
+            <p>{{m.location||'Local a definir'}}</p>
+            <div class="group-card-bottom"><span>{{m.present_count}} com presença registrada</span><button (click)="openMeeting(m)">Abrir encontro →</button></div>
+          </div>
+        </div>
+        <div *ngIf="!selectedMeeting && !meetings.length" class="surface empty-inline big-empty">
+          <span>✦</span><h3>Nenhum discipulado agendado</h3>
+          <p>Planeje os encontros de outubro a dezembro com a liderança. Todos os diáconos participam da jornada; os impedidos receberão acompanhamento adequado.</p>
+          <button *ngIf="canManage" class="primary" (click)="showNewMeeting=true">Agendar primeiro encontro</button>
+        </div>
+        <div *ngIf="selectedMeeting" class="surface table-surface">
+          <div class="surface-head"><h3>{{selectedMeeting.title}}</h3><span class="pill">{{selectedMeeting.scheduled_at | date:'dd/MM/yyyy, HH:mm':'-0300'}}</span></div>
+          <p class="hint">Lista de acompanhamento do encontro. As informações não são vinculadas às respostas da pesquisa anônima.</p>
+          <div class="stats">
+            <div class="stat-card"><span>Presenças registradas</span><strong>{{meetingPresent}}</strong><small>Compareceram</small></div>
+            <div class="stat-card"><span>Impedimento informado</span><strong>{{meetingUnable}}</strong><small>Precisam de acolhimento</small></div>
+            <div class="stat-card"><span>Não informado</span><strong>{{meetingUnreported}}</strong><small>Sem conclusão registrada</small></div>
+          </div>
+          <div class="scroll-table">
+            <table>
+              <thead><tr><th>Diácono / diaconisa</th><th>Turma</th><th>Situação ministerial</th><th>Participação no encontro</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let person of meetingAttendance">
+                  <td><strong>{{person.full_name}}</strong></td>
+                  <td>{{cohortLabel(person.cohort)}}</td>
+                  <td>{{statusLabel(person.deacon_status)}}</td>
+                  <td><select #attendanceSelect [value]="person.attendance" (change)="setAttendance(person.deacon_id,attendanceSelect.value)" [disabled]="busy || selectedMeeting.status==='cancelled'" [attr.aria-label]="'Participação de '+person.full_name">
+                    <option value="unreported">Não informado</option>
+                    <option value="present">Presente</option>
+                    <option value="unable">Impedimento informado</option>
+                  </select></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div *ngIf="!meetingAttendance.length" class="empty-inline"><strong>Nenhuma pessoa disponível nesta visualização</strong><p>Responsáveis visualizam somente os diáconos dos seus grupos. A coordenação pode visualizar o corpo completo.</p></div>
+          <div class="table-footer">Exibindo {{meetingAttendance.length}} diáconos. “Não informado” não é ausência confirmada.</div>
+        </div>
+      </section>
+
       <section *ngIf="page==='settings' && admin"><div class="page-heading"><div><span class="eyebrow">CONTROLE DE ACESSO</span><h1>Equipe e permissões</h1><p>Cadastre quem pode administrar o sistema e quem acompanha grupos de diáconos.</p></div><button class="primary" (click)="showNewUser=true">+ Novo usuário</button></div><div class="surface table-surface"><div class="scroll-table"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Permissão</th><th>Situação</th></tr></thead><tbody><tr *ngFor="let u of users"><td><strong>{{u.name}}</strong></td><td>{{u.email}}</td><td><span class="pill">{{u.role==='admin'?'Administrador':u.role==='coordinator'?'Coordenação':'Responsável'}}</span></td><td>{{u.active===false?'Desativado':'Ativo'}}</td></tr></tbody></table></div></div></section>
     </main>
   </div>
 </div>
 
 <!-- Modais administrativos e de cuidado -->
+<div *ngIf="showNewMeeting && canManage" class="modal-backdrop" (click)="showNewMeeting=false">
+  <form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="createMeeting()">
+    <div class="modal-head"><div><span class="eyebrow">JORNADA DE DISCIPULADO</span><h2>Agendar encontro</h2></div><button type="button" class="modal-close" (click)="showNewMeeting=false">×</button></div>
+    <div class="form-grid">
+      <label class="span-2">Tema do encontro<input name="meeting_title" required maxlength="160" [(ngModel)]="draftMeeting.title" placeholder="Ex.: Chamado e compromisso"></label>
+      <label>Data e horário (Brasília)<input name="meeting_schedule" type="datetime-local" required [(ngModel)]="draftMeeting.scheduled_at"></label>
+      <label>Local<input name="meeting_location" maxlength="180" [(ngModel)]="draftMeeting.location" placeholder="Ex.: Sala de discipulado"></label>
+    </div>
+    <p class="modal-hint">Os encontros são destinados a todo o diaconato. Não é necessário formar grupos restritos para convidar participantes.</p>
+    <div class="modal-actions"><button class="outline" type="button" (click)="showNewMeeting=false">Cancelar</button><button class="primary" [disabled]="busy || !draftMeeting.title || !draftMeeting.scheduled_at">Agendar encontro</button></div>
+  </form>
+</div>
 <div *ngIf="showNewDeacon" class="modal-backdrop" (click)="showNewDeacon=false"><form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="createDeacon()"><div class="modal-head"><div><span class="eyebrow">CADASTRO</span><h2>Novo diácono</h2></div><button type="button" class="modal-close" (click)="showNewDeacon=false">×</button></div><div class="form-grid"><label class="span-2">Nome completo<input name="full_name" required [(ngModel)]="draftDeacon.full_name"></label><label>Turma<select name="cohort" [(ngModel)]="draftDeacon.cohort"><option value="antigo">Antigo</option><option value="novo">Novo</option></select></label><label>Situação<select name="status" [(ngModel)]="draftDeacon.status"><option value="active">Ativo</option><option value="away">Afastamento temporário</option><option value="inactive">Inativo</option></select></label><label>Telefone<input name="phone" [(ngModel)]="draftDeacon.phone"></label><label>E-mail<input type="email" name="email" [(ngModel)]="draftDeacon.email"></label><label class="span-2">Disponibilidade (opcional)<textarea name="availability" [(ngModel)]="draftDeacon.availability" rows="2" placeholder="Ex.: domingos de manhã, exceto último domingo"></textarea></label></div><div class="modal-actions"><button class="outline" type="button" (click)="showNewDeacon=false">Cancelar</button><button class="primary" [disabled]="busy">Salvar cadastro</button></div></form></div>
 <div *ngIf="showNewGroup" class="modal-backdrop" (click)="showNewGroup=false"><form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="createGroup()"><div class="modal-head"><div><span class="eyebrow">REDE DE CUIDADO</span><h2>Novo grupo</h2></div><button class="modal-close" type="button" (click)="showNewGroup=false">×</button></div><div class="form-grid"><label class="span-2">Nome do grupo<input name="group_name" required [(ngModel)]="draftGroup.name" placeholder="Ex.: Grupo de cuidado 01"></label><label>Quantidade sugerida<input name="target_size" type="number" min="1" max="30" required [(ngModel)]="draftGroup.target_size"></label><label>Responsável<select name="leader_id" [(ngModel)]="draftGroup.leader_id"><option value="">Definir depois</option><option *ngFor="let u of users" [value]="u.id" [disabled]="u.role!=='leader'">{{u.name}} — {{u.role==='leader'?'Responsável':'Outro perfil'}}</option></select></label></div><p class="modal-hint">A referência de dez diáconos pode ser ajustada pela coordenação.</p><div class="modal-actions"><button class="outline" type="button" (click)="showNewGroup=false">Cancelar</button><button class="primary" [disabled]="busy">Criar grupo</button></div></form></div>
 <div *ngIf="showNewUser && admin" class="modal-backdrop" (click)="showNewUser=false"><form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="createUser()"><div class="modal-head"><div><span class="eyebrow">ACESSO RESERVADO</span><h2>Novo usuário</h2></div><button class="modal-close" type="button" (click)="showNewUser=false">×</button></div><div class="form-grid"><label class="span-2">Nome<input name="uname" required [(ngModel)]="draftUser.name"></label><label class="span-2">E-mail<input name="uemail" type="email" required [(ngModel)]="draftUser.email"></label><label>Perfil<select name="urole" [(ngModel)]="draftUser.role"><option value="leader">Responsável</option><option value="coordinator">Coordenação</option><option value="admin">Administrador</option></select></label><label>Senha provisória (12+ caracteres)<input name="upassword" type="password" minlength="12" required [(ngModel)]="draftUser.password"></label></div><div class="modal-actions"><button class="outline" type="button" (click)="showNewUser=false">Cancelar</button><button class="primary" [disabled]="busy">Criar usuário</button></div></form></div>
