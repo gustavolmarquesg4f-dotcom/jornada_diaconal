@@ -18,6 +18,14 @@ export interface RegistryDetails {
  restrictions_observations:string|null;
  source_row_number?:number;
 }
+export interface ObservationEntry {
+ id:string; full_name:string; phone:string|null; cohort:Cohort; status:DeaconStatus;
+ marital_status_original:string|null; spouse_name:string|null;
+ restrictions_observations:string|null; source_row_number:number|null;
+ available_wed_15:boolean; available_wed_20:boolean;
+ available_sun_10:boolean; available_sun_19:boolean;
+ only_first_sunday:boolean; mornings_only:boolean;
+}
 export interface Group { id: string; name: string; leader_id: string|null; leader_name: string|null; members: number; target_size: number }
 export interface Followup { id: string; contacted_at: string; author: string; method: string; outcome: string; summary: string; next_contact_on?: string; needs_pastoral_attention: boolean }
 export interface Dashboard { totals: {deacons:number;without_group:number;contacted_30_days:number;without_recent_contact:number};groups:Group[] }
@@ -41,6 +49,9 @@ export class ApiService {
  async logout():Promise<void>{try{await this.send('POST','/auth/logout',{})}finally{this.clear()}}
  dashboard():Promise<Dashboard>{return this.send('GET','/dashboard')}
  async deacons():Promise<Deacon[]>{return (await this.send<{items:Deacon[]}>('GET','/deacons')).items}
+ async observations():Promise<ObservationEntry[]>{
+   return (await this.send<{items:ObservationEntry[]}>('GET','/registry-observations')).items;
+ }
  async registry(id:string):Promise<RegistryDetails|null>{
   const result=await this.send<{item:RegistryDetails|null}>('GET',`/deacons/${encodeURIComponent(id)}/registry`);
   return result.item;
