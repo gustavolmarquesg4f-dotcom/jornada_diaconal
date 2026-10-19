@@ -1,0 +1,30 @@
+name: Verificar Jornada Diaconal
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  php-syntax:
+    name: Sintaxe PHP
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Conferir arquivos PHP
+        run: find api -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+
+  angular-build:
+    name: Compilar Angular
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar dependências
+        working-directory: frontend
+        run: npm install --no-audit --no-fund
+      - name: Compilar aplicação
+        working-directory: frontend
+        run: npm run build
