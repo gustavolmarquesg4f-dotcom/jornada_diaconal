@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiService, User, Deacon, Group, Followup, Dashboard } from './api.service';
+import { ApiService, User, Deacon, RegistryDetails, Group, Followup, Dashboard } from './api.service';
 
 type Page = 'dashboard'|'deacons'|'groups'|'followups'|'settings';
 @Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule],templateUrl:'./app.component.html'})
@@ -11,7 +11,7 @@ export class AppComponent implements OnInit {
  email='';password='';changeOld='';changeNew='';changeNewConfirm='';showChangePassword=false;showMenu=false;showNewDeacon=false;showNewGroup=false;showNewUser=false;showFollowup=false;
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
  deacons:Deacon[]=[];groups:Group[]=[];users:User[]=[];followups:Followup[]=[];
- selected:Deacon|null=null;search='';filter:'all'|'antigo'|'novo'|'unassigned'='all';
+ selected:Deacon|null=null;selectedRegistry:RegistryDetails|null=null;registryLoading=false;search='';filter:'all'|'antigo'|'novo'|'unassigned'='all';
  draftDeacon={full_name:'',cohort:'antigo',status:'active',phone:'',email:'',availability:''};
  draftGroup={name:'',target_size:10,leader_id:''};
  draftUser={name:'',email:'',password:'',role:'leader'};
@@ -29,7 +29,40 @@ export class AppComponent implements OnInit {
  async logout():Promise<void>{await this.api.logout();this.showChangePassword=false;this.page='dashboard';this.selected=null}
  async reload():Promise<void>{this.error='';try{const [d,people,groups]=await Promise.all([this.api.dashboard(),this.api.deacons(),this.api.groups()]);this.dashboard=d;this.deacons=people;this.groups=groups;if(this.canManage)this.users=await this.api.users();else this.users=[]}catch(e){this.error=this.msg(e)}}
  goto(page:Page):void{this.page=page;this.showMenu=false;this.notice='';this.error='';if(page!=='followups')this.selected=null}
- select(d:Deacon):void{this.selected=d;this.page='followups';this.followups=[];this.fetchFollowups()}
+ select(d:Deacon):void{
+  this.selected=d;
+  this.selectedRegistry=null;
+  this.page='followups';
+  this.followups=[];
+  this.fetchFollowups();
+  if(this.admin)this.loadRegistry(d.id);
+ }
+ async loadRegistry(id:string):Promise<void>{
+  this.registryLoading=true;
+  try{const details=await this.api.registry(id);if(this.selected?.id===id)this.selectedRegistry=details}
+  catch(e){this.error=this.msg(e)}
+  finally{this.registryLoading=false}
+ }
+ async saveRegistry():Promise<void>{
+  if(!this.admin||!this.selected||!this.selectedRegistry)return;
+  const id=this.selected.id,details=this.selectedRegistry;
+  await this.run(async()=>{
+   await this.api.updateRegistry(id,{
+    marital_status_original:details.marital_status_original,
+    spouse_name:details.spouse_name,
+    restrictions_observations:details.restrictions_observations,
+    available_wed_15:details.available_wed_15,
+    available_wed_20:details.available_wed_20,
+    available_sun_10:details.available_sun_10,
+    available_sun_19:details.available_sun_19,
+    only_first_sunday:details.only_first_sunday,
+    mornings_only:details.mornings_only
+   });
+   await this.loadRegistry(id);
+   await this.reload();
+  },'Cadastro original atualizado com sucesso.');
+ }
+
  async fetchFollowups():Promise<void>{if(!this.selected)return;try{this.followups=await this.api.followups(this.selected.id)}catch(e){this.error=this.msg(e)}}
  async createDeacon():Promise<void>{await this.run(async()=>{await this.api.createDeacon(this.draftDeacon);this.showNewDeacon=false;this.draftDeacon={full_name:'',cohort:'antigo',status:'active',phone:'',email:'',availability:''};await this.reload()},'Diácono cadastrado com sucesso.')}
  async createGroup():Promise<void>{await this.run(async()=>{await this.api.createGroup({...this.draftGroup,leader_id:this.draftGroup.leader_id||null});this.showNewGroup=false;this.draftGroup={name:'',target_size:10,leader_id:''};await this.reload()},'Grupo criado com sucesso.')}
