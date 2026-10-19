@@ -113,5 +113,59 @@ try {
   $next=$b['next_contact_on']??null;if($next&&!preg_match('/^\d{4}-\d{2}-\d{2}$/',(string)$next))respond(['error'=>'Data inválida'],422);
   $q=$db->prepare('INSERT INTO followups(deacon_id,author_id,method,outcome,summary,next_contact_on,needs_pastoral_attention) VALUES(?,?,?,?,?,?,?) RETURNING id');$q->execute([$did,$u['id'],$methodName,$outcome,txt($b,'summary',1000,false),$next,(bool)($b['needs_pastoral_attention']??false)]);$id=$q->fetchColumn();audit($db,$u,'followup.create',$id);respond(['id'=>$id],201);
  }
+
+ // Discipulados: encontros destinados a todos os diáconos, novos e antigos.
+ if($method==='GET'&&$path==='/discipleships'){
+  $rows=fetchAll($db,"SELECT m.id,m.title,m.scheduled_at,m.location,m.status,
+    (SELECT COUNT(*)::int FROM discipleship_attendance a WHERE a.meeting_id=m.id AND a.status='present') AS present_count,
+    (SELECT COUNT(*)::int FROM discipleship_attendance a WHERE a.meeting_id=m.id AND a.status='unable') AS unable_count
+    FROM discipleship_meetings m ORDER BY m.scheduled_at DESC LIMIT 100");
+  respond(['items'=>$rows]);
+ }
+ if($method==='POST'&&$path==='/discipleships'){
+  requireRole($u,['admin','coordinator']);$b=input();
+  $title=txt($b,'title',160);$scheduled=txt($b,'scheduled_at',22);$location=txt($b,'location',180,false);
+  $dt=DateTimeImmutable::createFromFormat('!Y-m-d\TH:i',$scheduled,new DateTimeZone('America/Sao_Paulo'));
+  if(!$dt||$dt->format('Y-m-d\TH:i')!==$scheduled)respond(['error'=>'Data e hora inválidas'],422);
+  $q=$db->prepare('INSERT INTO discipleship_meetings(title,scheduled_at,location,created_by) VALUES(?,?,?,?) RETURNING id');
+  $q->execute([$title,$dt->format('c'),$location,$u['id']]);$id=$q->fetchColumn();
+  audit($db,$u,'discipleship.create',$id);respond(['id'=>$id],201);
+ }
+ if(preg_match('~^/discipleships/([0-9a-f-]{36})/attendance$~i',(string)$path,$m)){
+  $meetingId=$m[1];validUuid($meetingId);
+  $q=$db->prepare('SELECT status FROM discipleship_meetings WHERE id=?');$q->execute([$meetingId]);$meeting=$q->fetch();
+  if(!$meeting)respond(['error'=>'Encontro não encontrado'],404);
+  if($method==='GET'){
+   // Coordenadores visualizam o corpo diaconal; responsáveis apenas seus grupos.
+   $scoped=$u['role']==='leader';
+   $where=$scoped?' WHERE g.leader_id=:user_id AND g.active=true':'';
+   $params=$scoped?['user_id'=>$u['id']]:[];
+   $params['meeting_id']=$meetingId;
+   $rows=fetchAll($db,"SELECT d.id AS deacon_id,d.full_name,d.cohort,d.status AS deacon_status,
+      COALESCE(a.status,'unreported') AS attendance
+      FROM deacons d LEFT JOIN group_members gm ON gm.deacon_id=d.id
+      LEFT JOIN care_groups g ON g.id=gm.group_id
+      LEFT JOIN discipleship_attendance a ON a.deacon_id=d.id AND a.meeting_id=:meeting_id
+      $where ORDER BY d.full_name",$params);
+   respond(['items'=>$rows]);
+  }
+  if($method==='POST'){
+   $b=input();$did=txt($b,'deacon_id',36);validUuid($did);canViewDeacon($db,$u,$did);
+   $status=txt($b,'attendance',16);
+   if(!in_array($status,['present','unable','unreported'],true))respond(['error'=>'Situação inválida'],422);
+   if($meeting['status']==='cancelled')respond(['error'=>'Encontro cancelado'],422);
+   $q=$db->prepare('SELECT 1 FROM deacons WHERE id=?');$q->execute([$did]);
+   if(!$q->fetchColumn())respond(['error'=>'Diácono não encontrado'],404);
+   if($status==='unreported'){
+    $q=$db->prepare('DELETE FROM discipleship_attendance WHERE meeting_id=? AND deacon_id=?');$q->execute([$meetingId,$did]);
+   }else{
+    $q=$db->prepare("INSERT INTO discipleship_attendance(meeting_id,deacon_id,status,updated_by)
+      VALUES(?,?,?,?) ON CONFLICT(meeting_id,deacon_id) DO UPDATE SET
+      status=EXCLUDED.status,updated_by=EXCLUDED.updated_by,updated_at=now()");
+    $q->execute([$meetingId,$did,$status,$u['id']]);
+   }
+   audit($db,$u,'discipleship.attendance',$did);respond(['ok'=>true]);
+  }
+ }
  respond(['error'=>'Rota não encontrada'],404);
 } catch(PDOException $e){error_log('Banco: '.$e->getMessage());respond(['error'=>'Não foi possível concluir a operação no banco de dados'],500);} catch(Throwable $e){error_log('Aplicação: '.$e->getMessage());respond(['error'=>'Erro interno'],500);}
