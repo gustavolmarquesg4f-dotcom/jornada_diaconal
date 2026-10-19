@@ -1,0 +1,46 @@
+name: Validar banco PostgreSQL 18 (Neon)
+
+on:
+  pull_request:
+    paths:
+      - 'api/sql/**'
+      - '.github/workflows/check-neon-schema.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-schema:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test_only
+          POSTGRES_DB: jornada_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jornada_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar cliente PostgreSQL
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client
+      - name: Aplicar e validar migrações
+        env:
+          PGPASSWORD: test_only
+        run: |
+          set -euo pipefail
+          PSQL=(psql -h localhost -U postgres -d jornada_test -v ON_ERROR_STOP=1 -X)
+          "${PSQL[@]}" -f api/sql/001_init.sql
+          "${PSQL[@]}" -f api/sql/002_discipleship.sql
+          "${PSQL[@]}" -f api/sql/test_schema.sql
+          echo "Testando a idempotência das migrações"
+          "${PSQL[@]}" -f api/sql/001_init.sql
+          "${PSQL[@]}" -f api/sql/002_discipleship.sql
+          "${PSQL[@]}" -f api/sql/test_schema.sql
