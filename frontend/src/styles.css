@@ -4,3 +4,36 @@
 @media(max-width:1250px){.stats{grid-template-columns:repeat(2,1fr)}.group-cards{grid-template-columns:repeat(2,1fr)}}@media(max-width:900px){.app-shell{grid-template-columns:1fr}.sidebar{display:none;position:fixed;z-index:12;left:0;top:0;width:min(280px,85vw);box-shadow:14px 0 50px #132e2160}.sidebar.mobile-open{display:flex}.menu-toggle{display:block}.dashboard-cols{grid-template-columns:1fr}.login-layout{grid-template-columns:1fr}.login-art{min-height:350px}.login-message{margin:50px 0}.login-foot{display:none}}@media(max-width:620px){.app-top{height:64px;padding:0 15px}.top-breadcrumb{font-size:9px}.top-actions .private-marker{display:none}.main-content{padding:25px 15px}.page-heading{flex-wrap:wrap}.page-heading h1{font-size:27px}.welcome-card{padding:26px}.stats{gap:10px}.stat-card{padding:15px}.stat-card strong{font-size:28px}.stat-card>span{font-size:11px}.group-cards,.profile-cols{grid-template-columns:1fr}.summary{grid-template-columns:1fr 1fr}.surface{padding:18px}.form-grid{grid-template-columns:1fr}.form-grid .span-2{grid-column:span 1}.assignment-row{flex-wrap:wrap}.assignment-row .person{flex-basis:100%}.login-side{padding:15px}.login-art{padding:30px}.login-message h1{font-size:38px}.login-card{padding:18px}}
 
 .group-leader-editor{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:700;color:#63816c;margin:12px 0}.group-leader-editor select{max-width:100%;border-radius:8px;background:white;border:1px solid #d7e5da;padding:8px 9px;font-size:12px;color:#45654b}
+
+/* Jornada Diaconal: observações originais, área de acesso restrito */
+.registry-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}
+.registry-summary>div{padding:18px 20px;border:1px solid var(--border);background:#fff;border-radius:13px;display:flex;flex-direction:column;gap:5px}
+.registry-summary strong{font-size:27px;line-height:1.2;color:var(--deep)}
+.registry-summary span{font-size:12px;color:var(--muted);font-weight:600}
+.registry-privacy{border:1px solid #e5dcc1;background:#fffaf0;border-radius:12px;padding:15px 18px;color:#695a39;line-height:1.55;font-size:13px;margin-bottom:18px}
+.registry-privacy strong{margin-right:5px}
+.registry-tools{gap:16px;flex-wrap:wrap}
+.registry-tools .search-wrap{flex:1;min-width:260px}
+.registry-loading{padding:26px;color:var(--muted);text-align:center}
+.registry-notes-table{width:100%;min-width:1090px;table-layout:auto}
+.registry-notes-table th:first-child{min-width:215px}
+.registry-notes-table th:nth-child(2){min-width:108px}
+.registry-notes-table th:nth-child(3){min-width:175px}
+.registry-notes-table th:nth-child(4){min-width:310px;width:41%}
+.registry-notes-table th:last-child{min-width:110px}
+.registry-notes-table td{vertical-align:top}
+.registry-notes-table .person{align-items:flex-start}
+.registry-notes-table .person strong,.registry-notes-table .person small{display:block;overflow-wrap:anywhere}
+.registry-cohort{display:block;margin-top:9px;color:var(--muted);font-size:11px}
+.registry-family{font-size:12px;line-height:1.65;color:#52665c;overflow-wrap:anywhere}
+.registry-family strong{font-weight:700}
+.registry-note p{margin:0;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;color:#293c33;max-width:none}
+.registry-no-note{color:var(--muted);font-style:italic;font-size:12px}
+@media(max-width:760px){
+ .registry-summary{gap:9px}
+ .registry-summary>div{padding:13px}
+ .registry-summary strong{font-size:23px}
+ .registry-summary span{font-size:11px}
+ .registry-tools .search-wrap{min-width:100%}
+}
+@media(max-width:390px){.registry-summary{grid-template-columns:1fr}.registry-summary>div{flex-direction:row;align-items:center;justify-content:space-between}}
