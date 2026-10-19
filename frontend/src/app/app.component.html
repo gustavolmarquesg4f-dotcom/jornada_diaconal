@@ -91,6 +91,35 @@
           <div class="surface"><div class="surface-head"><h3>Histórico de contato</h3><span class="pill">{{followups.length}} REGISTROS</span></div><div *ngIf="!followups.length" class="empty-inline"><span>✎</span><strong>Sem registros ainda</strong><p>O primeiro contato pode ser uma conversa simples para conhecer a pessoa.</p></div><div *ngFor="let f of followups" class="timeline-item"><span class="timeline-dot"></span><div><div class="timeline-head"><strong>{{outcomeLabel(f.outcome)}}</strong><span>{{f.contacted_at | date:'dd/MM/yyyy'}}</span></div><p>{{f.summary||'Sem observações adicionais.'}}</p><small>Por {{f.author}} · {{f.method}}</small><div *ngIf="f.needs_pastoral_attention" class="referral">↗ Atenção pastoral solicitada</div></div></div></div></div>
       </section>
 
+
+      <section *ngIf="page==='followups' && selected && admin" class="surface" style="padding:24px;margin-top:22px;margin-bottom:26px">
+        <div class="surface-head"><div><span class="eyebrow">ACESSO RESTRITO AO ADMINISTRADOR</span><h3>Cadastro original · Disponibilidade e observações</h3><p style="margin:10px 0 0;color:#66798c;font-size:13px">Informações importadas da planilha Atmosfera 2026, incluindo registros familiares e observações pessoais. Trate com confidencialidade.</p></div></div>
+        <p *ngIf="registryLoading">Carregando informações do cadastro...</p>
+        <p *ngIf="!registryLoading && !selectedRegistry">Esta pessoa não possui informações complementares importadas.</p>
+        <div *ngIf="selectedRegistry" class="form-grid">
+          <label>Estado civil (conforme origem)
+            <input name="registry_marital" [(ngModel)]="selectedRegistry.marital_status_original" placeholder="Não informado">
+          </label>
+          <label>Nome do cônjuge
+            <input name="registry_spouse" [(ngModel)]="selectedRegistry.spouse_name" placeholder="Não informado">
+          </label>
+          <div class="span-2" style="margin-top:12px"><strong>Disponibilidade nos cultos</strong></div>
+          <label class="check-label"><input type="checkbox" name="wed15" [(ngModel)]="selectedRegistry.available_wed_15"> Quarta-feira, 15h</label>
+          <label class="check-label"><input type="checkbox" name="wed20" [(ngModel)]="selectedRegistry.available_wed_20"> Quarta-feira, 20h</label>
+          <label class="check-label"><input type="checkbox" name="sun10" [(ngModel)]="selectedRegistry.available_sun_10"> Domingo, 10h</label>
+          <label class="check-label"><input type="checkbox" name="sun19" [(ngModel)]="selectedRegistry.available_sun_19"> Domingo, 19h</label>
+          <label class="check-label"><input type="checkbox" name="firstsun" [(ngModel)]="selectedRegistry.only_first_sunday"> Apenas primeiro domingo</label>
+          <label class="check-label"><input type="checkbox" name="morningonly" [(ngModel)]="selectedRegistry.mornings_only"> Apenas pela manhã</label>
+          <label class="span-2">Restrições e observações da planilha
+            <textarea name="registry_notes" [(ngModel)]="selectedRegistry.restrictions_observations" rows="5" placeholder="Sem observações na planilha original"></textarea>
+          </label>
+          <div class="span-2" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <small style="color:#687c90">Linha de origem: {{selectedRegistry.source_row_number||'Não informada'}}. Somente administrador pode consultar ou modificar estes dados.</small>
+            <button class="primary" type="button" [disabled]="busy" (click)="saveRegistry()">Salvar informações do cadastro</button>
+          </div>
+        </div>
+      </section>
+
       <section *ngIf="page==='settings' && admin"><div class="page-heading"><div><span class="eyebrow">CONTROLE DE ACESSO</span><h1>Equipe e permissões</h1><p>Cadastre quem pode administrar o sistema e quem acompanha grupos de diáconos.</p></div><button class="primary" (click)="showNewUser=true">+ Novo usuário</button></div><div class="surface table-surface"><div class="scroll-table"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Permissão</th><th>Situação</th></tr></thead><tbody><tr *ngFor="let u of users"><td><strong>{{u.name}}</strong></td><td>{{u.email}}</td><td><span class="pill">{{u.role==='admin'?'Administrador':u.role==='coordinator'?'Coordenação':'Responsável'}}</span></td><td>{{u.active===false?'Desativado':'Ativo'}}</td></tr></tbody></table></div></div></section>
     </main>
   </div>
