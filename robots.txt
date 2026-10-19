@@ -1,0 +1,4 @@
+# Jornada Diaconal — área administrativa
+# A interface é pública; os dados requerem autenticação.
+User-agent: *
+Disallow: /
