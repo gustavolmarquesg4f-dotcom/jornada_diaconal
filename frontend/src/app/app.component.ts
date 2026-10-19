@@ -1,9 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiService, User, Deacon, RegistryDetails, ObservationEntry, Group, Followup, Dashboard } from './api.service';
+import { ApiService, User, Deacon, RegistryDetails, ObservationEntry, Group, Followup, Dashboard, IntercessionTemplate, IntercessionDraw, PastoralSlot } from './api.service';
 
-type Page = 'dashboard'|'deacons'|'observations'|'groups'|'followups'|'settings';
+type Page = 'dashboard'|'deacons'|'observations'|'groups'|'leadership'|'intercession'|'pastoral'|'followups'|'settings';
 @Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule],templateUrl:'./app.component.html'})
 export class AppComponent implements OnInit {
  api=inject(ApiService);
@@ -12,7 +12,12 @@ export class AppComponent implements OnInit {
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
  deacons:Deacon[]=[];groups:Group[]=[];users:User[]=[];followups:Followup[]=[];
  observations:ObservationEntry[]=[];observationsLoading=false;observationsLoaded=false;observationSearch='';observationFilter:'all'|'with'|'without'='all';
- selected:Deacon|null=null;selectedRegistry:RegistryDetails|null=null;registryLoading=false;search='';filter:'all'|'antigo'|'novo'|'unassigned'='all';
+ intercessionTemplates:IntercessionTemplate[]=[];intercessionDraws:IntercessionDraw[]=[];
+ intercessionWeekStart='2026-10-26';intercessionCapacity:Record<string,number>={};
+ intercessionLoaded=false;intercessionLoading=false;
+ pastoralSlots:PastoralSlot[]=[];pastoralLoaded=false;pastoralLoading=false;
+ pastoralDraft:Record<string,{start_time:string;deacon_id:string;status:PastoralSlot['status'];approval_status:PastoralSlot['approval_status']}>={};
+  selected:Deacon|null=null;selectedRegistry:RegistryDetails|null=null;registryLoading=false;search='';filter:'all'|'antigo'|'novo'|'unassigned'='all';
  draftDeacon={full_name:'',cohort:'antigo',status:'active',phone:'',email:'',availability:''};
  draftGroup={name:'',target_size:10,leader_id:''};
  draftUser={name:'',email:'',password:'',role:'leader'};
@@ -46,9 +51,12 @@ export class AppComponent implements OnInit {
  async reload():Promise<void>{this.error='';try{const [d,people,groups]=await Promise.all([this.api.dashboard(),this.api.deacons(),this.api.groups()]);this.dashboard=d;this.deacons=people;this.groups=groups;if(this.canManage)this.users=await this.api.users();else this.users=[]}catch(e){this.error=this.msg(e)}}
  goto(page:Page):void{
   if(page==='observations'&&!this.admin){this.error='Esta área é exclusiva do administrador.';return}
+  if((page==='pastoral'||page==='intercession')&&!this.canManage){this.error='Esta área é exclusiva da coordenação.';return}
   this.page=page;this.showMenu=false;this.notice='';this.error='';
   if(page!=='followups')this.selected=null;
   if(page==='observations'&&!this.observationsLoaded)void this.loadObservations();
+  if(page==='pastoral'&&!this.pastoralLoaded)void this.loadPastoral();
+  if(page==='intercession'&&!this.intercessionLoaded)void this.loadIntercession();
  }
  async loadObservations():Promise<void>{
   if(!this.admin)return;
@@ -109,7 +117,84 @@ export class AppComponent implements OnInit {
  async updateStatus(d:Deacon,status:string):Promise<void>{await this.run(async()=>{await this.api.updateDeacon(d.id,{status});await this.reload()},'Situação atualizada.')}
  private async run(action:()=>Promise<void>,success:string):Promise<void>{this.error='';this.notice='';this.busy=true;try{await action();this.notice=success}catch(e){this.error=this.msg(e)}finally{this.busy=false}}
  private msg(e:unknown):string{return e instanceof Error?e.message:'Não foi possível concluir a operação.'}
- cohortLabel(c:string):string{return c==='novo'?'Novo':'Antigo'}
+
+ get pastoralBooked():number{return this.pastoralSlots.filter(slot=>slot.deacon_id!==null).length}
+ get pastoralApproved():number{return this.pastoralSlots.filter(slot=>slot.approval_status==='approved').length}
+ get intercessionConfigured():boolean{return this.intercessionTemplates.length>0&&this.intercessionTemplates.every(t=>!!t.people_per_service)}
+ showMinistryLeaders():void{this.goto('leadership')}
+ openNewLeader():void{this.draftUser={name:'',email:'',password:'',role:'leader'};this.showNewUser=true}
+ async loadPastoral():Promise<void>{
+  if(!this.canManage)return;this.pastoralLoading=true;this.error='';
+  try{
+   const r=await this.api.pastoralSlots();
+   this.pastoralSlots=r.items;
+   this.pastoralDraft={};
+   for(const slot of r.items){
+    this.pastoralDraft[slot.id]={
+      start_time:(slot.start_time||'').slice(0,5),
+      deacon_id:slot.deacon_id||'',
+      status:slot.status,
+      approval_status:slot.approval_status
+    };
+   }
+   this.pastoralLoaded=true;
+  }catch(e){this.error=this.msg(e)}
+  finally{this.pastoralLoading=false}
+ }
+ async savePastoral(slot:PastoralSlot):Promise<void>{
+  const draft=this.pastoralDraft[slot.id];if(!draft)return;
+  await this.run(async()=>{
+   await this.api.updatePastoralSlot(slot.id,{
+    start_time:draft.start_time||null,
+    deacon_id:draft.deacon_id||null,
+    status:draft.status,
+    approval_status:draft.approval_status
+   });
+   await this.loadPastoral();
+  },'Atendimento salvo. Nenhuma convocação foi enviada.');
+ }
+ async loadIntercession():Promise<void>{
+  if(!this.canManage)return;this.intercessionLoading=true;this.error='';
+  try{
+   const [ts,week]=await Promise.all([
+    this.api.intercessionTemplates(),this.api.intercessionWeek(this.intercessionWeekStart)
+   ]);
+   this.intercessionTemplates=ts;
+   this.intercessionDraws=week.items;
+   this.intercessionCapacity={};
+   for(const t of ts)this.intercessionCapacity[t.id]=t.people_per_service||0;
+   this.intercessionLoaded=true;
+  }catch(e){this.error=this.msg(e)}
+  finally{this.intercessionLoading=false}
+ }
+ async saveIntercessionCapacity(t:IntercessionTemplate):Promise<void>{
+  const value=Number(this.intercessionCapacity[t.id]);
+  await this.run(async()=>{
+   await this.api.updateIntercessionTemplate(t.id,value);
+   await this.loadIntercession();
+  },'Quantidade de intercessores atualizada.');
+ }
+ async drawIntercession():Promise<void>{
+  if(!this.intercessionConfigured){this.error='Defina a quantidade de intercessores em todos os cultos antes do sorteio.';return}
+  await this.run(async()=>{
+   const result=await this.api.raffleIntercession(this.intercessionWeekStart);
+   await this.loadIntercession();
+   if(!result.complete)this.notice='Rascunho criado, mas alguns cultos ficaram com vagas em aberto. Não publique sem completar as vagas.';
+  },'Sorteio realizado como rascunho. Revise antes de publicar.');
+ }
+ async publishIntercession(d:IntercessionDraw):Promise<void>{
+  await this.run(async()=>{
+   await this.api.publishIntercession(d.id);
+   await this.loadIntercession();
+  },'Escala aprovada e publicada no sistema. Nenhuma mensagem foi enviada.');
+ }
+ changeIntercessionWeek(weeks:number):void{
+  const dt=new Date(this.intercessionWeekStart+'T12:00:00Z');
+  dt.setUTCDate(dt.getUTCDate()+weeks*7);
+  this.intercessionWeekStart=dt.toISOString().slice(0,10);
+  void this.loadIntercession();
+ }
+  cohortLabel(c:string):string{return c==='novo'?'Novo':'Antigo'}
  statusLabel(s:string):string{return s==='active'?'Ativo':s==='away'?'Afastamento temporário':'Inativo'}
  outcomeLabel(s:string):string{return ({contato_realizado:'Contato realizado',retornar:'Retornar contato',sem_resposta:'Não respondeu',encaminhar:'Encaminhar à liderança'} as Record<string,string>)[s]||s}
 }
