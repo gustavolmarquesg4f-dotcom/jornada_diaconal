@@ -1,37 +1,54 @@
-name: Gerar site Angular na branch gh-pages
+name: Publicar Jornada Diaconal no GitHub Pages
+
 on:
   push:
     branches: [main]
     paths:
-      - 'frontend/**'
-      - '.github/workflows/deploy-pages.yml'
+      - "frontend/**"
+      - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
+
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
 concurrency:
-  group: gh-pages-publish
-  cancel-in-progress: true
+  group: github-pages
+  cancel-in-progress: false
+
 jobs:
-  build-and-publish:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Baixar código
+      - name: Checkout do repositório
         uses: actions/checkout@v4
-      - name: Configurar Node
+      - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-      - name: Instalar dependências
+          node-version: "22"
+      - name: Instalar dependências Angular
+        working-directory: frontend
         run: npm install --no-audit --no-fund
+      - name: Compilar aplicação para o caminho do repositório
         working-directory: frontend
-      - name: Compilar Angular
         run: npx ng build --configuration production --base-href "/jornada_diaconal/"
-        working-directory: frontend
-      - name: Publicar arquivos compilados na branch gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Garantir rota da demonstração
+        run: |
+          test -f frontend/dist/jornada-diaconal-web/browser/index.html
+          test -f frontend/dist/jornada-diaconal-web/browser/demo.html
+      - name: Enviar artefato estático
+        uses: actions/upload-pages-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: ./frontend/dist/jornada-diaconal-web/browser
-          force_orphan: true
-          enable_jekyll: false
+          path: frontend/dist/jornada-diaconal-web/browser
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Publicar no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
