@@ -187,6 +187,70 @@
         <button *ngIf="canManage && groups.length" class="outline" type="button" (click)="goto('groups')">Administrar grupos e vínculos →</button>
       </section>
 
+
+      <section *ngIf="page==='intercession' && canManage" class="ministry-schedule">
+        <div class="page-heading"><div>
+          <span class="eyebrow">ESCALA MINISTERIAL · INTERCESSÃO</span>
+          <h1>Sorteio por disponibilidade</h1>
+          <p>Sorteio com base nos dias e horários indicados pelos diáconos ativos; o resultado é um rascunho para revisão.</p>
+        </div><button class="outline" type="button" (click)="loadIntercession()" [disabled]="intercessionLoading">↻ Atualizar</button></div>
+        <div class="context-strip"><span>✦</span><div>
+          <strong>Seleção equilibrada e sem convocação automática.</strong>
+          <p>O sorteio prioriza quem teve menos escalas, evita duas designações no mesmo dia e só considera os horários de disponibilidade cadastrados. A coordenação deve confirmar com cada pessoa.</p>
+        </div></div>
+        <div class="surface ministry-config">
+          <div class="surface-head"><h3>1. Definir vagas por culto</h3><span class="pill">CONFIGURAÇÃO</span></div>
+          <p>Referência da planilha: quarta-feira às 15h e 20h; domingo às 10h e 19h.</p>
+          <div class="service-template" *ngFor="let t of intercessionTemplates">
+            <div><strong>{{t.label}}</strong><small>Respeita os horários e as restrições cadastradas.</small></div>
+            <label>Quantas pessoas?
+              <input type="number" min="1" max="30" [name]="'templateCount'+t.id"
+                [(ngModel)]="intercessionCapacity[t.id]" [disabled]="busy">
+            </label>
+            <button type="button" class="small-primary" (click)="saveIntercessionCapacity(t)"
+              [disabled]="busy||!intercessionCapacity[t.id]">Salvar quantidade</button>
+          </div>
+          <div *ngIf="!intercessionTemplates.length&&!intercessionLoading" class="empty-inline">
+            Não foi possível carregar os cultos. Clique em Atualizar.
+          </div>
+        </div>
+        <div class="surface ministry-week">
+          <div class="surface-head"><h3>2. Sortear a semana e revisar</h3></div>
+          <div class="week-controls">
+            <button class="outline" type="button" (click)="changeIntercessionWeek(-1)" [disabled]="busy||intercessionLoading">← Anterior</button>
+            <strong>Semana de {{intercessionWeekStart | date:'dd/MM/yyyy'}}</strong>
+            <button class="outline" type="button" (click)="changeIntercessionWeek(1)" [disabled]="busy||intercessionLoading">Próxima →</button>
+          </div>
+          <p *ngIf="intercessionLoading">Consultando a escala...</p>
+          <button *ngIf="!intercessionDraws.length&&!intercessionLoading" type="button" class="primary"
+            (click)="drawIntercession()" [disabled]="busy||!intercessionConfigured">
+            Realizar sorteio (rascunho)
+          </button>
+          <p *ngIf="!intercessionConfigured" class="modal-hint">Antes de sortear, salve quantas pessoas serão necessárias em cada culto.</p>
+          <div class="ministry-draw" *ngFor="let draw of intercessionDraws">
+            <div class="ministry-draw-heading"><div>
+              <strong>{{draw.service_date | date:'dd/MM/yyyy'}} · {{draw.service?.label||'Culto'}}</strong>
+              <small>{{draw.assignments.length}} de {{draw.service?.people_per_service||0}} vagas preenchidas</small>
+            </div>
+              <span class="status-pill" [class.inactive]="draw.status!=='published'">
+                {{draw.status==='published'?'Publicada':'Rascunho'}}
+              </span>
+            </div>
+            <div class="ministry-person" *ngFor="let a of draw.assignments">
+              <strong>{{a.deacon?.full_name||'Cadastro não localizado'}}</strong>
+              <span>{{a.deacon?.phone||'Telefone não informado'}}</span>
+            </div>
+            <p class="ministry-warning" *ngIf="draw.assignments.length<(draw.service?.people_per_service||0)">
+              Existem vagas sem pessoa elegível. Revise as disponibilidades antes de publicar.
+            </p>
+            <button *ngIf="draw.status==='draft'" class="outline" type="button"
+              (click)="publishIntercession(draw)" [disabled]="busy||draw.assignments.length!==(draw.service?.people_per_service||0)">
+              Publicar escala no sistema
+            </button>
+          </div>
+        </div>
+      </section>
+
       <section *ngIf="page==='groups'">
         <div class="page-heading"><div><span class="eyebrow">CUIDADO DE PROXIMIDADE</span><h1>Grupos de cuidado</h1><p>Organize pequenos grupos com responsáveis de referência. Dez pessoas é um ponto de partida, não uma regra.</p></div><button *ngIf="canManage" class="primary" (click)="showNewGroup=true">+ Novo grupo</button></div>
         <div class="context-strip"><span>♡</span><div><strong>Cuidado, não fiscalização.</strong><p>O responsável mantém contato, percebe necessidades e encaminha assuntos pastorais à liderança quando necessário.</p></div></div>
