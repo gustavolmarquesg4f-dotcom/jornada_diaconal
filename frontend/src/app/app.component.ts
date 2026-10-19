@@ -8,7 +8,7 @@ type Page = 'dashboard'|'deacons'|'groups'|'followups'|'settings';
 export class AppComponent implements OnInit {
  api=inject(ApiService);
  loading=true;busy=false;error='';notice='';page:Page='dashboard';
- email='';password='';showMenu=false;showNewDeacon=false;showNewGroup=false;showNewUser=false;showFollowup=false;
+ email='';password='';changeOld='';changeNew='';changeNewConfirm='';showChangePassword=false;showMenu=false;showNewDeacon=false;showNewGroup=false;showNewUser=false;showFollowup=false;
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
  deacons:Deacon[]=[];groups:Group[]=[];users:User[]=[];followups:Followup[]=[];
  selected:Deacon|null=null;search='';filter:'all'|'antigo'|'novo'|'unassigned'='all';
@@ -23,9 +23,10 @@ export class AppComponent implements OnInit {
  get unassigned():Deacon[]{return this.deacons.filter(d=>!d.group_id)}
  capacityPercent(g:Group):number{return g.target_size ? Math.min(100,Math.round(g.members/g.target_size*100)) : 0}
  get coverage():number{return this.dashboard.totals.deacons?Math.round(this.dashboard.totals.contacted_30_days/this.dashboard.totals.deacons*100):0}
- async ngOnInit():Promise<void>{if(this.api.authorized){try{await this.api.me();await this.reload()}catch{this.api.clear()}}this.loading=false}
- async login():Promise<void>{this.busy=true;this.error='';try{await this.api.login(this.email,this.password);this.password='';await this.reload()}catch(e){this.error=this.msg(e)}finally{this.busy=false}}
- async logout():Promise<void>{await this.api.logout();this.page='dashboard';this.selected=null}
+ async ngOnInit():Promise<void>{if(this.api.authorized){try{const u=await this.api.me();this.showChangePassword=!!u.must_change_password;if(!this.showChangePassword)await this.reload()}catch{this.api.clear()}}this.loading=false}
+ async login():Promise<void>{this.busy=true;this.error='';try{const u=await this.api.login(this.email,this.password);this.password='';this.showChangePassword=!!u.must_change_password;if(!this.showChangePassword)await this.reload()}catch(e){this.error=this.msg(e)}finally{this.busy=false}}
+ async changePassword():Promise<void>{this.error='';if(this.changeNew.length<12){this.error='A senha precisa ter pelo menos 12 caracteres.';return}if(this.changeNew!==this.changeNewConfirm){this.error='A confirmação da senha não confere.';return}this.busy=true;try{await this.api.changePassword(this.changeOld,this.changeNew);if(this.api.user)this.api.user.must_change_password=false;this.changeOld='';this.changeNew='';this.changeNewConfirm='';this.showChangePassword=false;this.notice='Senha atualizada com sucesso.';await this.reload()}catch(e){this.error=this.msg(e)}finally{this.busy=false}}
+ async logout():Promise<void>{await this.api.logout();this.showChangePassword=false;this.page='dashboard';this.selected=null}
  async reload():Promise<void>{this.error='';try{const [d,people,groups]=await Promise.all([this.api.dashboard(),this.api.deacons(),this.api.groups()]);this.dashboard=d;this.deacons=people;this.groups=groups;if(this.canManage)this.users=await this.api.users();else this.users=[]}catch(e){this.error=this.msg(e)}}
  goto(page:Page):void{this.page=page;this.showMenu=false;this.notice='';this.error='';if(page!=='followups')this.selected=null}
  select(d:Deacon):void{this.selected=d;this.page='followups';this.followups=[];this.fetchFollowups()}

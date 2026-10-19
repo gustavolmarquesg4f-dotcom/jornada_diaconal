@@ -16,7 +16,20 @@
   </form></div>
 </div>
 
-<div *ngIf="!loading && api.authorized" class="app-shell">
+<div *ngIf="!loading && api.authorized && showChangePassword" class="login-layout">
+  <div class="login-art"><div class="brand brand-white"><span class="brand-mark">J</span><span>Jornada Diaconal<small>Gestão &amp; Cuidado</small></span></div><div class="login-message"><span class="eyebrow light">SEGURANÇA DO ACESSO</span><h1>Seu acesso.<br><em>Sua responsabilidade.</em></h1><p>Proteja os registros do diaconato usando uma senha pessoal.</p></div></div>
+  <div class="login-side"><form class="login-card" (ngSubmit)="changePassword()">
+    <span class="pill neutral">SENHA DE ACESSO</span><h2>{{currentUser?.must_change_password?'Defina sua senha pessoal':'Alterar minha senha'}}</h2><p class="hint">Use no mínimo 12 caracteres. Não compartilhe sua senha com outros responsáveis.</p>
+    <label for="old-password">Senha atual</label><input id="old-password" name="old-password" [(ngModel)]="changeOld" type="password" autocomplete="current-password" required>
+    <label for="new-password">Nova senha</label><input id="new-password" name="new-password" [(ngModel)]="changeNew" type="password" minlength="12" autocomplete="new-password" required>
+    <label for="confirm-password">Confirmar nova senha</label><input id="confirm-password" name="confirm-password" [(ngModel)]="changeNewConfirm" type="password" minlength="12" autocomplete="new-password" required>
+    <p *ngIf="error" class="alert error">{{error}}</p>
+    <button type="submit" class="primary full" [disabled]="busy || !changeOld || changeNew.length<12 || !changeNewConfirm">{{busy?'Salvando...':'Salvar nova senha'}} <span aria-hidden="true">→</span></button>
+    <button *ngIf="!currentUser?.must_change_password" type="button" class="outline full" (click)="showChangePassword=false">Voltar ao painel</button>
+    <button type="button" class="outline full" (click)="logout()">Sair do sistema</button>
+  </form></div>
+</div>
+<div *ngIf="!loading && api.authorized && !showChangePassword" class="app-shell">
   <aside class="sidebar" [class.mobile-open]="showMenu">
     <div class="brand"><span class="brand-mark">J</span><span>Jornada Diaconal<small>Gestão & Cuidado</small></span></div>
     <div class="nav-heading">ÁREA DE TRABALHO</div>
@@ -31,7 +44,7 @@
     <div class="user-block"><div class="avatar">{{(currentUser?.name||'L').charAt(0)}}</div><div class="user-details"><strong>{{currentUser?.name}}</strong><small>{{currentUser?.role==='admin'?'Administrador':currentUser?.role==='coordinator'?'Coordenação':'Responsável por grupo'}}</small></div><button class="exit" (click)="logout()" aria-label="Sair do sistema">↪</button></div>
   </aside>
   <div class="content-shell">
-    <header class="app-top"><button class="menu-toggle" (click)="showMenu=!showMenu" aria-label="Abrir menu">☰</button><div class="top-breadcrumb">IGREJA DE DEUS <span>/</span> JORNADA DIACONAL</div><div class="top-actions"><span class="private-marker"><span class="live-dot"></span> Área reservada</span><button class="refresh" (click)="reload()" title="Atualizar dados" aria-label="Atualizar">↻</button></div></header>
+    <header class="app-top"><button class="menu-toggle" (click)="showMenu=!showMenu" aria-label="Abrir menu">☰</button><div class="top-breadcrumb">IGREJA DE DEUS <span>/</span> JORNADA DIACONAL</div><div class="top-actions"><button class="refresh" (click)="showChangePassword=true;error=''" title="Trocar minha senha" aria-label="Trocar minha senha">⚿</button><span class="private-marker"><span class="live-dot"></span> Área reservada</span><button class="refresh" (click)="reload()" title="Atualizar dados" aria-label="Atualizar">↻</button></div></header>
     <main class="main-content">
       <div *ngIf="error" class="alert error dismissable">{{error}} <button (click)="error=''">×</button></div>
       <div *ngIf="notice" class="alert success dismissable">{{notice}} <button (click)="notice=''">×</button></div>
