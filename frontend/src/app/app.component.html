@@ -36,6 +36,7 @@
     <nav class="navigation" aria-label="Menu principal">
       <button [class.active]="page==='dashboard'" (click)="goto('dashboard')"><span class="nav-icon">◫</span> Visão geral</button>
       <button [class.active]="page==='deacons'" (click)="goto('deacons')"><span class="nav-icon">♙</span> Diáconos</button>
+      <button *ngIf="admin" [class.active]="page==='observations'" (click)="goto('observations')"><span class="nav-icon">☷</span> Observações</button>
       <button [class.active]="page==='groups'" (click)="goto('groups')"><span class="nav-icon">▦</span> Grupos de cuidado</button>
       <button [class.active]="page==='followups'" (click)="goto('followups')"><span class="nav-icon">♡</span> Acompanhamento</button>
       <button *ngIf="admin" [class.active]="page==='settings'" (click)="goto('settings')"><span class="nav-icon">⚙</span> Usuários e acesso</button>
@@ -69,6 +70,82 @@
         <div class="surface table-surface"><div class="table-tools"><div class="search-wrap"><span>⌕</span><input placeholder="Buscar diácono ou grupo..." [(ngModel)]="search" aria-label="Buscar diácono"></div><div class="filter-tabs"><button (click)="filter='all'" [class.active]="filter==='all'">Todos</button><button (click)="filter='antigo'" [class.active]="filter==='antigo'">Antigos</button><button (click)="filter='novo'" [class.active]="filter==='novo'">Novos</button><button (click)="filter='unassigned'" [class.active]="filter==='unassigned'">Sem grupo</button></div></div>
           <div class="scroll-table"><table><thead><tr><th>Diácono</th><th>Turma</th><th>Situação</th><th>Responsável / grupo</th><th>Último contato</th><th></th></tr></thead><tbody><tr *ngFor="let d of filteredDeacons"><td><div class="person"><span class="person-circle">{{d.full_name.charAt(0)}}</span><span><strong>{{d.full_name}}</strong><small>{{d.phone||'Contato não informado'}}</small></span></div></td><td>{{cohortLabel(d.cohort)}}</td><td><span class="status-pill" [class.away]="d.status==='away'" [class.inactive]="d.status==='inactive'">{{statusLabel(d.status)}}</span></td><td>{{d.group_name||'Sem grupo'}}</td><td>{{d.last_contact?(d.last_contact | date:'dd/MM/yyyy'):'—'}}</td><td><button class="row-link" (click)="select(d)">Acompanhar →</button></td></tr></tbody></table></div>
           <div *ngIf="!filteredDeacons.length" class="empty-inline"><strong>Nenhum diácono encontrado</strong><p>Cadastre os participantes ou ajuste os filtros.</p></div><div class="table-footer">Mostrando {{filteredDeacons.length}} de {{deacons.length}} diáconos</div></div>
+      </section>
+
+
+      <section *ngIf="page==='observations' && admin" class="notes-section">
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow">ACESSO RESTRITO · CADASTRO ATMOSFERA 2026</span>
+            <h1>Observações do diaconato</h1>
+            <p>Consulte o conteúdo integral das observações da planilha original, por pessoa, sem resumos ou cortes. Apenas administradores têm acesso.</p>
+          </div>
+          <button class="outline" type="button" (click)="loadObservations()" [disabled]="observationsLoading">↻ Atualizar</button>
+        </div>
+
+        <div class="registry-summary" aria-live="polite">
+          <div><strong>{{observations.length}}</strong><span>Cadastros consultados</span></div>
+          <div><strong>{{observationsWithNotes}}</strong><span>Com observações</span></div>
+          <div><strong>{{observations.length-observationsWithNotes}}</strong><span>Sem observações na fonte</span></div>
+        </div>
+        <div class="registry-privacy">
+          <strong>Uso reservado à liderança autorizada.</strong>
+          Os textos abaixo foram transcritos do cadastro de origem e podem conter informações pessoais e percepções não verificadas. Não representam diagnóstico, avaliação de espiritualidade nem situação disciplinar.
+        </div>
+
+        <div class="surface table-surface">
+          <div class="table-tools registry-tools">
+            <div class="search-wrap"><span>⌕</span>
+              <input [(ngModel)]="observationSearch" name="observationSearch" placeholder="Buscar por nome, telefone ou texto..." aria-label="Buscar nas observações">
+            </div>
+            <div class="filter-tabs">
+              <button type="button" [class.active]="observationFilter==='all'" (click)="observationFilter='all'">Todos</button>
+              <button type="button" [class.active]="observationFilter==='with'" (click)="observationFilter='with'">Com observação</button>
+              <button type="button" [class.active]="observationFilter==='without'" (click)="observationFilter='without'">Sem observação</button>
+            </div>
+          </div>
+          <p *ngIf="observationsLoading" class="registry-loading">Carregando os registros originais...</p>
+          <div class="scroll-table" *ngIf="!observationsLoading">
+            <table class="registry-notes-table">
+              <thead><tr>
+                <th>Diácono / contato</th>
+                <th>Situação</th>
+                <th>Família (cadastro original)</th>
+                <th>Observações integrais</th>
+                <th>Cadastro</th>
+              </tr></thead>
+              <tbody>
+                <tr *ngFor="let person of filteredObservations">
+                  <td>
+                    <div class="person"><span class="person-circle">{{person.full_name.charAt(0)}}</span>
+                      <span><strong>{{person.full_name}}</strong><small>{{person.phone||'Telefone não informado'}}</small></span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="status-pill" [class.away]="person.status==='away'" [class.inactive]="person.status==='inactive'">{{statusLabel(person.status)}}</span>
+                    <small class="registry-cohort">{{cohortLabel(person.cohort)}}</small>
+                  </td>
+                  <td class="registry-family">
+                    <div><strong>Estado civil:</strong> {{person.marital_status_original||'Não informado'}}</div>
+                    <div><strong>Cônjuge:</strong> {{person.spouse_name||'Não informado'}}</div>
+                  </td>
+                  <td class="registry-note">
+                    <p *ngIf="person.restrictions_observations;else noObservation">{{person.restrictions_observations}}</p>
+                    <ng-template #noObservation><span class="registry-no-note">Nenhuma observação registrada na planilha.</span></ng-template>
+                  </td>
+                  <td><button type="button" class="row-link" (click)="viewObservation(person)">Abrir cadastro →</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div *ngIf="!observationsLoading && !filteredObservations.length" class="empty-inline">
+            <strong>Não há observações para os filtros escolhidos.</strong>
+            <p>Altere a pesquisa ou selecione outra categoria.</p>
+          </div>
+          <div class="table-footer" *ngIf="!observationsLoading">
+            Mostrando {{filteredObservations.length}} de {{observations.length}} cadastros · Texto completo da fonte
+          </div>
+        </div>
       </section>
 
       <section *ngIf="page==='groups'">
