@@ -88,3 +88,16 @@ html,body{max-width:100%}
 .pastoral-care-find span{color:#77919a;font-size:11px;margin-left:auto}
 #pastoral-appointment-list{scroll-margin-top:98px}
 @media(max-width:640px){.pastoral-care-find{align-items:stretch;flex-direction:column}.pastoral-care-find input{max-width:none;width:100%;flex:auto}.pastoral-care-find span{margin-left:0}}
+
+/* Guia contextual da aplicação para novos usuários e apresentação à liderança */
+.top-help-trigger{font-weight:850;font-size:16px;color:#07778e}
+.quick-help-panel{max-width:610px}
+.quick-help-intro{font-size:13px;line-height:1.6;color:#698590;margin:0 0 16px}
+.quick-help-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;overflow-y:auto;min-height:0}
+.quick-help-options button{text-align:left;display:flex;flex-direction:column;gap:7px;padding:16px;border-radius:11px;border:1px solid #d5e5ea;background:#fafcfd}
+.quick-help-options button:hover{border-color:#7fc1cf;background:#eefafc}
+.quick-help-options button strong{font-size:13px;color:#0b5770;line-height:1.4}
+.quick-help-options button small{font-size:11px;line-height:1.55;color:#678391}
+.quick-help-footnote{font-size:11px;line-height:1.6;color:#82949b;margin:16px 0 0;padding-top:12px;border-top:1px solid #e9f0f3}
+@media(max-width:580px){.quick-help-options{grid-template-columns:1fr}.quick-help-options button{padding:13px}.quick-help-panel{max-height:calc(100dvh - 65px)}}
+@media print{.quick-help-backdrop{display:none!important}}
