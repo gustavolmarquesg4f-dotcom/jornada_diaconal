@@ -39,29 +39,40 @@
     <div class="brand"><span class="brand-mark brand-ministry-icon" role="img" aria-label="Símbolo do Ministério dos Diáconos"></span><span>Jornada Diaconal<small>Ministério dos Diáconos</small></span></div>
     <div class="nav-heading">ÁREA DE TRABALHO</div>
     <nav class="navigation" aria-label="Menu principal">
-      <button title="Visão geral" aria-label="Visão geral" [class.active]="page==='dashboard'" (click)="goto('dashboard')"><span class="nav-icon">◫</span> Visão geral</button>
-      <button title="Diáconos" aria-label="Diáconos" [class.active]="page==='deacons'" (click)="goto('deacons')"><span class="nav-icon">♙</span> Diáconos</button>
-      <button *ngIf="admin" title="Observações" aria-label="Observações" [class.active]="page==='observations'" (click)="goto('observations')"><span class="nav-icon">☷</span> Observações</button>
-      <button title="Liderança e grupos" aria-label="Liderança e grupos" [class.active]="page==='leadership'" (click)="goto('leadership')"><span class="nav-icon">♧</span> Liderança e grupos</button>
-      <button *ngIf="canManage" title="Escala de intercessão" aria-label="Escala de intercessão" [class.active]="page==='intercession'" (click)="goto('intercession')"><span class="nav-icon">✦</span> Escala de intercessão</button>
-      <button *ngIf="canManage" title="Agenda pastoral" aria-label="Agenda pastoral" [class.active]="page==='pastoral'" (click)="goto('pastoral')"><span class="nav-icon">▤</span> Agenda do Pr. Sato</button>
-      <button title="Grupos de cuidado" aria-label="Grupos de cuidado" [class.active]="page==='groups'" (click)="goto('groups')"><span class="nav-icon">▦</span> Grupos de cuidado</button>
-      <button title="Acompanhamento" aria-label="Acompanhamento" [class.active]="page==='followups'" (click)="goto('followups')"><span class="nav-icon">♡</span> Acompanhamento</button>
-      <button *ngIf="admin" title="Usuários e acesso" aria-label="Usuários e acesso" [class.active]="page==='settings'" (click)="goto('settings')"><span class="nav-icon">⚙</span> Usuários e acesso</button>
+      <button title="Visão geral" aria-label="Visão geral" [class.active]="page==='dashboard'" [attr.aria-current]="page==='dashboard'?'page':null" (click)="goto('dashboard')"><span class="nav-icon">◫</span> Visão geral</button>
+      <button title="Diáconos" aria-label="Diáconos" [class.active]="page==='deacons'" [attr.aria-current]="page==='deacons'?'page':null" (click)="goto('deacons')"><span class="nav-icon">♙</span> Diáconos</button>
+      <button *ngIf="admin" title="Observações" aria-label="Observações" [class.active]="page==='observations'" [attr.aria-current]="page==='observations'?'page':null" (click)="goto('observations')"><span class="nav-icon">☷</span> Observações</button>
+      <button title="Liderança e grupos" aria-label="Liderança e grupos" [class.active]="page==='leadership'" [attr.aria-current]="page==='leadership'?'page':null" (click)="goto('leadership')"><span class="nav-icon">♧</span> Liderança e grupos</button>
+      <button *ngIf="canManage" title="Escala de intercessão" aria-label="Escala de intercessão" [class.active]="page==='intercession'" [attr.aria-current]="page==='intercession'?'page':null" (click)="goto('intercession')"><span class="nav-icon">✦</span> Escala de intercessão</button>
+      <button *ngIf="canManage" title="Agenda pastoral" aria-label="Agenda pastoral" [class.active]="page==='pastoral'" [attr.aria-current]="page==='pastoral'?'page':null" (click)="goto('pastoral')"><span class="nav-icon">▤</span> Agenda do Pr. Sato</button>
+      <button title="Grupos de cuidado" aria-label="Grupos de cuidado" [class.active]="page==='groups'" [attr.aria-current]="page==='groups'?'page':null" (click)="goto('groups')"><span class="nav-icon">▦</span> Grupos de cuidado</button>
+      <button title="Acompanhamento" aria-label="Acompanhamento" [class.active]="page==='followups'" [attr.aria-current]="page==='followups'?'page':null" (click)="goto('followups')"><span class="nav-icon">♡</span> Acompanhamento</button>
+      <button *ngIf="admin" title="Usuários e acesso" aria-label="Usuários e acesso" [class.active]="page==='settings'" [attr.aria-current]="page==='settings'?'page':null" (click)="goto('settings')"><span class="nav-icon">⚙</span> Usuários e acesso</button>
     </nav>
     <div class="sidebar-note"><span class="note-icon">✦</span><p>Mais que uma escala.<strong>Uma caminhada de cuidado.</strong></p></div>
     <div class="user-block"><div class="avatar">{{(currentUser?.name||'L').charAt(0)}}</div><div class="user-details"><strong>{{currentUser?.name}}</strong><small>{{currentUser?.role==='admin'?'Administrador':currentUser?.role==='coordinator'?'Coordenação':'Responsável por grupo'}}</small></div><button class="exit" (click)="logout()" aria-label="Sair do sistema">↪</button></div>
   </aside>
   <div class="content-shell">
-    <header class="app-top"><button type="button" class="menu-toggle" (click)="showMenu=!showMenu" [attr.aria-expanded]="showMenu" aria-label="Abrir menu de navegação">☰</button><div class="top-breadcrumb">IGREJA DE DEUS NO GUARÁ 1 <span>/</span> <strong>{{pageTitle}}</strong></div><div class="top-actions"><button class="refresh" (click)="showChangePassword=true;error=''" title="Trocar minha senha" aria-label="Trocar minha senha">⚿</button><span class="private-marker"><span class="live-dot"></span> Área reservada</span><button class="refresh" (click)="reload()" title="Atualizar dados" aria-label="Atualizar">↻</button></div></header>
+    <header class="app-top"><button type="button" class="menu-toggle" (click)="showMenu=!showMenu" [attr.aria-expanded]="showMenu" aria-label="Abrir menu de navegação">☰</button><div class="top-breadcrumb">IGREJA DE DEUS NO GUARÁ 1 <span>/</span> <strong>{{pageTitle}}</strong></div><div class="top-actions">
+  <button type="button" class="top-quick-search" (click)="openQuickSearch()" title="Buscar diácono (Ctrl+K)" aria-label="Abrir busca rápida de diáconos"><span aria-hidden="true">⌕</span> <span class="quick-text">Buscar diácono</span><kbd class="quick-kbd">Ctrl K</kbd></button>
+  <button class="refresh" (click)="showChangePassword=true;error=''" title="Trocar minha senha" aria-label="Trocar minha senha">⚿</button>
+  <span class="private-marker"><span class="live-dot"></span> Área reservada</span>
+  <button type="button" class="refresh" (click)="refreshCurrentPage()" [disabled]="refreshing||busy" title="Atualizar esta seção" aria-label="Atualizar esta seção">{{refreshing?'…':'↻'}}</button>
+  </div></header>
     <main class="main-content">
-      <div *ngIf="error" class="alert error dismissable">{{error}} <button (click)="error=''">×</button></div>
-      <div *ngIf="notice" class="alert success dismissable">{{notice}} <button (click)="notice=''">×</button></div>
+      <div *ngIf="error" class="alert error dismissable" role="alert">{{error}} <button type="button" (click)="error=''" aria-label="Fechar mensagem de erro">×</button></div>
+      <div *ngIf="notice" class="alert success dismissable" role="status">{{notice}} <button type="button" (click)="notice=''" aria-label="Fechar aviso">×</button></div>
 
       <section *ngIf="page==='dashboard'">
-        <div class="page-heading"><div><span class="eyebrow">PAINEL DA LIDERANÇA</span><h1>Visão geral</h1><p>Uma visão das pessoas, dos vínculos e do acompanhamento do nosso diaconato.</p></div><button class="outline" (click)="reload()">↻ Atualizar dados</button></div>
+        <div class="page-heading"><div><span class="eyebrow">PAINEL DA LIDERANÇA</span><h1>Visão geral</h1><p>Uma visão das pessoas, dos vínculos e do acompanhamento do nosso diaconato.</p></div><button type="button" class="outline" (click)="refreshCurrentPage()" [disabled]="refreshing||busy">{{refreshing?'Atualizando...':'↻ Atualizar dados'}}</button></div>
         <div class="welcome-card"><div><span>MINISTÉRIO DOS DIÁCONOS · IGREJA DE DEUS NO GUARÁ 1</span><h2>Cuidar de cada pessoa.<br>Fortalecer todo o corpo.</h2><p>Nosso objetivo é que nenhum diácono caminhe sozinho e que o serviço seja saudável e sustentável.</p></div><img class="welcome-brand-img" src="marca-diaconos.webp" alt="" aria-hidden="true"></div>
-        <div class="stats">
+        <div class="dashboard-quick-actions" aria-label="Ações frequentes">
+  <button type="button" (click)="openQuickSearch()" class="dashboard-quick-card"><span class="dashboard-quick-icon" aria-hidden="true">⌕</span><span><strong>Encontrar diácono</strong><small>Buscar nome ou telefone</small></span><span aria-hidden="true">→</span></button>
+  <button type="button" (click)="goto('deacons')" class="dashboard-quick-card"><span class="dashboard-quick-icon" aria-hidden="true">♙</span><span><strong>Consultar cadastros</strong><small>Lista, filtros e impressão</small></span><span aria-hidden="true">→</span></button>
+  <button type="button" (click)="goto('groups')" class="dashboard-quick-card"><span class="dashboard-quick-icon" aria-hidden="true">♧</span><span><strong>Grupos de cuidado</strong><small>Responsáveis e vínculos</small></span><span aria-hidden="true">→</span></button>
+  <button *ngIf="canManage" type="button" (click)="goto('pastoral')" class="dashboard-quick-card"><span class="dashboard-quick-icon" aria-hidden="true">♡</span><span><strong>Agenda pastoral</strong><small>Atendimentos e prioridades</small></span><span aria-hidden="true">→</span></button>
+</div>
+<div class="stats">
           <div class="stat-card"><div class="stat-icon green">♙</div><span>Diáconos cadastrados</span><strong>{{dashboard.totals.deacons}}</strong><small>Pessoas no sistema</small></div>
           <div class="stat-card"><div class="stat-icon amber">◌</div><span>Sem grupo definido</span><strong>{{dashboard.totals.without_group}}</strong><small>Ainda aguardam vinculação</small></div>
           <div class="stat-card"><div class="stat-icon blue">♡</div><span>Contatos em 30 dias</span><strong>{{dashboard.totals.contacted_30_days}}</strong><small>Diáconos com registro recente</small></div>
