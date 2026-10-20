@@ -7,7 +7,7 @@ type Page = 'dashboard'|'deacons'|'observations'|'groups'|'leadership'|'interces
 @Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule],templateUrl:'./app.component.html'})
 export class AppComponent implements OnInit {
  api=inject(ApiService);
- loading=true;busy=false;error='';notice='';page:Page='dashboard';
+ loading=true;busy=false;refreshing=false;showQuickSearch=false;quickQuery='';error='';notice='';page:Page='dashboard';
  email='';password='';changeOld='';changeNew='';changeNewConfirm='';showChangePassword=false;showMenu=false;showNewDeacon=false;showNewGroup=false;showNewUser=false;showFollowup=false;sidebarCollapsed=false;showPrintPanel=false;printReady=false;printWithPhone=false;
  printSelection:'all'|'antigo'|'novo'='all';printGeneratedAt=new Date();
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
@@ -23,7 +23,7 @@ export class AppComponent implements OnInit {
   intercessionTemplates:IntercessionTemplate[]=[];intercessionDraws:IntercessionDraw[]=[];
  intercessionWeekStart='2026-10-26';intercessionCapacity:Record<string,number>={};
  intercessionLoaded=false;intercessionLoading=false;
- pastoralSlots:PastoralSlot[]=[];pastoralLoaded=false;pastoralLoading=false;
+ pastoralSlots:PastoralSlot[]=[];pastoralLoaded=false;pastoralLoading=false;pastoralWeekStart='2026-10-26';
  pastoralQueue:PastoralQueueItem[]=[];pastoralQueueLoaded=false;pastoralQueueLoading=false;
  pastoralVerifyCandidates:PastoralCarePerson[]=[];pastoralQueueSearch='';
  pastoralNew:{deacon_id:string;priority:number;reason:PastoralCareReason}={
@@ -69,9 +69,84 @@ export class AppComponent implements OnInit {
   // Aguarda a atualização do documento de impressão antes de chamar a janela nativa.
   setTimeout(()=>window.print(),120);
  }
- @HostListener('document:keydown.escape')
- closeMobileMenu():void{if(this.showMenu)this.showMenu=false}
- get filteredDeacons():Deacon[]{const q=this.search.trim().toLocaleLowerCase('pt-BR');return this.deacons.filter(d=>(this.filter==='all'||(this.filter==='unassigned'?!d.group_id:d.cohort===this.filter))&&(!q||d.full_name.toLocaleLowerCase('pt-BR').includes(q)||(d.group_name||'').toLocaleLowerCase('pt-BR').includes(q)))}
+
+ private normalizeSearch(value:string):string{
+  return value.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+ }
+ get quickResults():Deacon[]{
+  const q=this.normalizeSearch(this.quickQuery);
+  if(q.length<2)return [];
+  const digits=q.replace(/\D/g,'');
+  return this.deacons.filter(d=>
+   this.normalizeSearch(d.full_name).includes(q)||
+   this.normalizeSearch(d.group_name||'').includes(q)||
+   (!!digits&&digits.length>=3&&(d.phone||'').replace(/\D/g,'').includes(digits))
+  ).slice().sort((a,b)=>this.printCollator.compare(a.full_name,b.full_name)).slice(0,10);
+ }
+ openQuickSearch():void{
+  if(!this.api.authorized||this.showChangePassword)return;
+  this.showQuickSearch=true;this.quickQuery='';this.showMenu=false;
+  setTimeout(()=>document.getElementById('quick-search-field')?.focus(),0);
+ }
+ closeQuickSearch():void{this.showQuickSearch=false;this.quickQuery=''}
+ openQuickPerson(d:Deacon):void{
+  this.closeQuickSearch();this.select(d);window.scrollTo(0,0);
+ }
+ openFirstQuickResult():void{
+  const first=this.quickResults[0];
+  if(first)this.openQuickPerson(first);
+ }
+ @HostListener('document:keydown',['$event'])
+ onGlobalKeyDown(event:KeyboardEvent):void{
+  if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='k'&&this.api.authorized&&!this.showChangePassword){
+   event.preventDefault();this.openQuickSearch();return;
+  }
+  if(event.key==='Escape'){
+   if(this.showQuickSearch){event.preventDefault();this.closeQuickSearch()}
+   if(this.showMenu)this.showMenu=false;
+  }
+ }
+ async refreshCurrentPage():Promise<void>{
+  if(this.refreshing||this.busy)return;
+  this.refreshing=true;this.notice='';this.error='';
+  try{
+   await this.reload();
+   if(this.error)return;
+   if(this.page==='observations'&&this.admin)await this.loadObservations();
+   if(this.page==='pastoral'&&this.canManage)await this.loadPastoral();
+   if(this.page==='intercession'&&this.canManage)await this.loadIntercession();
+   if(this.page==='followups'&&this.selected){
+     const recent=this.deacons.find(d=>d.id===this.selected?.id);
+     if(recent)this.selected=recent;
+     await this.fetchFollowups();
+   }
+   if(!this.error)this.notice='Informações atualizadas.';
+  }catch(e){this.error=this.msg(e)}
+  finally{this.refreshing=false}
+ }
+ private dateWeekStart(date:string):string{
+  const dt=new Date(date.slice(0,10)+'T12:00:00Z');
+  dt.setUTCDate(dt.getUTCDate()-((dt.getUTCDay()+6)%7));
+  return dt.toISOString().slice(0,10);
+ }
+ get pastoralWeeks():{date:string;count:number}[]{
+  const dates=[...new Set(this.pastoralSlots.map(s=>this.dateWeekStart(s.appointment_date)))].sort();
+  return dates.map(date=>({date,count:this.pastoralSlots.filter(s=>this.dateWeekStart(s.appointment_date)===date).length}));
+ }
+ get visiblePastoralSlots():PastoralSlot[]{
+  return this.pastoralSlots.filter(s=>this.dateWeekStart(s.appointment_date)===this.pastoralWeekStart);
+ }
+
+ get filteredDeacons():Deacon[]{
+  const q=this.normalizeSearch(this.search);
+  const digits=q.replace(/\D/g,'');
+  return this.deacons.filter(d=>
+    (this.filter==='all'||(this.filter==='unassigned'?!d.group_id:d.cohort===this.filter))&&
+    (!q||this.normalizeSearch(d.full_name).includes(q)||
+     this.normalizeSearch(d.group_name||'').includes(q)||
+     (digits.length>=3&&(d.phone||'').replace(/\D/g,'').includes(digits)))
+  ).slice().sort((a,b)=>this.printCollator.compare(a.full_name,b.full_name));
+ }
 
  get observationsWithNotes():number{
   return this.observations.filter(item=>!!item.restrictions_observations?.trim()).length;
@@ -98,7 +173,8 @@ export class AppComponent implements OnInit {
  goto(page:Page):void{
   if(page==='observations'&&!this.admin){this.error='Esta área é exclusiva do administrador.';return}
   if((page==='pastoral'||page==='intercession')&&!this.canManage){this.error='Esta área é exclusiva da coordenação.';return}
-  this.page=page;this.showMenu=false;this.notice='';this.error='';
+  this.page=page;this.showMenu=false;this.closeQuickSearch();this.notice='';this.error='';
+  window.scrollTo(0,0);
   if(page!=='followups')this.selected=null;
   if(page==='observations'&&!this.observationsLoaded)void this.loadObservations();
   if(page==='pastoral'&&!this.pastoralLoaded)void this.loadPastoral();
@@ -120,6 +196,7 @@ export class AppComponent implements OnInit {
  }
 
  select(d:Deacon):void{
+  this.showMenu=false;
   this.selected=d;
   this.selectedRegistry=null;
   this.page='followups';
