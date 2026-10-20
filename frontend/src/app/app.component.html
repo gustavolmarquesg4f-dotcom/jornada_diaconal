@@ -333,6 +333,15 @@
             <p>Organize os contatos por prioridade antes de preencher a agenda.</p>
           </div><span class="pill">{{pastoralQueue.length}} CADASTROS</span></div>
           <p class="modal-hint">Cadastros inativos precisam ter a situação confirmada. Não utilize a pesquisa anônima para identificar pessoas.</p>
+          <div *ngIf="pastoralVerifyCandidates.length" class="pastoral-verification">
+            <strong>{{pastoralVerifyCandidates.length}} cadastros inativos para conferir</strong>
+            <p>Esta lista é apenas administrativa e não comprova afastamento.</p>
+            <div *ngFor="let person of pastoralVerifyCandidates" class="pastoral-verify-item">
+              <span><strong>{{person.full_name}}</strong><small>{{person.phone||'Sem telefone'}}</small></span>
+              <button type="button" class="outline" [disabled]="busy" (click)="addPastoralVerification(person)">Incluir para conferir</button>
+            </div>
+          </div>
+          <p *ngIf="pastoralQueueLoading" class="modal-hint">Atualizando a fila de acolhimento...</p>
           <div class="pastoral-care-form">
             <label>Diácono(a)
               <select name="pastoralPerson" [(ngModel)]="pastoralNew.deacon_id">
