@@ -16,6 +16,7 @@ export class AppComponent implements OnInit {
   {id:'pastores',label:'Porta lateral próxima aos pastores'},
   {id:'bateria',label:'Porta lateral próxima à bateria'}
  ];
+ intercessionPostEditor:Record<string,boolean>={};
  intercessionCandidates:Record<string,IntercessionCandidate[]>={};
  intercessionReplacements:Record<string,string>={};
   intercessionTemplates:IntercessionTemplate[]=[];intercessionDraws:IntercessionDraw[]=[];
@@ -171,10 +172,7 @@ export class AppComponent implements OnInit {
    this.intercessionTemplates=ts;
    this.intercessionDraws=week.items;
    this.intercessionCandidates={};
-   const drafts=week.items.filter(d=>d.status==='draft');
-   const requests=drafts.flatMap(draw=>this.intercessionPosts.map(post=>({draw,post})));
-   const lists=await Promise.all(requests.map(req=>this.api.intercessionCandidates(req.draw.id,req.post.id).catch(()=>[])));
-   requests.forEach((req,i)=>{this.intercessionCandidates[req.draw.id+'|'+req.post.id]=lists[i]});
+   this.intercessionPostEditor={};
    this.intercessionCapacity={};
    for(const t of ts)this.intercessionCapacity[t.id]=t.people_per_service||0;
    this.intercessionLoaded=true;
@@ -203,7 +201,17 @@ export class AppComponent implements OnInit {
    await this.loadIntercession();
   },'Confirmação da escala atualizada.');
  }
- async replaceIntercessionPost(drawId:string,post:'pastores'|'bateria'):Promise<void>{
+ async toggleIntercessionEditor(drawId:string,post:'pastores'|'bateria'):Promise<void>{
+  const key=drawId+'|'+post;
+  if(this.intercessionPostEditor[key]){this.intercessionPostEditor[key]=false;return}
+  this.error='';
+  try{
+   const candidates=await this.api.intercessionCandidates(drawId,post);
+   this.intercessionCandidates[key]=candidates;
+   this.intercessionPostEditor[key]=true;
+  }catch(e){this.error=this.msg(e)}
+ }
+  async replaceIntercessionPost(drawId:string,post:'pastores'|'bateria'):Promise<void>{
   const prefix=drawId+'|'+post;
   const first=this.intercessionReplacements[prefix+'|1'];
   const second=this.intercessionReplacements[prefix+'|2'];
