@@ -31,9 +31,10 @@ export interface Followup { id: string; contacted_at: string; author: string; me
 export interface IntercessionTemplate {
  id:string;label:string;weekday:number;start_time:string;people_per_service:number|null;active:boolean;
 }
-export interface IntercessionCandidate {id:string;full_name:string;phone:string|null}
+export interface IntercessionCandidate {id:string;full_name:string;phone:string|null;spouse_id:string|null}
 export interface IntercessionAssignment {
  id:string;draw_id:string;deacon_id:string;status:'proposed'|'confirmed'|'declined';
+ service_post:'pastores'|'bateria';rotation_order:1|2;
  deacon:{id:string;full_name:string;phone:string|null}|null;
 }
 export interface IntercessionDraw {
@@ -106,14 +107,14 @@ export class ApiService {
  raffleIntercession(start:string):Promise<{items:{date:string;label:string;selected:number;required:number;draw_id:string}[];complete:boolean}>{
    return this.send('POST','/intercession/raffle',{start_date:start});
  }
- async intercessionCandidates(id:string):Promise<IntercessionCandidate[]>{
-   return (await this.send<{items:IntercessionCandidate[]}>('GET',`/intercession/candidates?draw_id=${encodeURIComponent(id)}`)).items;
+ async intercessionCandidates(id:string,post:'pastores'|'bateria'):Promise<IntercessionCandidate[]>{
+   return (await this.send<{items:IntercessionCandidate[]}>('GET',`/intercession/candidates?draw_id=${encodeURIComponent(id)}&post=${post}`)).items;
  }
  confirmIntercessor(id:string,status:'proposed'|'confirmed'|'declined'):Promise<{ok:boolean}>{
    return this.send('PATCH',`/intercession/assignments/${encodeURIComponent(id)}`,{status});
  }
- replaceIntercessor(draw:string,assignment:string,deacon:string):Promise<{ok:boolean}>{
-   return this.send('POST',`/intercession/draws/${encodeURIComponent(draw)}/replace`,{assignment_id:assignment,deacon_id:deacon});
+ replaceIntercessionPost(draw:string,post:'pastores'|'bateria',people:[string,string]):Promise<{ok:boolean}>{
+   return this.send('POST',`/intercession/draws/${encodeURIComponent(draw)}/replace`,{service_post:post,deacon_ids:people});
  }
   publishIntercession(id:string):Promise<{ok:boolean}>{
    return this.send('POST',`/intercession/draws/${encodeURIComponent(id)}/publish`,{});
