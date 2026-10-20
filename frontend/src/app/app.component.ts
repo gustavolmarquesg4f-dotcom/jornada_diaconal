@@ -12,6 +12,10 @@ export class AppComponent implements OnInit {
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
  deacons:Deacon[]=[];groups:Group[]=[];users:User[]=[];followups:Followup[]=[];
  observations:ObservationEntry[]=[];observationsLoading=false;observationsLoaded=false;observationSearch='';observationFilter:'all'|'with'|'without'='all';
+ readonly intercessionPosts:{id:'pastores'|'bateria';label:string}[]=[
+  {id:'pastores',label:'Porta lateral próxima aos pastores'},
+  {id:'bateria',label:'Porta lateral próxima à bateria'}
+ ];
  intercessionCandidates:Record<string,IntercessionCandidate[]>={};
  intercessionReplacements:Record<string,string>={};
   intercessionTemplates:IntercessionTemplate[]=[];intercessionDraws:IntercessionDraw[]=[];
@@ -122,7 +126,10 @@ export class AppComponent implements OnInit {
 
  get pastoralBooked():number{return this.pastoralSlots.filter(slot=>slot.deacon_id!==null).length}
  get pastoralApproved():number{return this.pastoralSlots.filter(slot=>slot.approval_status==='approved').length}
- get intercessionConfigured():boolean{return this.intercessionTemplates.length>0&&this.intercessionTemplates.every(t=>!!t.people_per_service)}
+ get intercessionConfigured():boolean{return this.intercessionTemplates.length>0&&this.intercessionTemplates.every(t=>t.people_per_service===4)}
+ assignmentsForPost(draw:IntercessionDraw,post:'pastores'|'bateria'){
+  return draw.assignments.filter(a=>a.service_post===post).sort((a,b)=>a.rotation_order-b.rotation_order);
+ }
  showMinistryLeaders():void{this.goto('leadership')}
  openNewLeader():void{this.draftUser={name:'',email:'',password:'',role:'leader'};this.showNewUser=true}
  async loadPastoral():Promise<void>{
@@ -165,8 +172,9 @@ export class AppComponent implements OnInit {
    this.intercessionDraws=week.items;
    this.intercessionCandidates={};
    const drafts=week.items.filter(d=>d.status==='draft');
-   const lists=await Promise.all(drafts.map(d=>this.api.intercessionCandidates(d.id).catch(()=>[])));
-   drafts.forEach((d,i)=>{this.intercessionCandidates[d.id]=lists[i]});
+   const requests=drafts.flatMap(draw=>this.intercessionPosts.map(post=>({draw,post})));
+   const lists=await Promise.all(requests.map(req=>this.api.intercessionCandidates(req.draw.id,req.post.id).catch(()=>[])));
+   requests.forEach((req,i)=>{this.intercessionCandidates[req.draw.id+'|'+req.post.id]=lists[i]});
    this.intercessionCapacity={};
    for(const t of ts)this.intercessionCapacity[t.id]=t.people_per_service||0;
    this.intercessionLoaded=true;
@@ -181,7 +189,7 @@ export class AppComponent implements OnInit {
   },'Quantidade de intercessores atualizada.');
  }
  async drawIntercession():Promise<void>{
-  if(!this.intercessionConfigured){this.error='Defina a quantidade de intercessores em todos os cultos antes do sorteio.';return}
+  if(!this.intercessionConfigured){this.error='A configuração deve reservar quatro intercessores por culto.';return}
   await this.run(async()=>{
    const result=await this.api.raffleIntercession(this.intercessionWeekStart);
    await this.loadIntercession();
@@ -195,18 +203,29 @@ export class AppComponent implements OnInit {
    await this.loadIntercession();
   },'Confirmação da escala atualizada.');
  }
- async replaceIntercession(drawId:string,assignmentId:string):Promise<void>{
-  const candidate=this.intercessionReplacements[assignmentId];
-  if(!candidate){this.error='Escolha primeiro um diácono disponível.';return}
+ async replaceIntercessionPost(drawId:string,post:'pastores'|'bateria'):Promise<void>{
+  const prefix=drawId+'|'+post;
+  const first=this.intercessionReplacements[prefix+'|1'];
+  const second=this.intercessionReplacements[prefix+'|2'];
+  if(!first||!second||first===second){this.error='Escolha duas pessoas diferentes para a mesma porta.';return}
+  const pool=this.intercessionCandidates[prefix]||[];
+  const p1=pool.find(x=>x.id===first),p2=pool.find(x=>x.id===second);
+  if(!p1||!p2){this.error='Atualize os candidatos disponíveis antes de substituir a dupla.';return}
+  if((p1.spouse_id&&p1.spouse_id!==second)||(p2.spouse_id&&p2.spouse_id!==first)){
+   this.error='Os casais cadastrados devem ser escalados juntos na mesma porta.';return;
+  }
   await this.run(async()=>{
-   await this.api.replaceIntercessor(drawId,assignmentId,candidate);
+   await this.api.replaceIntercessionPost(drawId,post,[first,second]);
    await this.loadIntercession();
-  },'Substituição feita no rascunho. Confirme com a pessoa antes de publicar.');
+  },'Dupla salva na mesma porta, para revezamento. Confirme ambas antes de publicar.');
  }
   canPublish(draw:IntercessionDraw):boolean{
-  return draw.status==='draft'&&!!draw.service?.people_per_service&&
-    draw.assignments.length===draw.service.people_per_service&&
-    draw.assignments.every(a=>a.status==='confirmed');
+  return draw.status==='draft'&&draw.service?.people_per_service===4&&
+    draw.assignments.length===4&&draw.assignments.every(a=>a.status==='confirmed')&&
+    this.intercessionPosts.every(post=>{
+      const group=this.assignmentsForPost(draw,post.id);
+      return group.length===2&&group[0].rotation_order===1&&group[1].rotation_order===2;
+    });
  }
   async publishIntercession(d:IntercessionDraw):Promise<void>{
   await this.run(async()=>{
