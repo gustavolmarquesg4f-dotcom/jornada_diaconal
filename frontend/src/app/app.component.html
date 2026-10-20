@@ -29,8 +29,13 @@
     <button type="button" class="outline full" (click)="logout()">Sair do sistema</button>
   </form></div>
 </div>
-<div *ngIf="!loading && api.authorized && !showChangePassword" class="app-shell">
-  <aside class="sidebar" [class.mobile-open]="showMenu">
+<div *ngIf="!loading && api.authorized && !showChangePassword" class="app-shell" [class.nav-collapsed]="sidebarCollapsed">
+  <button *ngIf="showMenu" class="sidebar-backdrop" type="button" (click)="showMenu=false" aria-label="Fechar menu de navegação"></button>
+  <aside class="sidebar" [class.mobile-open]="showMenu" aria-label="Navegação principal">
+    <div class="sidebar-controls">
+      <button type="button" class="sidebar-collapse-toggle" (click)="sidebarCollapsed=!sidebarCollapsed" [attr.aria-label]="sidebarCollapsed?'Expandir menu lateral':'Recolher menu lateral'" [attr.title]="sidebarCollapsed?'Expandir menu':'Recolher menu'">{{sidebarCollapsed?'»':'«'}}</button>
+      <button type="button" class="sidebar-mobile-close" (click)="showMenu=false" aria-label="Fechar menu lateral">×</button>
+    </div>
     <div class="brand"><span class="brand-mark brand-ministry-icon" role="img" aria-label="Símbolo do Ministério dos Diáconos"></span><span>Jornada Diaconal<small>Ministério dos Diáconos</small></span></div>
     <div class="nav-heading">ÁREA DE TRABALHO</div>
     <nav class="navigation" aria-label="Menu principal">
@@ -48,7 +53,7 @@
     <div class="user-block"><div class="avatar">{{(currentUser?.name||'L').charAt(0)}}</div><div class="user-details"><strong>{{currentUser?.name}}</strong><small>{{currentUser?.role==='admin'?'Administrador':currentUser?.role==='coordinator'?'Coordenação':'Responsável por grupo'}}</small></div><button class="exit" (click)="logout()" aria-label="Sair do sistema">↪</button></div>
   </aside>
   <div class="content-shell">
-    <header class="app-top"><button class="menu-toggle" (click)="showMenu=!showMenu" aria-label="Abrir menu">☰</button><div class="top-breadcrumb">IGREJA DE DEUS NO GUARÁ 1 <span>/</span> MINISTÉRIO DOS DIÁCONOS</div><div class="top-actions"><button class="refresh" (click)="showChangePassword=true;error=''" title="Trocar minha senha" aria-label="Trocar minha senha">⚿</button><span class="private-marker"><span class="live-dot"></span> Área reservada</span><button class="refresh" (click)="reload()" title="Atualizar dados" aria-label="Atualizar">↻</button></div></header>
+    <header class="app-top"><button type="button" class="menu-toggle" (click)="showMenu=!showMenu" [attr.aria-expanded]="showMenu" aria-label="Abrir menu de navegação">☰</button><div class="top-breadcrumb">IGREJA DE DEUS NO GUARÁ 1 <span>/</span> <strong>{{pageTitle}}</strong></div><div class="top-actions"><button class="refresh" (click)="showChangePassword=true;error=''" title="Trocar minha senha" aria-label="Trocar minha senha">⚿</button><span class="private-marker"><span class="live-dot"></span> Área reservada</span><button class="refresh" (click)="reload()" title="Atualizar dados" aria-label="Atualizar">↻</button></div></header>
     <main class="main-content">
       <div *ngIf="error" class="alert error dismissable">{{error}} <button (click)="error=''">×</button></div>
       <div *ngIf="notice" class="alert success dismissable">{{notice}} <button (click)="notice=''">×</button></div>
