@@ -241,11 +241,19 @@
                 {{draw.status==='published'?'Publicada':'Rascunho'}}
               </span>
             </div>
-            <div class="ministry-person" *ngFor="let a of draw.assignments">
-              <div><strong>{{a.deacon?.full_name||'Cadastro não localizado'}}</strong>
-                <span>{{a.deacon?.phone||'Telefone não informado'}}</span></div>
-              <div *ngIf="draw.status==='draft'" class="assignment-tools">
-                <label>Confirmação:
+
+            <div class="ministry-post" *ngFor="let post of intercessionPosts">
+              <div class="ministry-post-heading">
+                <div><strong>{{post.label}}</strong><small>2 pessoas, no mesmo posto, com revezamento</small></div>
+                <span class="pill">{{assignmentsForPost(draw,post.id).length}} / 2</span>
+              </div>
+              <div class="ministry-person" *ngFor="let a of assignmentsForPost(draw,post.id)">
+                <div class="ministry-person-id">
+                  <small>Intercessor {{a.rotation_order}}</small>
+                  <strong>{{a.deacon?.full_name||'Cadastro não localizado'}}</strong>
+                  <span>{{a.deacon?.phone||'Telefone não informado'}}</span>
+                </div>
+                <label *ngIf="draw.status==='draft'" class="ministry-status">Confirmação
                   <select [name]="'status'+a.id" [ngModel]="a.status"
                     (ngModelChange)="confirmIntercession(a.id,$event)" [disabled]="busy">
                     <option value="proposed">A confirmar</option>
@@ -253,21 +261,39 @@
                     <option value="declined">Não poderá</option>
                   </select>
                 </label>
-                <label>Substituir por:
-                  <select [name]="'replacement'+a.id" [(ngModel)]="intercessionReplacements[a.id]" [disabled]="busy">
-                    <option value="">Selecionar disponível</option>
-                    <option *ngFor="let person of intercessionCandidates[draw.id]||[]" [value]="person.id">
+                <span *ngIf="draw.status==='published'" class="status-pill">Confirmado</span>
+              </div>
+              <p *ngIf="assignmentsForPost(draw,post.id).length!==2" class="ministry-warning">
+                Esta porta precisa de duas pessoas com disponibilidade confirmada.
+              </p>
+              <div *ngIf="draw.status==='draft'" class="ministry-post-replace">
+                <div><strong>Alterar dupla neste posto</strong><small>Se escolher alguém com cônjuge vinculado, selecione o cônjuge também.</small></div>
+                <label>1ª pessoa
+                  <select [name]="'postFirst'+draw.id+post.id"
+                    [(ngModel)]="intercessionReplacements[draw.id+'|'+post.id+'|1']" [disabled]="busy">
+                    <option value="">Escolher disponível</option>
+                    <option *ngFor="let person of intercessionCandidates[draw.id+'|'+post.id]||[]" [value]="person.id">
                       {{person.full_name}}
                     </option>
                   </select>
                 </label>
-                <button class="outline" type="button" (click)="replaceIntercession(draw.id,a.id)"
-                  [disabled]="busy||!intercessionReplacements[a.id]">Substituir</button>
+                <label>2ª pessoa
+                  <select [name]="'postSecond'+draw.id+post.id"
+                    [(ngModel)]="intercessionReplacements[draw.id+'|'+post.id+'|2']" [disabled]="busy">
+                    <option value="">Escolher disponível</option>
+                    <option *ngFor="let person of intercessionCandidates[draw.id+'|'+post.id]||[]" [value]="person.id">
+                      {{person.full_name}}
+                    </option>
+                  </select>
+                </label>
+                <button class="outline" type="button" (click)="replaceIntercessionPost(draw.id,post.id)"
+                  [disabled]="busy||!intercessionReplacements[draw.id+'|'+post.id+'|1']||!intercessionReplacements[draw.id+'|'+post.id+'|2']">
+                  Salvar dupla
+                </button>
               </div>
-              <span *ngIf="draw.status==='published'" class="status-pill">{{a.status==='confirmed'?'Confirmado':'A conferir'}}</span>
             </div>
             <p class="ministry-warning" *ngIf="draw.assignments.length<(draw.service?.people_per_service||0)">
-              Existem vagas sem pessoa elegível. Revise as disponibilidades antes de publicar.
+              Uma ou mais vagas estão abertas. Revise as disponibilidades e complete as duplas antes de publicar.
             </p>
             <button *ngIf="draw.status==='draft'" class="outline" type="button"
               (click)="publishIntercession(draw)" [disabled]="busy||!canPublish(draw)">
