@@ -7,7 +7,7 @@ type Page = 'dashboard'|'deacons'|'observations'|'groups'|'leadership'|'interces
 @Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule],templateUrl:'./app.component.html'})
 export class AppComponent implements OnInit {
  api=inject(ApiService);
- loading=true;busy=false;refreshing=false;showQuickSearch=false;quickQuery='';error='';notice='';page:Page='dashboard';
+ loading=true;busy=false;refreshing=false;showQuickSearch=false;showHelp=false;quickQuery='';error='';notice='';page:Page='dashboard';
  email='';password='';changeOld='';changeNew='';changeNewConfirm='';showChangePassword=false;showMenu=false;showNewDeacon=false;showNewGroup=false;showNewUser=false;showFollowup=false;sidebarCollapsed=false;showPrintPanel=false;printReady=false;printWithPhone=false;
  printSelection:'all'|'antigo'|'novo'='all';printGeneratedAt=new Date();
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
@@ -103,6 +103,7 @@ export class AppComponent implements OnInit {
   }
   if(event.key==='Escape'){
    if(this.showQuickSearch){event.preventDefault();this.closeQuickSearch()}
+   if(this.showHelp){event.preventDefault();this.showHelp=false}
    if(this.showMenu)this.showMenu=false;
   }
  }
@@ -201,7 +202,7 @@ export class AppComponent implements OnInit {
  async logout():Promise<void>{
   await this.api.logout();
   try{sessionStorage.removeItem('jdg_current_module');sessionStorage.removeItem('jdg_compact_sidebar')}catch{}
-  this.showChangePassword=false;this.closeQuickSearch();this.page='dashboard';this.selected=null;
+  this.showChangePassword=false;this.closeQuickSearch();this.showHelp=false;this.page='dashboard';this.selected=null;
  }
  async reload():Promise<void>{this.error='';try{const [d,people,groups]=await Promise.all([this.api.dashboard(),this.api.deacons(),this.api.groups()]);this.dashboard=d;this.deacons=people;this.groups=groups;if(this.canManage)this.users=await this.api.users();else this.users=[]}catch(e){this.error=this.msg(e)}}
  goto(page:Page):void{
