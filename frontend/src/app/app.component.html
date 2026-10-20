@@ -192,26 +192,31 @@
         <div class="page-heading"><div>
           <span class="eyebrow">ESCALA MINISTERIAL · INTERCESSÃO</span>
           <h1>Sorteio por disponibilidade</h1>
-          <p>Sorteio com base nos dias e horários indicados pelos diáconos ativos; o resultado é um rascunho para revisão.</p>
+          <p>Quatro intercessores por culto, em duas portas. Pessoas de cada dupla se revezam no mesmo lugar; casais devem servir juntos.</p>
         </div><button class="outline" type="button" (click)="loadIntercession()" [disabled]="intercessionLoading">↻ Atualizar</button></div>
         <div class="context-strip"><span>✦</span><div>
           <strong>Seleção equilibrada e sem convocação automática.</strong>
-          <p>O sorteio prioriza quem teve menos escalas, evita duas designações no mesmo dia e só considera os horários de disponibilidade cadastrados. A coordenação deve confirmar com cada pessoa.</p>
+          <p>O sorteio distribui duas pessoas na porta dos pastores e duas na porta da bateria. Casais são escalados juntos, no mesmo posto. A coordenação confirma cada pessoa antes da publicação.</p>
         </div></div>
+
         <div class="surface ministry-config">
-          <div class="surface-head"><h3>1. Definir vagas por culto</h3><span class="pill">CONFIGURAÇÃO</span></div>
-          <p>Referência da planilha: quarta-feira às 15h e 20h; domingo às 10h e 19h.</p>
-          <div class="service-template" *ngFor="let t of intercessionTemplates">
-            <div><strong>{{t.label}}</strong><small>Respeita os horários e as restrições cadastradas.</small></div>
-            <label>Quantas pessoas?
-              <input type="number" min="1" max="30" [name]="'templateCount'+t.id"
-                [(ngModel)]="intercessionCapacity[t.id]" [disabled]="busy">
-            </label>
-            <button type="button" class="small-primary" (click)="saveIntercessionCapacity(t)"
-              [disabled]="busy||!intercessionCapacity[t.id]">Salvar quantidade</button>
+          <div class="surface-head"><h3>1. Postos de intercessão</h3><span class="pill">4 PESSOAS POR CULTO</span></div>
+          <div class="ministry-posts-overview">
+            <div class="ministry-post-summary">
+              <span class="ministry-post-num">01</span>
+              <div><strong>Porta lateral próxima aos pastores</strong><small>2 diáconos no mesmo lugar, alternando durante o culto</small></div>
+              <span class="pill">2 PESSOAS</span>
+            </div>
+            <div class="ministry-post-summary">
+              <span class="ministry-post-num">02</span>
+              <div><strong>Porta lateral próxima à bateria</strong><small>2 diáconos no mesmo lugar, alternando durante o culto</small></div>
+              <span class="pill">2 PESSOAS</span>
+            </div>
           </div>
-          <div *ngIf="!intercessionTemplates.length&&!intercessionLoading" class="empty-inline">
-            Não foi possível carregar os cultos. Clique em Atualizar.
+          <p><strong>Regra dos casais:</strong> quando marido e esposa forem escalados, estarão no mesmo culto e no mesmo posto, revezando entre si. A escala só poderá usar horários em que ambos informaram disponibilidade.</p>
+          <div class="service-template" *ngFor="let t of intercessionTemplates">
+            <div><strong>{{t.label}}</strong><small>Disponibilidade verificada antes do sorteio</small></div>
+            <span class="pill">4 INTERCESSORES</span>
           </div>
         </div>
         <div class="surface ministry-week">
@@ -226,7 +231,7 @@
             (click)="drawIntercession()" [disabled]="busy||!intercessionConfigured">
             Realizar sorteio (rascunho)
           </button>
-          <p *ngIf="!intercessionConfigured" class="modal-hint">Antes de sortear, salve quantas pessoas serão necessárias em cada culto.</p>
+          <p *ngIf="!intercessionConfigured" class="modal-hint">Os quatro cultos devem estar configurados com exatamente quatro intercessores.</p>
           <div class="ministry-draw" *ngFor="let draw of intercessionDraws">
             <div class="ministry-draw-heading"><div>
               <strong>{{draw.service_date | date:'dd/MM/yyyy'}} · {{draw.service?.label||'Culto'}}</strong>
