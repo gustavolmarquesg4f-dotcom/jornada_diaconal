@@ -1,0 +1,10 @@
+.pastoral-care-form,.pastoral-care-item{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));align-items:end;gap:12px;padding:14px 0;border-top:1px solid #dce8e0}
+.pastoral-care-form label,.pastoral-care-item label{display:flex;flex-direction:column;gap:6px;color:#506d60;font-size:12px;font-weight:700}
+.pastoral-care-form select,.pastoral-care-item select{border:1px solid #d6e2db;border-radius:9px;background:#fff;padding:9px;min-width:0;width:100%;min-height:40px}
+.pastoral-care-item>strong{font-size:13px;color:#183d32;align-self:center}
+.pastoral-verification{border:1px solid #e5ddc6;background:#fffaf0;padding:16px;border-radius:11px;margin:18px 0}
+.pastoral-verification p{font-size:12px;color:#796b4b}
+.pastoral-verify-item{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid #e8e0cc}
+.pastoral-verify-item span strong,.pastoral-verify-item span small{display:block;font-size:12px}
+.pastoral-verify-item span small{color:#817965}
+@media(max-width:680px){.pastoral-verify-item{flex-wrap:wrap}}
