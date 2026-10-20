@@ -101,3 +101,30 @@
 .assignment-tools select{max-width:240px;min-height:37px;min-width:125px;border:1px solid #d5e2d8;border-radius:8px;padding:8px 9px;background:#fff;color:#284633;font-size:12px}
 .assignment-tools>.outline{min-height:37px;font-size:12px;white-space:nowrap}
 @media(max-width:950px){.ministry-person{flex-direction:column;align-items:stretch}.assignment-tools{width:100%}.assignment-tools label{flex:1}}
+
+/* Intercessão: duas portas, quatro pessoas e revezamento por dupla */
+.ministry-posts-overview{display:grid;gap:12px;margin:18px 0}
+.ministry-post-summary{display:flex;align-items:center;gap:14px;background:#f7faf7;border:1px solid #dae8dd;border-radius:12px;padding:17px}
+.ministry-post-summary>div{flex:1}
+.ministry-post-summary strong{display:block;color:var(--deep);font-size:14px}
+.ministry-post-summary small{display:block;color:var(--muted);font-size:12px;margin-top:5px}
+.ministry-post-num{display:flex;align-items:center;justify-content:center;width:39px;height:39px;flex:0 0 39px;border-radius:12px;color:var(--deep);background:#dfefe5;font-weight:800}
+.ministry-post{margin:16px 0;border:1px solid #dae8dd;background:#fcfdfb;border-radius:12px;overflow:hidden}
+.ministry-post-heading{padding:15px 18px;background:#edf5ee;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ministry-post-heading strong{font-size:14px;color:var(--deep);display:block}
+.ministry-post-heading small{display:block;margin-top:4px;color:#698373;font-size:11px}
+.ministry-post>.ministry-person{margin:0 15px;display:flex;justify-content:space-between;align-items:center;gap:18px}
+.ministry-person-id{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ministry-person-id small{font-size:10px;color:var(--muted)}
+.ministry-person-id strong{font-size:13px;color:var(--deep);overflow-wrap:anywhere}
+.ministry-person-id span{font-size:12px;color:var(--muted)}
+.ministry-status{font-size:11px;font-weight:700;color:#53695d;display:flex;flex-direction:column;gap:5px}
+.ministry-status select,.ministry-post-replace select{border:1px solid #d6e5d9;background:#fff;border-radius:8px;min-height:38px;padding:8px 9px;color:#344d3f;font-size:12px;width:100%}
+.ministry-post-replace{border-top:1px dashed #d1e2d4;padding:15px;display:grid;grid-template-columns:minmax(140px,1fr) minmax(145px,1fr) minmax(145px,1fr) auto;gap:12px;align-items:end}
+.ministry-post-replace>div strong{font-size:12px;color:var(--deep);display:block}
+.ministry-post-replace>div small{font-size:11px;color:var(--muted);line-height:1.5;display:block;margin-top:4px}
+.ministry-post-replace label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:700;color:#53695d}
+.ministry-post-replace button{min-height:38px;white-space:nowrap;font-size:12px}
+.ministry-post>.ministry-warning{margin:12px 15px}
+@media(max-width:1100px){.ministry-post-replace{grid-template-columns:repeat(2,minmax(0,1fr))}.ministry-post-replace>div{grid-column:1/-1}.ministry-post-replace>button{grid-column:1/-1}}
+@media(max-width:600px){.ministry-post-summary{flex-wrap:wrap}.ministry-post-summary>.pill{margin-left:52px}.ministry-post-replace{grid-template-columns:1fr}.ministry-post-replace>div,.ministry-post-replace>button{grid-column:1}.ministry-post>.ministry-person{align-items:flex-start}.ministry-status{min-width:115px}}
