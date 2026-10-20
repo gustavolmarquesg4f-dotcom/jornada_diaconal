@@ -2,8 +2,8 @@
 
 <div *ngIf="!loading && !api.authorized" class="login-layout">
   <div class="login-art">
-    <div class="brand brand-white"><span class="brand-mark">J</span><span>Jornada Diaconal<small>Igreja de Deus · Guará I</small></span></div>
-    <div class="login-message"><span class="eyebrow light">CUIDAR DE QUEM SERVE</span><h1>Um corpo diaconal<br><em>mais próximo.</em></h1><p>Uma ferramenta para conhecer, acompanhar e fortalecer a caminhada de cada diácono.</p><div class="motto">“Antes de cuidar da escala, precisamos cuidar da jornada.”</div></div>
+    <div class="brand brand-white"><span class="brand-mark brand-ministry-icon" role="img" aria-label="Símbolo do Ministério dos Diáconos"></span><span>Jornada Diaconal<small>Igreja de Deus no Guará 1</small></span></div>
+    <div class="login-message"><img class="ministry-brand-hero" src="marca-diaconos.webp" alt="Logo oficial do Ministério dos Diáconos — Igreja de Deus no Guará 1"><span class="eyebrow light">CUIDAR DE QUEM SERVE</span><h1>Um corpo diaconal<br><em>mais próximo.</em></h1><p>Uma ferramenta para conhecer, acompanhar e fortalecer a caminhada de cada diácono.</p><div class="motto">“Antes de cuidar da escala, precisamos cuidar da jornada.”</div></div>
     <div class="login-foot">Serviço · Comunhão · Continuidade</div>
   </div>
   <div class="login-side"><form class="login-card" (ngSubmit)="login()">
@@ -17,7 +17,7 @@
 </div>
 
 <div *ngIf="!loading && api.authorized && showChangePassword" class="login-layout">
-  <div class="login-art"><div class="brand brand-white"><span class="brand-mark">J</span><span>Jornada Diaconal<small>Gestão &amp; Cuidado</small></span></div><div class="login-message"><span class="eyebrow light">SEGURANÇA DO ACESSO</span><h1>Seu acesso.<br><em>Sua responsabilidade.</em></h1><p>Proteja os registros do diaconato usando uma senha pessoal.</p></div></div>
+  <div class="login-art"><div class="brand brand-white"><span class="brand-mark brand-ministry-icon" role="img" aria-label="Símbolo do Ministério dos Diáconos"></span><span>Jornada Diaconal<small>Ministério dos Diáconos</small></span></div><div class="login-message"><span class="eyebrow light">SEGURANÇA DO ACESSO</span><h1>Seu acesso.<br><em>Sua responsabilidade.</em></h1><p>Proteja os registros do diaconato usando uma senha pessoal.</p></div></div>
   <div class="login-side"><form class="login-card" (ngSubmit)="changePassword()">
     <span class="pill neutral">SENHA DE ACESSO</span><h2>{{currentUser?.must_change_password?'Defina sua senha pessoal':'Alterar minha senha'}}</h2><p class="hint">Use no mínimo 12 caracteres. Não compartilhe sua senha com outros responsáveis.</p>
     <label for="old-password">Senha atual</label><input id="old-password" name="old-password" [(ngModel)]="changeOld" type="password" autocomplete="current-password" required>
@@ -31,7 +31,7 @@
 </div>
 <div *ngIf="!loading && api.authorized && !showChangePassword" class="app-shell">
   <aside class="sidebar" [class.mobile-open]="showMenu">
-    <div class="brand"><span class="brand-mark">J</span><span>Jornada Diaconal<small>Gestão & Cuidado</small></span></div>
+    <div class="brand"><span class="brand-mark brand-ministry-icon" role="img" aria-label="Símbolo do Ministério dos Diáconos"></span><span>Jornada Diaconal<small>Ministério dos Diáconos</small></span></div>
     <div class="nav-heading">ÁREA DE TRABALHO</div>
     <nav class="navigation" aria-label="Menu principal">
       <button [class.active]="page==='dashboard'" (click)="goto('dashboard')"><span class="nav-icon">◫</span> Visão geral</button>
@@ -48,14 +48,14 @@
     <div class="user-block"><div class="avatar">{{(currentUser?.name||'L').charAt(0)}}</div><div class="user-details"><strong>{{currentUser?.name}}</strong><small>{{currentUser?.role==='admin'?'Administrador':currentUser?.role==='coordinator'?'Coordenação':'Responsável por grupo'}}</small></div><button class="exit" (click)="logout()" aria-label="Sair do sistema">↪</button></div>
   </aside>
   <div class="content-shell">
-    <header class="app-top"><button class="menu-toggle" (click)="showMenu=!showMenu" aria-label="Abrir menu">☰</button><div class="top-breadcrumb">IGREJA DE DEUS <span>/</span> JORNADA DIACONAL</div><div class="top-actions"><button class="refresh" (click)="showChangePassword=true;error=''" title="Trocar minha senha" aria-label="Trocar minha senha">⚿</button><span class="private-marker"><span class="live-dot"></span> Área reservada</span><button class="refresh" (click)="reload()" title="Atualizar dados" aria-label="Atualizar">↻</button></div></header>
+    <header class="app-top"><button class="menu-toggle" (click)="showMenu=!showMenu" aria-label="Abrir menu">☰</button><div class="top-breadcrumb">IGREJA DE DEUS NO GUARÁ 1 <span>/</span> MINISTÉRIO DOS DIÁCONOS</div><div class="top-actions"><button class="refresh" (click)="showChangePassword=true;error=''" title="Trocar minha senha" aria-label="Trocar minha senha">⚿</button><span class="private-marker"><span class="live-dot"></span> Área reservada</span><button class="refresh" (click)="reload()" title="Atualizar dados" aria-label="Atualizar">↻</button></div></header>
     <main class="main-content">
       <div *ngIf="error" class="alert error dismissable">{{error}} <button (click)="error=''">×</button></div>
       <div *ngIf="notice" class="alert success dismissable">{{notice}} <button (click)="notice=''">×</button></div>
 
       <section *ngIf="page==='dashboard'">
         <div class="page-heading"><div><span class="eyebrow">PAINEL DA LIDERANÇA</span><h1>Visão geral</h1><p>Uma visão das pessoas, dos vínculos e do acompanhamento do nosso diaconato.</p></div><button class="outline" (click)="reload()">↻ Atualizar dados</button></div>
-        <div class="welcome-card"><div><span>JORNADA DIACONAL</span><h2>Cuidar de cada pessoa.<br>Fortalecer todo o corpo.</h2><p>Nosso objetivo é que nenhum diácono caminhe sozinho e que o serviço seja saudável e sustentável.</p></div><div class="welcome-watermark">✳</div></div>
+        <div class="welcome-card"><div><span>MINISTÉRIO DOS DIÁCONOS · IGREJA DE DEUS NO GUARÁ 1</span><h2>Cuidar de cada pessoa.<br>Fortalecer todo o corpo.</h2><p>Nosso objetivo é que nenhum diácono caminhe sozinho e que o serviço seja saudável e sustentável.</p></div><img class="welcome-brand-img" src="marca-diaconos.webp" alt="" aria-hidden="true"></div>
         <div class="stats">
           <div class="stat-card"><div class="stat-icon green">♙</div><span>Diáconos cadastrados</span><strong>{{dashboard.totals.deacons}}</strong><small>Pessoas no sistema</small></div>
           <div class="stat-card"><div class="stat-icon amber">◌</div><span>Sem grupo definido</span><strong>{{dashboard.totals.without_group}}</strong><small>Ainda aguardam vinculação</small></div>
