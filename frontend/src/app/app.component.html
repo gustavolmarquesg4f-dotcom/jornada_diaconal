@@ -500,11 +500,22 @@
           </div>
         </div>
         <div class="surface">
-          <div class="surface-head"><h3>Agenda para validação pastoral</h3><span class="pill">32 VAGAS · 4 SEMANAS</span></div>
+          <div class="surface-head"><div><h3>Agenda para validação pastoral</h3><p>Escolha uma semana para reduzir a quantidade de horários exibidos.</p></div><span class="pill">{{pastoralSlots.length}} VAGAS NO TOTAL</span></div>
+          <nav class="pastoral-week-tabs" aria-label="Selecionar semana da agenda">
+            <button type="button" *ngFor="let week of pastoralWeeks"
+              [class.active]="pastoralWeekStart===week.date" [attr.aria-current]="pastoralWeekStart===week.date?'date':null"
+              (click)="pastoralWeekStart=week.date">
+              <strong>Semana de {{week.date | date:'dd/MM':'UTC'}}</strong><small>{{week.count}} atendimentos</small>
+            </button>
+          </nav>
+          <div class="pastoral-week-summary" *ngIf="pastoralSlots.length">
+            Exibindo {{visiblePastoralSlots.length}} atendimentos na semana selecionada.
+            <button type="button" class="text-button" (click)="pastoralWeekStart=pastoralWeeks[0].date">Ir para a primeira semana</button>
+          </div>
           <p class="modal-hint">A pesquisa é anônima. Ela orienta a proposta geral, mas não identifica quem respondeu. A participação nas conversas será voluntária, mediante convite da liderança.</p>
           <p *ngIf="pastoralLoading">Carregando os horários...</p>
           <div class="pastoral-list" *ngIf="!pastoralLoading">
-            <div class="pastoral-row" *ngFor="let slot of pastoralSlots">
+            <div class="pastoral-row" *ngFor="let slot of visiblePastoralSlots">
               <div class="pastoral-date"><strong>{{slot.appointment_date | date:'dd/MM/yyyy'}}</strong>
                 <small>Atendimento {{slot.slot_order}} · 1 hora</small></div>
               <label>Horário
@@ -593,6 +604,31 @@
       <section *ngIf="page==='settings' && admin"><div class="page-heading"><div><span class="eyebrow">CONTROLE DE ACESSO</span><h1>Equipe e permissões</h1><p>Cadastre quem pode administrar o sistema e quem acompanha grupos de diáconos.</p></div><button class="primary" (click)="showNewUser=true">+ Novo usuário</button></div><div class="surface table-surface"><div class="scroll-table"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Permissão</th><th>Situação</th></tr></thead><tbody><tr *ngFor="let u of users"><td><strong>{{u.name}}</strong></td><td>{{u.email}}</td><td><span class="pill">{{u.role==='admin'?'Administrador':u.role==='coordinator'?'Coordenação':'Responsável'}}</span></td><td>{{u.active===false?'Desativado':'Ativo'}}</td></tr></tbody></table></div></div></section>
     </main>
   </div>
+</div>
+
+<!-- Busca rápida, disponível somente após autenticação -->
+<div *ngIf="showQuickSearch && api.authorized && !showChangePassword" class="quick-search-backdrop" (click)="closeQuickSearch()" role="presentation">
+  <section class="quick-search-panel" role="dialog" aria-modal="true" aria-label="Busca rápida de diáconos" (click)="$event.stopPropagation()">
+    <div class="quick-search-head">
+      <div><span class="eyebrow">ACESSO RÁPIDO</span><h2>Encontrar diácono</h2></div>
+      <button type="button" class="quick-search-close" (click)="closeQuickSearch()" aria-label="Fechar busca">×</button>
+    </div>
+    <div class="quick-search-input-wrap"><span aria-hidden="true">⌕</span>
+      <input id="quick-search-field" type="search" name="quick-search" [(ngModel)]="quickQuery"
+        placeholder="Digite o nome, telefone ou grupo..." aria-label="Digite pelo menos duas letras para buscar"
+        autocomplete="off" (keydown.enter)="openFirstQuickResult()">
+    </div>
+    <div class="quick-search-results" aria-live="polite">
+      <p *ngIf="quickQuery.trim().length<2" class="quick-search-hint">Digite pelo menos 2 caracteres. Atalho: Ctrl + K para abrir, Esc para fechar.</p>
+      <p *ngIf="quickQuery.trim().length>=2 && !quickResults.length" class="quick-search-hint">Nenhum diácono encontrado. Confira a grafia ou busque pelo telefone.</p>
+      <button type="button" *ngFor="let person of quickResults" (click)="openQuickPerson(person)" class="quick-result">
+        <span class="person-circle" aria-hidden="true">{{person.full_name.charAt(0)}}</span>
+        <span class="quick-result-info"><strong>{{person.full_name}}</strong><small>{{cohortLabel(person.cohort)}} · {{person.group_name||'Sem grupo'}} · {{person.phone||'Sem telefone'}}</small></span>
+        <span class="quick-result-arrow" aria-hidden="true">→</span>
+      </button>
+    </div>
+    <div class="quick-search-foot"><span>Selecione uma pessoa para abrir o acompanhamento.</span><button type="button" class="text-button" (click)="closeQuickSearch();goto('deacons')">Ver lista completa →</button></div>
+  </section>
 </div>
 
 <!-- Modais administrativos e de cuidado -->
