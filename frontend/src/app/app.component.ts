@@ -85,7 +85,7 @@ export class AppComponent implements OnInit {
  }
  openQuickSearch():void{
   if(!this.api.authorized||this.showChangePassword)return;
-  this.showQuickSearch=true;this.quickQuery='';this.showMenu=false;
+  this.showHelp=false;this.showQuickSearch=true;this.quickQuery='';this.showMenu=false;
   setTimeout(()=>document.getElementById('quick-search-field')?.focus(),0);
  }
  closeQuickSearch():void{this.showQuickSearch=false;this.quickQuery=''}
