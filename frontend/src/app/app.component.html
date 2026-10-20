@@ -33,7 +33,7 @@
   <button *ngIf="showMenu" class="sidebar-backdrop" type="button" (click)="showMenu=false" aria-label="Fechar menu de navegação"></button>
   <aside class="sidebar" [class.mobile-open]="showMenu" aria-label="Navegação principal">
     <div class="sidebar-controls">
-      <button type="button" class="sidebar-collapse-toggle" (click)="sidebarCollapsed=!sidebarCollapsed" [attr.aria-label]="sidebarCollapsed?'Expandir menu lateral':'Recolher menu lateral'" [attr.title]="sidebarCollapsed?'Expandir menu':'Recolher menu'">{{sidebarCollapsed?'»':'«'}}</button>
+      <button type="button" class="sidebar-collapse-toggle" (click)="toggleSidebar()" [attr.aria-label]="sidebarCollapsed?'Expandir menu lateral':'Recolher menu lateral'" [attr.title]="sidebarCollapsed?'Expandir menu':'Recolher menu'">{{sidebarCollapsed?'»':'«'}}</button>
       <button type="button" class="sidebar-mobile-close" (click)="showMenu=false" aria-label="Fechar menu lateral">×</button>
     </div>
     <div class="brand"><span class="brand-mark brand-ministry-icon" role="img" aria-label="Símbolo do Ministério dos Diáconos"></span><span>Jornada Diaconal<small>Ministério dos Diáconos</small></span></div>
@@ -476,6 +476,15 @@
             </label>
             <button class="primary" type="button" (click)="addPastoralCandidate()" [disabled]="busy||!pastoralNew.deacon_id">Adicionar</button>
           </div>
+          <div class="pastoral-care-find">
+            <label for="pastoralQueueSearch">Pesquisar na fila de acolhimento</label>
+            <input id="pastoralQueueSearch" name="pastoralQueueSearch" [(ngModel)]="pastoralQueueSearch"
+              placeholder="Nome ou telefone" autocomplete="off">
+            <span>{{filteredPastoralQueue.length}} de {{pastoralQueue.length}} contatos</span>
+          </div>
+          <div *ngIf="!pastoralQueueLoading && pastoralQueue.length && !filteredPastoralQueue.length" class="empty-inline">
+            Nenhum contato corresponde à pesquisa. Tente outra busca.
+          </div>
           <div *ngFor="let item of filteredPastoralQueue" class="pastoral-care-item">
             <strong>{{item.person?.full_name||'Cadastro não localizado'}}</strong>
             <label>Prioridade
@@ -499,7 +508,7 @@
             <button class="outline" type="button" (click)="preparePastoralSlot(item)" [disabled]="busy">Preparar vaga</button>
           </div>
         </div>
-        <div class="surface">
+        <div class="surface" id="pastoral-appointment-list">
           <div class="surface-head"><div><h3>Agenda para validação pastoral</h3><p>Escolha uma semana para reduzir a quantidade de horários exibidos.</p></div><span class="pill">{{pastoralSlots.length}} VAGAS NO TOTAL</span></div>
           <nav class="pastoral-week-tabs" aria-label="Selecionar semana da agenda">
             <button type="button" *ngFor="let week of pastoralWeeks"
