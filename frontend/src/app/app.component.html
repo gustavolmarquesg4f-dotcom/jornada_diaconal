@@ -266,8 +266,16 @@
               <p *ngIf="assignmentsForPost(draw,post.id).length!==2" class="ministry-warning">
                 Esta porta precisa de duas pessoas com disponibilidade confirmada.
               </p>
-              <div *ngIf="draw.status==='draft'" class="ministry-post-replace">
+              <div *ngIf="draw.status==='draft'" class="post-editor-open">
+                <button type="button" class="outline" (click)="toggleIntercessionEditor(draw.id,post.id)" [disabled]="busy">
+                  {{intercessionPostEditor[draw.id+'|'+post.id]?'Fechar alteração':'Trocar ou completar dupla'}}
+                </button>
+              </div>
+              <div *ngIf="draw.status==='draft' && intercessionPostEditor[draw.id+'|'+post.id]" class="ministry-post-replace">
                 <div><strong>Alterar dupla neste posto</strong><small>Se escolher alguém com cônjuge vinculado, selecione o cônjuge também.</small></div>
+                <div *ngIf="!(intercessionCandidates[draw.id+'|'+post.id]||[]).length" class="ministry-warning">
+                  Nenhuma pessoa disponível para este posto com os critérios atuais. Atualize a disponibilidade dos cadastros.
+                </div>
                 <label>1ª pessoa
                   <select [name]="'postFirst'+draw.id+post.id"
                     [(ngModel)]="intercessionReplacements[draw.id+'|'+post.id+'|1']" [disabled]="busy">
