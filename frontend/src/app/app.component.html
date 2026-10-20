@@ -73,13 +73,110 @@
         </div><div class="surface"><div class="surface-head"><h3>Como estamos cuidando?</h3><span class="pill">ÚLTIMOS 30 DIAS</span></div><div class="progress-ring"><div class="ring" [style.--coverage]="coverage+'%'">{{coverage}}<small>%</small></div><div><strong>Diáconos com registro de contato</strong><p>O indicador mostra registros, não a qualidade do cuidado. A conversa e a proximidade continuam sendo essenciais.</p></div></div><div class="advice-box"><strong>Próximo passo</strong><p>Comece com poucos grupos, avalie o acompanhamento e ajuste a quantidade de pessoas por responsável.</p></div></div></div>
       </section>
 
-      <section *ngIf="page==='deacons'">
-        <div class="page-heading"><div><span class="eyebrow">CADASTRO E VIDA MINISTERIAL</span><h1>Diáconos</h1><p>Conheça quem faz parte do ministério e a referência de cuidado de cada pessoa.</p></div><button *ngIf="canManage" class="primary" (click)="showNewDeacon=true">+ Novo diácono</button></div>
-        <div class="surface table-surface"><div class="table-tools"><div class="search-wrap"><span>⌕</span><input placeholder="Buscar diácono ou grupo..." [(ngModel)]="search" aria-label="Buscar diácono"></div><div class="filter-tabs"><button (click)="filter='all'" [class.active]="filter==='all'">Todos</button><button (click)="filter='antigo'" [class.active]="filter==='antigo'">Antigos</button><button (click)="filter='novo'" [class.active]="filter==='novo'">Novos</button><button (click)="filter='unassigned'" [class.active]="filter==='unassigned'">Sem grupo</button></div></div>
-          <div class="scroll-table"><table><thead><tr><th>Diácono</th><th>Turma</th><th>Situação</th><th>Responsável / grupo</th><th>Último contato</th><th></th></tr></thead><tbody><tr *ngFor="let d of filteredDeacons"><td><div class="person"><span class="person-circle">{{d.full_name.charAt(0)}}</span><span><strong>{{d.full_name}}</strong><small>{{d.phone||'Contato não informado'}}</small></span></div></td><td>{{cohortLabel(d.cohort)}}</td><td><span class="status-pill" [class.away]="d.status==='away'" [class.inactive]="d.status==='inactive'">{{statusLabel(d.status)}}</span></td><td>{{d.group_name||'Sem grupo'}}</td><td>{{d.last_contact?(d.last_contact | date:'dd/MM/yyyy'):'—'}}</td><td><button class="row-link" (click)="select(d)">Acompanhar →</button></td></tr></tbody></table></div>
-          <div *ngIf="!filteredDeacons.length" class="empty-inline"><strong>Nenhum diácono encontrado</strong><p>Cadastre os participantes ou ajuste os filtros.</p></div><div class="table-footer">Mostrando {{filteredDeacons.length}} de {{deacons.length}} diáconos</div></div>
-      </section>
 
+      <section *ngIf="page==='deacons'" class="deacon-directory">
+        <div class="page-heading directory-heading">
+          <div>
+            <span class="eyebrow">MINISTÉRIO DOS DIÁCONOS · CADASTRO</span>
+            <h1>Diáconos</h1>
+            <p>Encontre pessoas, acompanhe grupos e imprima a relação nominal atualizada.</p>
+          </div>
+          <div class="directory-actions">
+            <button type="button" class="outline directory-print-button" (click)="openPrintPanel()" [attr.aria-expanded]="showPrintPanel">
+              <span aria-hidden="true">▤</span> {{showPrintPanel?'Fechar impressão':'Imprimir lista'}}
+            </button>
+            <button *ngIf="canManage" type="button" class="primary" (click)="showNewDeacon=true">+ Novo diácono</button>
+          </div>
+        </div>
+        <div class="directory-overview" aria-label="Resumo de diáconos">
+          <button type="button" [class.selected]="filter==='all'" (click)="filter='all';search=''"><strong>{{deacons.length}}</strong><span>Todos os diáconos</span></button>
+          <button type="button" [class.selected]="filter==='antigo'" (click)="filter='antigo';search=''"><strong>{{oldCount}}</strong><span>Antigos</span></button>
+          <button type="button" [class.selected]="filter==='novo'" (click)="filter='novo';search=''"><strong>{{newCount}}</strong><span>Novos</span></button>
+        </div>
+        <div *ngIf="showPrintPanel" class="directory-print-options surface">
+          <div class="surface-head">
+            <div><h3>Preparar lista para impressão</h3><p>Relação nominal em ordem alfabética, pronta para papel A4.</p></div>
+            <span class="pill">DADOS DO SISTEMA</span>
+          </div>
+          <div class="print-options-fields">
+            <label>Quais diáconos?
+              <select [(ngModel)]="printSelection" name="printSelection" aria-label="Selecionar grupo para impressão">
+                <option value="all">Todos — separados em antigos e novos</option>
+                <option value="antigo">Somente antigos</option>
+                <option value="novo">Somente novos</option>
+              </select>
+            </label>
+            <label class="print-phone-choice"><input type="checkbox" [(ngModel)]="printWithPhone" name="printWithPhone">
+              Incluir telefones (uso interno)
+            </label>
+            <button type="button" class="primary" (click)="printDeacons()" [disabled]="!deacons.length">
+              <span aria-hidden="true">▤</span> Imprimir agora
+            </button>
+          </div>
+          <p class="privacy-hint">Por padrão, a impressão contém apenas nomes. Não inclui observações, estado civil nem informações pastorais.</p>
+        </div>
+        <div class="surface table-surface directory-table">
+          <div class="table-tools">
+            <div class="search-wrap"><span aria-hidden="true">⌕</span>
+              <input placeholder="Buscar por nome ou grupo..." [(ngModel)]="search" aria-label="Buscar diácono por nome ou grupo">
+              <button *ngIf="search" type="button" class="search-clear" (click)="search=''" aria-label="Limpar busca">×</button>
+            </div>
+            <div class="filter-tabs" aria-label="Filtrar participantes">
+              <button type="button" (click)="filter='all'" [class.active]="filter==='all'">Todos</button>
+              <button type="button" (click)="filter='antigo'" [class.active]="filter==='antigo'">Antigos</button>
+              <button type="button" (click)="filter='novo'" [class.active]="filter==='novo'">Novos</button>
+              <button type="button" (click)="filter='unassigned'" [class.active]="filter==='unassigned'">Sem grupo</button>
+            </div>
+          </div>
+          <div class="scroll-table">
+            <table class="responsive-deacons-table">
+              <thead><tr><th>Diácono</th><th>Turma</th><th>Situação</th><th>Responsável / grupo</th><th>Último contato</th><th>Ação</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let d of filteredDeacons">
+                  <td class="directory-person-cell" data-label="Diácono">
+                    <div class="person"><span class="person-circle">{{d.full_name.charAt(0)}}</span>
+                      <span><strong>{{d.full_name}}</strong><small>{{d.phone||'Contato não informado'}}</small></span>
+                    </div>
+                  </td>
+                  <td data-label="Turma">{{cohortLabel(d.cohort)}}</td>
+                  <td data-label="Situação"><span class="status-pill" [class.away]="d.status==='away'" [class.inactive]="d.status==='inactive'">{{statusLabel(d.status)}}</span></td>
+                  <td data-label="Grupo">{{d.group_name||'Sem grupo'}}</td>
+                  <td data-label="Último contato">{{d.last_contact?(d.last_contact | date:'dd/MM/yyyy'):'—'}}</td>
+                  <td class="directory-action-cell"><button type="button" class="row-link" (click)="select(d)">Acompanhar <span aria-hidden="true">→</span></button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div *ngIf="!filteredDeacons.length" class="empty-inline"><strong>Nenhum diácono encontrado</strong><p>Ajuste a busca ou os filtros.</p>
+            <button type="button" class="outline" (click)="search='';filter='all'">Limpar filtros</button>
+          </div>
+          <div class="table-footer">Exibindo {{filteredDeacons.length}} de {{deacons.length}} diáconos · Ordenação alfabética</div>
+        </div>
+        <div *ngIf="printReady" class="print-sheet" aria-label="Lista nominal para impressão">
+          <div class="print-sheet-header">
+            <span class="print-sheet-ministry">IGREJA DE DEUS NO GUARÁ 1</span>
+            <h1>Ministério dos Diáconos</h1>
+            <p>Relação nominal · Gerada em {{printGeneratedAt | date:'dd/MM/yyyy HH:mm'}}</p>
+          </div>
+          <section *ngIf="printSelection!=='novo'" class="print-cohort">
+            <div class="print-cohort-heading"><h2>Diáconos antigos</h2><span>{{printOld.length}} pessoas</span></div>
+            <ol class="print-names" [class.with-phones]="printWithPhone">
+              <li *ngFor="let person of printOld"><span>{{person.full_name}}</span>
+                <small *ngIf="printWithPhone">{{person.phone||'Sem telefone'}}</small>
+              </li>
+            </ol>
+          </section>
+          <section *ngIf="printSelection!=='antigo'" class="print-cohort">
+            <div class="print-cohort-heading"><h2>Diáconos novos</h2><span>{{printNew.length}} pessoas</span></div>
+            <ol class="print-names" [class.with-phones]="printWithPhone">
+              <li *ngFor="let person of printNew"><span>{{person.full_name}}</span>
+                <small *ngIf="printWithPhone">{{person.phone||'Sem telefone'}}</small>
+              </li>
+            </ol>
+          </section>
+          <footer class="print-sheet-footer">Jornada Diaconal · Relação gerada a partir do cadastro autorizado</footer>
+        </div>
+      </section>
 
       <section *ngIf="page==='observations' && admin" class="notes-section">
         <div class="page-heading">
