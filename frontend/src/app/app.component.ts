@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService, User, Deacon, RegistryDetails, ObservationEntry, Group, Followup, Dashboard, IntercessionTemplate, IntercessionDraw, IntercessionCandidate, PastoralSlot, PastoralQueueItem, PastoralCareReason, PastoralCareStage, PastoralCarePerson } from './api.service';
@@ -8,7 +8,8 @@ type Page = 'dashboard'|'deacons'|'observations'|'groups'|'leadership'|'interces
 export class AppComponent implements OnInit {
  api=inject(ApiService);
  loading=true;busy=false;error='';notice='';page:Page='dashboard';
- email='';password='';changeOld='';changeNew='';changeNewConfirm='';showChangePassword=false;showMenu=false;showNewDeacon=false;showNewGroup=false;showNewUser=false;showFollowup=false;
+ email='';password='';changeOld='';changeNew='';changeNewConfirm='';showChangePassword=false;showMenu=false;showNewDeacon=false;showNewGroup=false;showNewUser=false;showFollowup=false;sidebarCollapsed=false;showPrintPanel=false;printReady=false;printWithPhone=false;
+ printSelection:'all'|'antigo'|'novo'='all';printGeneratedAt=new Date();
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
  deacons:Deacon[]=[];groups:Group[]=[];users:User[]=[];followups:Followup[]=[];
  observations:ObservationEntry[]=[];observationsLoading=false;observationsLoaded=false;observationSearch='';observationFilter:'all'|'with'|'without'='all';
@@ -39,6 +40,37 @@ export class AppComponent implements OnInit {
  get currentUser():User|null{return this.api.user}
  get canManage():boolean{return this.currentUser?.role==='admin'||this.currentUser?.role==='coordinator'}
  get admin():boolean{return this.currentUser?.role==='admin'}
+
+ readonly printCollator=new Intl.Collator('pt-BR',{sensitivity:'base'});
+ get printOld():Deacon[]{return this.printPeople('antigo')}
+ get printNew():Deacon[]{return this.printPeople('novo')}
+ get oldCount():number{return this.deacons.filter(d=>d.cohort==='antigo').length}
+ get newCount():number{return this.deacons.filter(d=>d.cohort==='novo').length}
+ get pageTitle():string{
+  const labels:Record<Page,string>={
+   dashboard:'Visão geral',deacons:'Diáconos',observations:'Observações',
+   groups:'Grupos de cuidado',leadership:'Liderança',intercession:'Intercessão',
+   pastoral:'Agenda pastoral',followups:'Acompanhamento',settings:'Usuários e acesso'
+  };
+  return labels[this.page];
+ }
+ printPeople(cohort:'antigo'|'novo'):Deacon[]{
+  return this.deacons.filter(d=>d.cohort===cohort)
+   .slice().sort((x,y)=>this.printCollator.compare(x.full_name,y.full_name));
+ }
+ openPrintPanel():void{
+  this.showPrintPanel=!this.showPrintPanel;
+  this.error='';
+ }
+ printDeacons():void{
+  if(!this.deacons.length){this.error='Nenhum cadastro disponível para impressão.';return}
+  this.printReady=true;
+  this.printGeneratedAt=new Date();
+  // Aguarda a atualização do documento de impressão antes de chamar a janela nativa.
+  setTimeout(()=>window.print(),120);
+ }
+ @HostListener('document:keydown.escape')
+ closeMobileMenu():void{if(this.showMenu)this.showMenu=false}
  get filteredDeacons():Deacon[]{const q=this.search.trim().toLocaleLowerCase('pt-BR');return this.deacons.filter(d=>(this.filter==='all'||(this.filter==='unassigned'?!d.group_id:d.cohort===this.filter))&&(!q||d.full_name.toLocaleLowerCase('pt-BR').includes(q)||(d.group_name||'').toLocaleLowerCase('pt-BR').includes(q)))}
 
  get observationsWithNotes():number{
