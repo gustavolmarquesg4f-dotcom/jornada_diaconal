@@ -327,6 +327,56 @@
           <strong>Dois atendimentos de 60 minutos por dia, quatro dias por semana.</strong>
           <p>Segundas, terças, quintas e sextas, de 26 de outubro a 20 de novembro de 2026. Os horários ainda devem ser definidos com o Pr. Sato. Não há envio automático de convites ou registro de confidências.</p>
         </div></div>
+
+        <div class="surface" *ngIf="admin">
+          <div class="surface-head"><div><h3>Fila de acolhimento do Pr. Sato</h3>
+            <p>Organize os contatos por prioridade antes de preencher a agenda.</p>
+          </div><span class="pill">{{pastoralQueue.length}} CADASTROS</span></div>
+          <p class="modal-hint">Cadastros inativos precisam ter a situação confirmada. Não utilize a pesquisa anônima para identificar pessoas.</p>
+          <div class="pastoral-care-form">
+            <label>Diácono(a)
+              <select name="pastoralPerson" [(ngModel)]="pastoralNew.deacon_id">
+                <option value="">Escolha uma pessoa</option>
+                <option *ngFor="let person of deacons" [value]="person.id">{{person.full_name}}</option>
+              </select>
+            </label>
+            <label>Motivo do contato
+              <select name="pastoralReason" [(ngModel)]="pastoralNew.reason">
+                <option *ngFor="let reason of pastoralReasons" [value]="reason.value">{{reason.label}}</option>
+              </select>
+            </label>
+            <label>Prioridade
+              <select name="pastoralPriority" [(ngModel)]="pastoralNew.priority">
+                <option [ngValue]="1">1 · Prioritário</option><option [ngValue]="2">2 · Alta</option>
+                <option [ngValue]="3">3 · Média</option><option [ngValue]="4">4 · Regular</option>
+                <option [ngValue]="5">5 · Futuro</option>
+              </select>
+            </label>
+            <button class="primary" type="button" (click)="addPastoralCandidate()" [disabled]="busy||!pastoralNew.deacon_id">Adicionar</button>
+          </div>
+          <div *ngFor="let item of filteredPastoralQueue" class="pastoral-care-item">
+            <strong>{{item.person?.full_name||'Cadastro não localizado'}}</strong>
+            <label>Prioridade
+              <select [name]="'carePriority'+item.id" [(ngModel)]="pastoralQueueDraft[item.id].priority">
+                <option [ngValue]="1">1</option><option [ngValue]="2">2</option>
+                <option [ngValue]="3">3</option><option [ngValue]="4">4</option>
+                <option [ngValue]="5">5</option>
+              </select>
+            </label>
+            <label>Motivo
+              <select [name]="'careReason'+item.id" [(ngModel)]="pastoralQueueDraft[item.id].reason">
+                <option *ngFor="let r of pastoralReasons" [value]="r.value">{{r.label}}</option>
+              </select>
+            </label>
+            <label>Etapa
+              <select [name]="'careStage'+item.id" [(ngModel)]="pastoralQueueDraft[item.id].stage">
+                <option *ngFor="let st of pastoralStages" [value]="st.value">{{st.label}}</option>
+              </select>
+            </label>
+            <button class="small-primary" type="button" (click)="updatePastoralCandidate(item)" [disabled]="busy">Salvar</button>
+            <button class="outline" type="button" (click)="preparePastoralSlot(item)" [disabled]="busy">Preparar vaga</button>
+          </div>
+        </div>
         <div class="surface">
           <div class="surface-head"><h3>Agenda para validação pastoral</h3><span class="pill">32 VAGAS · 4 SEMANAS</span></div>
           <p class="modal-hint">A pesquisa é anônima. Ela orienta a proposta geral, mas não identifica quem respondeu. A participação nas conversas será voluntária, mediante convite da liderança.</p>
