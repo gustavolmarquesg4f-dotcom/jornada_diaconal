@@ -128,3 +128,116 @@
 .ministry-post>.ministry-warning{margin:12px 15px}
 @media(max-width:1100px){.ministry-post-replace{grid-template-columns:repeat(2,minmax(0,1fr))}.ministry-post-replace>div{grid-column:1/-1}.ministry-post-replace>button{grid-column:1/-1}}
 @media(max-width:600px){.ministry-post-summary{flex-wrap:wrap}.ministry-post-summary>.pill{margin-left:52px}.ministry-post-replace{grid-template-columns:1fr}.ministry-post-replace>div,.ministry-post-replace>button{grid-column:1}.ministry-post>.ministry-person{align-items:flex-start}.ministry-status{min-width:115px}}
+
+/* Identidade visual: Ministério dos Diáconos — Igreja de Deus no Guará 1 */
+:root{
+  --green:#047b91;
+  --deep:#06384a;
+  --mint:#e6f6f8;
+  --border:#dce8ec;
+  --muted:#6e8792;
+  --gold:#1bb7c8;
+  color:#153745;
+  background:#f4f8fa;
+}
+body{background:#f4f8fa}
+.loading-screen{color:#086b80}
+.loader{border-color:#c6e9ec;border-top-color:#04a8b9}
+.brand{color:#083e51}
+.brand small{color:#748e99}
+.brand-white{color:#f5fdff}
+.brand-white small{color:#b6e7f0}
+.brand-ministry-icon{
+  width:52px;height:52px;min-width:52px;border-radius:15px;
+  background-color:#043c50;
+  background-image:url('marca-diaconos.webp');
+  background-size:85px 85px;
+  background-repeat:no-repeat;
+  background-position:center center;
+  border:1px solid #1e91a9;
+  box-shadow:0 3px 12px #002d431a;
+}
+.brand-white .brand-ministry-icon{background-color:#04475b;border-color:#5ed0df}
+.sidebar>.brand{margin-bottom:42px;padding:0 6px;gap:10px}
+.sidebar>.brand>span:last-child{font-size:15px;line-height:1.35}
+.sidebar>.brand small{font-size:10px;letter-spacing:0}
+.login-art{
+  background:
+    radial-gradient(ellipse at 78% 17%,#0d9fb247 0,transparent 41%),
+    radial-gradient(ellipse at 8% 88%,#12698745 0,transparent 44%),
+    linear-gradient(140deg,#042b3b 0%,#08566c 58%,#063147 100%);
+}
+.login-art:after{content:'✦';right:-135px;bottom:-35px;color:#7ae8ed12}
+.login-message em{color:#61e0e7}
+.eyebrow.light{color:#77d6e2}
+.login-message>p{color:#c9e4ea}
+.motto{border-left-color:#36bbcb;color:#d9eef2}
+.login-foot{color:#b2dce6}
+.ministry-brand-hero{
+  display:block;width:min(218px,44vw);height:auto;aspect-ratio:1;
+  object-fit:cover;border-radius:23px;margin:0 0 24px;
+  border:1px solid #40cbdf55;
+  box-shadow:0 12px 32px #001d2c55;
+}
+.login-side{background:radial-gradient(circle at 93% 0%,#dff0f4,transparent 33%),#fbfdfe}
+.login-card label{color:#335969}
+.login-card input{border-color:#cfdee5;outline-color:#16a7bb}
+.login-card input:focus{border-color:#1bb7c8}
+.pill,.pill.neutral{background:#def4f7;color:#08697c}
+.primary,.small-primary{background:#078fa6;color:#fff}
+.primary:hover,.small-primary:hover{background:#056c87}
+.outline{background:#fff;color:#08697c;border-color:#cee3e9}
+.outline:hover{background:#eef9fb}
+.sidebar{border-right-color:#e2ecf0}
+.nav-heading{color:#8da2aa}
+.navigation button{color:#567987}
+.navigation button:hover{background:#f0f8fa}
+.navigation button.active{background:#def4f7;color:#056f88}
+.sidebar-note{background:#eaf6f9;color:#356e81}
+.sidebar-note strong{color:#066e84}
+.avatar,.person-circle{background:#e1f5f8;color:#067c8f}
+.user-block{border-top-color:#e7eff2}
+.app-top{border-bottom-color:#e0edf1}
+.top-breadcrumb{color:#50788a;letter-spacing:.085em}
+.top-breadcrumb span{color:#16aabb}
+.private-marker{color:#4a7887}
+.live-dot{background:#0baeb9}
+.refresh{color:#06788e;border-color:#dce8ec}
+.page-heading h1{color:#083d51}
+.eyebrow{color:#087e94}
+.welcome-card{
+  background:
+    radial-gradient(circle at 77% 12%,#23c9d655,transparent 46%),
+    linear-gradient(117deg,#05384a,#086f82);
+  border:1px solid #107c91;
+  min-height:212px;
+}
+.welcome-card>div:first-child{max-width:72%}
+.welcome-card span{color:#8eecf0}
+.welcome-card p{color:#c5e9f0}
+.welcome-brand-img{
+  width:150px;height:150px;object-fit:cover;flex:none;
+  border-radius:22px;opacity:.84;box-shadow:0 10px 24px #001f2a35;
+}
+.stat-card{border-color:#e1ebef;box-shadow:0 3px 15px #123d5109}
+.stat-icon.green{background:#e1f5f6;color:#088ea5}
+.stat-icon.amber{background:#e9f5fa;color:#388aaf}
+.stat-icon.blue{background:#e5effa;color:#4c8fc4}
+.stat-icon.rose{background:#f0ebf7;color:#9174ab}
+.surface{border-color:#dfeaf0}
+.text-button,.row-link{color:#077c95}
+.group-count{color:#077d91}
+.group-initial{background:#e4f5f7;color:#077f93}
+.registry-summary strong{color:#084359}
+.hierarchy-pastor{background:linear-gradient(130deg,#06394d,#087d8d)}
+.hierarchy-pastor .eyebrow{color:#a4e8eb}
+@media(max-width:830px){
+  .welcome-brand-img{width:105px;height:105px}
+  .top-breadcrumb{font-size:9px;letter-spacing:.035em}
+}
+@media(max-width:580px){
+  .welcome-brand-img{display:none}
+  .welcome-card>div:first-child{max-width:none}
+  .ministry-brand-hero{width:min(160px,48vw);margin-bottom:18px}
+  .login-art{padding-top:30px;padding-bottom:30px}
+}
