@@ -1,0 +1,82 @@
+
+/* Jornada Diaconal — navegação e experiência refinadas (20/10/2026) */
+html,body{max-width:100%}
+.app-top{gap:14px}
+.top-actions{gap:9px}
+.top-quick-search{
+ display:inline-flex;align-items:center;gap:8px;border:1px solid #cee4e9;
+ border-radius:10px;background:#f4fafb;color:#196980;
+ padding:8px 10px;min-height:39px;max-width:220px;font-weight:750;font-size:12px;
+ transition:background .15s,border-color .15s
+}
+.top-quick-search:hover{background:#e4f7f9;border-color:#5dc4d4}
+.top-quick-search>span:first-child{font-size:19px;line-height:1}
+.quick-kbd{border:1px solid #bad7de;color:#648994;border-radius:4px;background:white;font:700 9px/1.4 system-ui;padding:2px 5px;white-space:nowrap}
+.dashboard-quick-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.dashboard-quick-card{display:flex;align-items:center;gap:12px;padding:17px 15px;background:#fff;border:1px solid #dae8ee;border-radius:13px;text-align:left;min-width:0;transition:box-shadow .18s,transform .18s,border-color .18s}
+.dashboard-quick-card:hover{box-shadow:0 7px 20px #0f5c6814;border-color:#92c9d5;transform:translateY(-2px)}
+.dashboard-quick-card>span:nth-child(2){flex:1;min-width:0}
+.dashboard-quick-card strong{font-size:12px;color:#125569;display:block;line-height:1.4}
+.dashboard-quick-card small{display:block;font-size:11px;color:#7a919c;margin-top:4px;line-height:1.4}
+.dashboard-quick-card>span:last-child{color:#167b91}
+.dashboard-quick-icon{display:grid;place-items:center;flex:none;width:39px;height:39px;background:#e2f6f8;color:#05859d;border-radius:11px;font-size:21px}
+.quick-search-backdrop{position:fixed;inset:0;z-index:50;background:#041e2dbd;display:flex;justify-content:center;align-items:flex-start;padding:clamp(45px,11vh,120px) 16px 16px;overflow-y:auto}
+.quick-search-panel{background:#fff;border-radius:18px;width:min(590px,100%);min-width:0;box-shadow:0 26px 85px #00152260;border:1px solid #b7e2e7;padding:22px;max-height:calc(100dvh - 80px);display:flex;flex-direction:column;overflow:hidden}
+.quick-search-head{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-bottom:18px}
+.quick-search-head h2{font-size:22px;letter-spacing:-.045em;margin:0;color:#083b52}
+.quick-search-head .eyebrow{margin-bottom:5px}
+.quick-search-close{background:#f0f7f9;border:0;border-radius:9px;height:35px;width:35px;color:#366e7e;font-size:22px;flex:none}
+.quick-search-input-wrap{border:2px solid #9ad4df;background:#f8fdfe;min-height:55px;display:flex;align-items:center;border-radius:11px;padding:0 13px;gap:9px}
+.quick-search-input-wrap>span{font-size:24px;color:#0b8199;flex:none}
+.quick-search-input-wrap input{min-width:0;flex:1;border:0;outline:0;background:transparent;font-size:15px;color:#103b4c;padding:13px 0}
+.quick-search-results{overflow-y:auto;flex:1;margin-top:10px;min-height:85px;scrollbar-width:thin}
+.quick-search-hint{font-size:13px;line-height:1.6;color:#78909c;padding:16px 5px;text-align:center;margin:0}
+.quick-result{display:flex;width:100%;align-items:center;gap:13px;background:white;border:0;border-bottom:1px solid #ebf2f5;padding:13px 9px;text-align:left;border-radius:8px;min-height:65px}
+.quick-result:hover,.quick-result:focus-visible{background:#e9f8fa}
+.quick-result .person-circle{width:37px;height:37px}
+.quick-result-info{flex:1;min-width:0}
+.quick-result-info strong{display:block;color:#103e50;font-size:13px;overflow-wrap:anywhere}
+.quick-result-info small{display:block;color:#758d99;font-size:11px;margin-top:4px;line-height:1.5;overflow-wrap:anywhere}
+.quick-result-arrow{color:#208399;font-size:18px}
+.quick-search-foot{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:14px 0 0;padding-top:12px;border-top:1px solid #e4eef2;font-size:11px;color:#78909a}
+.quick-search-foot .text-button{white-space:nowrap}
+.pastoral-week-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:19px 0 12px}
+.pastoral-week-tabs button{background:#f9fcfd;border:1px solid #d7e5e9;border-radius:11px;color:#416b7a;text-align:left;min-height:62px;padding:12px;display:flex;flex-direction:column;gap:5px;transition:background .15s,border-color .15s}
+.pastoral-week-tabs button:hover{background:#edf9fb}
+.pastoral-week-tabs button.active{background:#ddf6f8;border-color:#1b9eb0;box-shadow:inset 0 0 0 1px #1b9eb0}
+.pastoral-week-tabs strong{font-size:12px;color:#17556a;line-height:1.2}
+.pastoral-week-tabs small{font-size:11px;color:#6e8d99}
+.pastoral-week-summary{font-size:12px;color:#718997;display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap;margin-bottom:13px;padding-bottom:13px;border-bottom:1px solid #eaf0f3}
+.notes-section .registry-note p{line-height:1.65}
+@media(max-width:1220px){.dashboard-quick-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.top-quick-search{max-width:170px}.quick-kbd{display:none}}
+@media(max-width:900px){
+ .top-quick-search{min-width:39px;max-width:44px;justify-content:center;padding:7px}
+ .top-quick-search .quick-text{display:none}
+ .quick-search-backdrop{padding:55px 12px 12px}
+ .quick-search-panel{max-height:calc(100dvh - 65px)}
+ .notes-section .scroll-table{overflow:visible;padding:12px}
+ .notes-section .registry-notes-table,.notes-section .registry-notes-table tbody{display:block;min-width:0;width:100%;table-layout:auto}
+ .notes-section .registry-notes-table thead{display:none}
+ .notes-section .registry-notes-table tbody{display:grid;grid-template-columns:1fr;gap:12px}
+ .notes-section .registry-notes-table tr{display:flex;flex-direction:column;gap:12px;border:1px solid #dde9ed;border-radius:13px;background:white;padding:17px;overflow:hidden}
+ .notes-section .registry-notes-table td{border:0;padding:0;display:block;width:100%;font-size:12px;min-width:0;overflow-wrap:anywhere}
+ .notes-section .registry-notes-table td:nth-child(2):before{content:"Situação";display:block;font-size:10px;text-transform:uppercase;font-weight:800;color:#7a95a1;margin-bottom:5px}
+ .notes-section .registry-notes-table td:nth-child(3):before{content:"Cadastro familiar";display:block;font-size:10px;text-transform:uppercase;font-weight:800;color:#7a95a1;margin-bottom:5px}
+ .notes-section .registry-notes-table td:nth-child(4):before{content:"Observações originais";display:block;font-size:10px;text-transform:uppercase;font-weight:800;color:#7a95a1;margin-bottom:5px}
+ .notes-section .registry-notes-table td:nth-child(4){border-top:1px solid #edf2f4;padding-top:10px}
+ .notes-section .registry-notes-table td:nth-child(5) button{background:#e8f7f9;padding:10px 14px;border-radius:8px;min-height:42px;width:100%;text-align:center}
+}
+@media(max-width:640px){
+ .dashboard-quick-actions{grid-template-columns:1fr 1fr;gap:9px}
+ .dashboard-quick-card{padding:13px 11px;gap:8px}
+ .dashboard-quick-icon{width:32px;height:32px;font-size:18px}
+ .dashboard-quick-card strong{font-size:11px}
+ .dashboard-quick-card small{font-size:10px}
+ .dashboard-quick-card>span:last-child{display:none}
+ .pastoral-week-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .quick-search-panel{padding:17px;border-radius:14px}
+ .quick-search-foot>span{display:none}
+ .top-actions{gap:5px}
+}
+@media print{.quick-search-backdrop,.dashboard-quick-actions{display:none!important}}
+@media(prefers-reduced-motion:reduce){.dashboard-quick-card,.pastoral-week-tabs button{transition:none}}
