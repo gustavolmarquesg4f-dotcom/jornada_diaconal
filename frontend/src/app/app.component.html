@@ -39,15 +39,15 @@
     <div class="brand"><span class="brand-mark brand-ministry-icon" role="img" aria-label="Símbolo do Ministério dos Diáconos"></span><span>Jornada Diaconal<small>Ministério dos Diáconos</small></span></div>
     <div class="nav-heading">ÁREA DE TRABALHO</div>
     <nav class="navigation" aria-label="Menu principal">
-      <button [class.active]="page==='dashboard'" (click)="goto('dashboard')"><span class="nav-icon">◫</span> Visão geral</button>
-      <button [class.active]="page==='deacons'" (click)="goto('deacons')"><span class="nav-icon">♙</span> Diáconos</button>
-      <button *ngIf="admin" [class.active]="page==='observations'" (click)="goto('observations')"><span class="nav-icon">☷</span> Observações</button>
-      <button [class.active]="page==='leadership'" (click)="goto('leadership')"><span class="nav-icon">♧</span> Liderança e grupos</button>
-      <button *ngIf="canManage" [class.active]="page==='intercession'" (click)="goto('intercession')"><span class="nav-icon">✦</span> Escala de intercessão</button>
-      <button *ngIf="canManage" [class.active]="page==='pastoral'" (click)="goto('pastoral')"><span class="nav-icon">▤</span> Agenda do Pr. Sato</button>
-      <button [class.active]="page==='groups'" (click)="goto('groups')"><span class="nav-icon">▦</span> Grupos de cuidado</button>
-      <button [class.active]="page==='followups'" (click)="goto('followups')"><span class="nav-icon">♡</span> Acompanhamento</button>
-      <button *ngIf="admin" [class.active]="page==='settings'" (click)="goto('settings')"><span class="nav-icon">⚙</span> Usuários e acesso</button>
+      <button title="Visão geral" aria-label="Visão geral" [class.active]="page==='dashboard'" (click)="goto('dashboard')"><span class="nav-icon">◫</span> Visão geral</button>
+      <button title="Diáconos" aria-label="Diáconos" [class.active]="page==='deacons'" (click)="goto('deacons')"><span class="nav-icon">♙</span> Diáconos</button>
+      <button *ngIf="admin" title="Observações" aria-label="Observações" [class.active]="page==='observations'" (click)="goto('observations')"><span class="nav-icon">☷</span> Observações</button>
+      <button title="Liderança e grupos" aria-label="Liderança e grupos" [class.active]="page==='leadership'" (click)="goto('leadership')"><span class="nav-icon">♧</span> Liderança e grupos</button>
+      <button *ngIf="canManage" title="Escala de intercessão" aria-label="Escala de intercessão" [class.active]="page==='intercession'" (click)="goto('intercession')"><span class="nav-icon">✦</span> Escala de intercessão</button>
+      <button *ngIf="canManage" title="Agenda pastoral" aria-label="Agenda pastoral" [class.active]="page==='pastoral'" (click)="goto('pastoral')"><span class="nav-icon">▤</span> Agenda do Pr. Sato</button>
+      <button title="Grupos de cuidado" aria-label="Grupos de cuidado" [class.active]="page==='groups'" (click)="goto('groups')"><span class="nav-icon">▦</span> Grupos de cuidado</button>
+      <button title="Acompanhamento" aria-label="Acompanhamento" [class.active]="page==='followups'" (click)="goto('followups')"><span class="nav-icon">♡</span> Acompanhamento</button>
+      <button *ngIf="admin" title="Usuários e acesso" aria-label="Usuários e acesso" [class.active]="page==='settings'" (click)="goto('settings')"><span class="nav-icon">⚙</span> Usuários e acesso</button>
     </nav>
     <div class="sidebar-note"><span class="note-icon">✦</span><p>Mais que uma escala.<strong>Uma caminhada de cuidado.</strong></p></div>
     <div class="user-block"><div class="avatar">{{(currentUser?.name||'L').charAt(0)}}</div><div class="user-details"><strong>{{currentUser?.name}}</strong><small>{{currentUser?.role==='admin'?'Administrador':currentUser?.role==='coordinator'?'Coordenação':'Responsável por grupo'}}</small></div><button class="exit" (click)="logout()" aria-label="Sair do sistema">↪</button></div>
