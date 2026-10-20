@@ -55,6 +55,7 @@
   <div class="content-shell">
     <header class="app-top"><button type="button" class="menu-toggle" (click)="showMenu=!showMenu" [attr.aria-expanded]="showMenu" aria-label="Abrir menu de navegação">☰</button><div class="top-breadcrumb">IGREJA DE DEUS NO GUARÁ 1 <span>/</span> <strong>{{pageTitle}}</strong></div><div class="top-actions">
   <button type="button" class="top-quick-search" (click)="openQuickSearch()" title="Buscar diácono (Ctrl+K)" aria-label="Abrir busca rápida de diáconos"><span aria-hidden="true">⌕</span> <span class="quick-text">Buscar diácono</span><kbd class="quick-kbd">Ctrl K</kbd></button>
+  <button type="button" class="refresh top-help-trigger" (click)="showHelp=true" title="Ajuda e orientações" aria-label="Abrir ajuda do sistema">?</button>
   <button class="refresh" (click)="showChangePassword=true;error=''" title="Trocar minha senha" aria-label="Trocar minha senha">⚿</button>
   <span class="private-marker"><span class="live-dot"></span> Área reservada</span>
   <button type="button" class="refresh" (click)="refreshCurrentPage()" [disabled]="refreshing||busy" title="Atualizar esta seção" aria-label="Atualizar esta seção">{{refreshing?'…':'↻'}}</button>
@@ -637,6 +638,33 @@
       </button>
     </div>
     <div class="quick-search-foot"><span>Selecione uma pessoa para abrir o acompanhamento.</span><button type="button" class="text-button" (click)="closeQuickSearch();goto('deacons')">Ver lista completa →</button></div>
+  </section>
+</div>
+
+<div *ngIf="showHelp && api.authorized && !showChangePassword" class="quick-search-backdrop quick-help-backdrop" (click)="showHelp=false" role="presentation">
+  <section class="quick-search-panel quick-help-panel" role="dialog" aria-modal="true" aria-label="Ajuda para utilizar a Jornada Diaconal" (click)="$event.stopPropagation()">
+    <div class="quick-search-head"><div><span class="eyebrow">ORIENTAÇÕES DA JORNADA</span><h2>Como utilizar o sistema</h2></div>
+      <button type="button" class="quick-search-close" (click)="showHelp=false" aria-label="Fechar ajuda">×</button>
+    </div>
+    <p class="quick-help-intro">Escolha o que deseja fazer. As opções disponíveis respeitam o seu perfil de acesso.</p>
+    <div class="quick-help-options">
+      <button type="button" (click)="showHelp=false;openQuickSearch()">
+        <strong>⌕ Encontrar um diácono</strong><small>Busque por nome, telefone ou grupo e abra o acompanhamento.</small>
+      </button>
+      <button type="button" (click)="showHelp=false;goto('deacons')">
+        <strong>♙ Consultar e imprimir cadastros</strong><small>Veja antigos e novos, filtre os nomes e imprima listas.</small>
+      </button>
+      <button type="button" (click)="showHelp=false;goto('groups')">
+        <strong>♧ Organizar grupos de cuidado</strong><small>Vincule os diáconos a líderes de referência.</small>
+      </button>
+      <button *ngIf="canManage" type="button" (click)="showHelp=false;goto('intercession')">
+        <strong>✦ Preparar a intercessão</strong><small>Consulte a disponibilidade, sorteie e confirme as duplas antes de publicar.</small>
+      </button>
+      <button *ngIf="canManage" type="button" (click)="showHelp=false;goto('pastoral')">
+        <strong>♡ Organizar atendimentos pastorais</strong><small>Priorize os contatos, escolha a semana e agende com aprovação pastoral.</small>
+      </button>
+    </div>
+    <p class="quick-help-footnote">Informações pastorais e observações pessoais são restritas aos perfis autorizados. Nenhuma convocação é enviada automaticamente.</p>
   </section>
 </div>
 
