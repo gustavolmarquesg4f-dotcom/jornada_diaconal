@@ -165,15 +165,50 @@ export class AppComponent implements OnInit {
  get unassigned():Deacon[]{return this.deacons.filter(d=>!d.group_id)}
  capacityPercent(g:Group):number{return g.target_size ? Math.min(100,Math.round(g.members/g.target_size*100)) : 0}
  get coverage():number{return this.dashboard.totals.deacons?Math.round(this.dashboard.totals.contacted_30_days/this.dashboard.totals.deacons*100):0}
- async ngOnInit():Promise<void>{if(this.api.authorized){try{const u=await this.api.me();this.showChangePassword=!!u.must_change_password;if(!this.showChangePassword)await this.reload()}catch{this.api.clear()}}this.loading=false}
- async login():Promise<void>{this.busy=true;this.error='';try{const u=await this.api.login(this.email,this.password);this.password='';this.showChangePassword=!!u.must_change_password;if(!this.showChangePassword)await this.reload()}catch(e){this.error=this.msg(e)}finally{this.busy=false}}
+
+ private restoreWorkspace():void{
+  try{
+   this.sidebarCollapsed=sessionStorage.getItem('jdg_compact_sidebar')==='yes';
+   const page=sessionStorage.getItem('jdg_current_module') as Page|null;
+   const allowed:Page[]=['dashboard','deacons','observations','groups','leadership','intercession','pastoral','settings'];
+   if(page&&allowed.includes(page)&&
+      !(page==='observations'&&!this.admin)&&!(page==='settings'&&!this.admin)&&
+      !((page==='pastoral'||page==='intercession')&&!this.canManage)){
+     this.goto(page);
+   }
+  }catch{/* Preferências locais opcionais; nunca bloqueiam o login. */}
+ }
+ toggleSidebar():void{
+  this.sidebarCollapsed=!this.sidebarCollapsed;
+  try{sessionStorage.setItem('jdg_compact_sidebar',this.sidebarCollapsed?'yes':'no')}catch{}
+ }
+ async ngOnInit():Promise<void>{
+  if(this.api.authorized){
+   try{const u=await this.api.me();this.showChangePassword=!!u.must_change_password;
+      if(!this.showChangePassword){await this.reload();this.restoreWorkspace()}}
+   catch{this.api.clear()}
+  }
+  this.loading=false;
+ }
+ async login():Promise<void>{
+  this.busy=true;this.error='';
+  try{const u=await this.api.login(this.email,this.password);this.password='';
+   this.showChangePassword=!!u.must_change_password;
+   if(!this.showChangePassword){await this.reload();this.restoreWorkspace()}
+  }catch(e){this.error=this.msg(e)}finally{this.busy=false}
+ }
  async changePassword():Promise<void>{this.error='';if(this.changeNew.length<12){this.error='A senha precisa ter pelo menos 12 caracteres.';return}if(this.changeNew!==this.changeNewConfirm){this.error='A confirmação da senha não confere.';return}this.busy=true;try{await this.api.changePassword(this.changeOld,this.changeNew);if(this.api.user)this.api.user.must_change_password=false;this.changeOld='';this.changeNew='';this.changeNewConfirm='';this.showChangePassword=false;this.notice='Senha atualizada com sucesso.';await this.reload()}catch(e){this.error=this.msg(e)}finally{this.busy=false}}
- async logout():Promise<void>{await this.api.logout();this.showChangePassword=false;this.page='dashboard';this.selected=null}
+ async logout():Promise<void>{
+  await this.api.logout();
+  try{sessionStorage.removeItem('jdg_current_module');sessionStorage.removeItem('jdg_compact_sidebar')}catch{}
+  this.showChangePassword=false;this.closeQuickSearch();this.page='dashboard';this.selected=null;
+ }
  async reload():Promise<void>{this.error='';try{const [d,people,groups]=await Promise.all([this.api.dashboard(),this.api.deacons(),this.api.groups()]);this.dashboard=d;this.deacons=people;this.groups=groups;if(this.canManage)this.users=await this.api.users();else this.users=[]}catch(e){this.error=this.msg(e)}}
  goto(page:Page):void{
   if(page==='observations'&&!this.admin){this.error='Esta área é exclusiva do administrador.';return}
   if((page==='pastoral'||page==='intercession')&&!this.canManage){this.error='Esta área é exclusiva da coordenação.';return}
   this.page=page;this.showMenu=false;this.closeQuickSearch();this.notice='';this.error='';
+  if(page!=='followups')try{sessionStorage.setItem('jdg_current_module',page)}catch{}
   window.scrollTo(0,0);
   if(page!=='followups')this.selected=null;
   if(page==='observations'&&!this.observationsLoaded)void this.loadObservations();
@@ -341,7 +376,9 @@ export class AppComponent implements OnInit {
   if(!slot||!this.pastoralDraft[slot.id]){
     this.error='Não há vaga livre na agenda proposta. Revise a agenda do pastor.';return;
   }
+  this.pastoralWeekStart=this.dateWeekStart(slot.appointment_date);
   this.pastoralDraft[slot.id].deacon_id=item.deacon_id;
+  setTimeout(()=>document.getElementById('pastoral-appointment-list')?.scrollIntoView({behavior:'smooth',block:'start'}),0);
   this.notice='Nome reservado apenas no formulário do atendimento '+slot.appointment_date+
      '. Confira o horário, obtenha aprovação do Pr. Sato e clique em Salvar na agenda abaixo.';
  }
