@@ -41,6 +41,15 @@ export interface IntercessionDraw {
  id:string; template_id:string;service_date:string;status:'draft'|'published';
  service:IntercessionTemplate|null;assignments:IntercessionAssignment[];
 }
+export type PastoralCareReason='verify_status'|'away_confirmed'|'support_requested'|'reconnection'|'new_integration'|'routine';
+export type PastoralCareStage='to_contact'|'contacted'|'invited'|'scheduled'|'completed'|'deferred';
+export interface PastoralCarePerson {
+ id:string;full_name:string;phone:string|null;status:DeaconStatus;cohort:Cohort;last_contact:string|null;
+}
+export interface PastoralQueueItem {
+ id:string;deacon_id:string;priority:number;reason:PastoralCareReason;stage:PastoralCareStage;
+ created_at:string;updated_at:string;person:PastoralCarePerson|null;
+}
 export interface PastoralSlot {
  id:string;appointment_date:string;slot_order:number;start_time:string|null;
  duration_minutes:number;deacon_id:string|null;
@@ -89,6 +98,15 @@ export class ApiService {
  createUser(u:unknown):Promise<{item:User}>{return this.send('POST','/users',u)}
  async followups(deaconId:string):Promise<Followup[]>{return (await this.send<{items:Followup[]}>('GET',`/followups?deacon_id=${encodeURIComponent(deaconId)}`)).items}
  createFollowup(f:unknown):Promise<{id:string}>{return this.send('POST','/followups',f)}
+ pastoralQueue():Promise<{items:PastoralQueueItem[];needs_verification:PastoralCarePerson[]}>{
+   return this.send('GET','/pastoral/queue');
+ }
+ addPastoralQueue(item:{deacon_id:string;priority:number;reason:PastoralCareReason}):Promise<{item:PastoralQueueItem}>{
+   return this.send('POST','/pastoral/queue',item);
+ }
+ updatePastoralQueue(id:string,changes:Partial<Pick<PastoralQueueItem,'priority'|'reason'|'stage'>>):Promise<{item:PastoralQueueItem}>{
+   return this.send('PATCH',`/pastoral/queue/${encodeURIComponent(id)}`,changes);
+ }
  pastoralSlots():Promise<{items:PastoralSlot[];pastor:string}>{
    return this.send('GET','/pastoral/slots');
  }
