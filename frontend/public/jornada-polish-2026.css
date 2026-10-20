@@ -80,3 +80,11 @@ html,body{max-width:100%}
 }
 @media print{.quick-search-backdrop,.dashboard-quick-actions{display:none!important}}
 @media(prefers-reduced-motion:reduce){.dashboard-quick-card,.pastoral-week-tabs button{transition:none}}
+
+/* Busca operacional na fila de acolhimento */
+.pastoral-care-find{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:18px 0 9px;padding:13px 0;border-top:1px solid #e3edf0}
+.pastoral-care-find label{font-size:12px;font-weight:750;color:#446b7b}
+.pastoral-care-find input{min-width:160px;flex:1 1 240px;max-width:380px;background:white;border:1px solid #cbdfe5;border-radius:9px;min-height:41px;padding:9px 12px;font-size:13px}
+.pastoral-care-find span{color:#77919a;font-size:11px;margin-left:auto}
+#pastoral-appointment-list{scroll-margin-top:98px}
+@media(max-width:640px){.pastoral-care-find{align-items:stretch;flex-direction:column}.pastoral-care-find input{max-width:none;width:100%;flex:auto}.pastoral-care-find span{margin-left:0}}
