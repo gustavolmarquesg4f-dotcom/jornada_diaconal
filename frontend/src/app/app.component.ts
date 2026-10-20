@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiService, User, Deacon, RegistryDetails, ObservationEntry, Group, Followup, Dashboard, IntercessionTemplate, IntercessionDraw, IntercessionCandidate, PastoralSlot } from './api.service';
+import { ApiService, User, Deacon, RegistryDetails, ObservationEntry, Group, Followup, Dashboard, IntercessionTemplate, IntercessionDraw, IntercessionCandidate, PastoralSlot, PastoralQueueItem, PastoralCareReason, PastoralCareStage, PastoralCarePerson } from './api.service';
 
 type Page = 'dashboard'|'deacons'|'observations'|'groups'|'leadership'|'intercession'|'pastoral'|'followups'|'settings';
 @Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule],templateUrl:'./app.component.html'})
@@ -23,6 +23,13 @@ export class AppComponent implements OnInit {
  intercessionWeekStart='2026-10-26';intercessionCapacity:Record<string,number>={};
  intercessionLoaded=false;intercessionLoading=false;
  pastoralSlots:PastoralSlot[]=[];pastoralLoaded=false;pastoralLoading=false;
+ pastoralQueue:PastoralQueueItem[]=[];pastoralQueueLoaded=false;pastoralQueueLoading=false;
+ pastoralVerifyCandidates:PastoralCarePerson[]=[];pastoralQueueSearch='';
+ pastoralNew:{deacon_id:string;priority:number;reason:PastoralCareReason}={
+   deacon_id:'',priority:2,reason:'verify_status'
+ };
+ pastoralQueueDraft:Record<string,{priority:number;reason:PastoralCareReason;stage:PastoralCareStage}>={};
+
  pastoralDraft:Record<string,{start_time:string;deacon_id:string;status:PastoralSlot['status'];approval_status:PastoralSlot['approval_status']}>={};
   selected:Deacon|null=null;selectedRegistry:RegistryDetails|null=null;registryLoading=false;search='';filter:'all'|'antigo'|'novo'|'unassigned'='all';
  draftDeacon={full_name:'',cohort:'antigo',status:'active',phone:'',email:'',availability:''};
@@ -125,6 +132,32 @@ export class AppComponent implements OnInit {
  private async run(action:()=>Promise<void>,success:string):Promise<void>{this.error='';this.notice='';this.busy=true;try{await action();this.notice=success}catch(e){this.error=this.msg(e)}finally{this.busy=false}}
  private msg(e:unknown):string{return e instanceof Error?e.message:'Não foi possível concluir a operação.'}
 
+
+ readonly pastoralReasons:{value:PastoralCareReason;label:string}[]=[
+   {value:'verify_status',label:'Conferir situação cadastral'},
+   {value:'away_confirmed',label:'Afastamento confirmado pela liderança'},
+   {value:'support_requested',label:'Acolhimento solicitado'},
+   {value:'reconnection',label:'Retomar vínculo e contato'},
+   {value:'new_integration',label:'Integração ao diaconato'},
+   {value:'routine',label:'Acompanhamento regular'}
+ ];
+ readonly pastoralStages:{value:PastoralCareStage;label:string}[]=[
+   {value:'to_contact',label:'A contatar'},
+   {value:'contacted',label:'Contato realizado'},
+   {value:'invited',label:'Convite enviado'},
+   {value:'scheduled',label:'Agendado'},
+   {value:'completed',label:'Atendido'},
+   {value:'deferred',label:'Pausado'}
+ ];
+ get filteredPastoralQueue():PastoralQueueItem[]{
+  const query=this.pastoralQueueSearch.trim().toLocaleLowerCase('pt-BR');
+  return this.pastoralQueue.filter(item=>!query||
+    (item.person?.full_name||'').toLocaleLowerCase('pt-BR').includes(query)||
+    (item.person?.phone||'').includes(query));
+ }
+ pastoralReasonLabel(key:PastoralCareReason):string{
+   return this.pastoralReasons.find(x=>x.value===key)?.label||key;
+ }
  get pastoralBooked():number{return this.pastoralSlots.filter(slot=>slot.deacon_id!==null).length}
  get pastoralApproved():number{return this.pastoralSlots.filter(slot=>slot.approval_status==='approved').length}
  get intercessionConfigured():boolean{return this.intercessionTemplates.length>0&&this.intercessionTemplates.every(t=>t.people_per_service===4)}
@@ -148,10 +181,62 @@ export class AppComponent implements OnInit {
     };
    }
    this.pastoralLoaded=true;
+   if(this.admin)await this.loadPastoralQueue();
   }catch(e){this.error=this.msg(e)}
   finally{this.pastoralLoading=false}
  }
- async savePastoral(slot:PastoralSlot):Promise<void>{
+
+ async loadPastoralQueue():Promise<void>{
+  if(!this.admin)return;
+  this.pastoralQueueLoading=true;
+  try{
+   const result=await this.api.pastoralQueue();
+   this.pastoralQueue=result.items;
+   this.pastoralVerifyCandidates=result.needs_verification;
+   this.pastoralQueueDraft={};
+   for(const person of result.items){
+    this.pastoralQueueDraft[person.id]={
+     priority:person.priority,reason:person.reason,stage:person.stage
+    };
+   }
+   this.pastoralQueueLoaded=true;
+  }catch(e){this.error=this.msg(e)}
+  finally{this.pastoralQueueLoading=false}
+ }
+ async addPastoralCandidate():Promise<void>{
+  if(!this.pastoralNew.deacon_id){this.error='Escolha um diácono para incluir na fila.';return;}
+  await this.run(async()=>{
+   await this.api.addPastoralQueue({...this.pastoralNew});
+   this.pastoralNew={deacon_id:'',priority:2,reason:'verify_status'};
+   await this.loadPastoralQueue();
+  },'Pessoa incluída na fila pastoral. Nenhum convite foi enviado.');
+ }
+ async addPastoralVerification(person:PastoralCarePerson):Promise<void>{
+  await this.run(async()=>{
+   await this.api.addPastoralQueue({
+    deacon_id:person.id,priority:2,reason:'verify_status'
+   });
+   await this.loadPastoralQueue();
+  },'Situação adicionada para conferência da liderança, sem presumir afastamento.');
+ }
+ async updatePastoralCandidate(item:PastoralQueueItem):Promise<void>{
+  const fields=this.pastoralQueueDraft[item.id];if(!fields)return;
+  await this.run(async()=>{
+   await this.api.updatePastoralQueue(item.id,{...fields});
+   await this.loadPastoralQueue();
+  },'Prioridade e etapa de acompanhamento atualizadas.');
+ }
+ preparePastoralSlot(item:PastoralQueueItem):void{
+  if(!item.person){this.error='Cadastro não encontrado.';return}
+  const slot=this.pastoralSlots.find(v=>!v.deacon_id&&v.status==='proposed');
+  if(!slot||!this.pastoralDraft[slot.id]){
+    this.error='Não há vaga livre na agenda proposta. Revise a agenda do pastor.';return;
+  }
+  this.pastoralDraft[slot.id].deacon_id=item.deacon_id;
+  this.notice='Nome reservado apenas no formulário do atendimento '+slot.appointment_date+
+     '. Confira o horário, obtenha aprovação do Pr. Sato e clique em Salvar na agenda abaixo.';
+ }
+  async savePastoral(slot:PastoralSlot):Promise<void>{
   const draft=this.pastoralDraft[slot.id];if(!draft)return;
   await this.run(async()=>{
    await this.api.updatePastoralSlot(slot.id,{
