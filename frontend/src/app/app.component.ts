@@ -14,6 +14,7 @@ export class AppComponent implements OnInit {
  deacons:Deacon[]=[];groups:Group[]=[];users:User[]=[];followups:Followup[]=[];
  expandedGroupId:string|null=null;
  workspace:LeaderWorkspace|null=null;workspaceLoading=false;workspaceLoaded=false;workspaceFilter:'due'|'without_contact'|'referrals'='due';
+ workspaceSearch='';workspaceVisibleLimit=20;
  monthlyReport:MonthlyReport|null=null;reportMonth=new Date().toISOString().slice(0,7);reportLoading=false;reportLoaded=false;
  readiness:ReadinessSummary|null=null;recentAudit:AuditEvent[]=[];auditLoading=false;
 
@@ -175,10 +176,22 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   });
  }
 
- get visibleWorkspaceItems():WorkspaceMember[]{
+ get workspaceFilteredItems():WorkspaceMember[]{
   if(!this.workspace)return [];
-  return this.workspaceFilter==='due'?this.workspace.due:
-   this.workspaceFilter==='without_contact'?this.workspace.without_contact:this.workspace.referrals;
+  const source=this.workspaceFilter==='due'?this.workspace.due:
+    this.workspaceFilter==='without_contact'?this.workspace.without_contact:this.workspace.referrals;
+  const term=this.normalizeSearch(this.workspaceSearch);
+  if(!term)return source;
+  const digits=term.replace(/\D/g,'');
+  return source.filter(person=>this.normalizeSearch(person.full_name).includes(term)||
+    this.normalizeSearch(person.group_name||'').includes(term)||
+    (digits.length>=3&&(person.phone||'').replace(/\D/g,'').includes(digits)));
+ }
+ get visibleWorkspaceItems():WorkspaceMember[]{
+  return this.workspaceFilteredItems.slice(0,this.workspaceVisibleLimit);
+ }
+ selectWorkspaceFilter(filter:'due'|'without_contact'|'referrals'):void{
+  this.workspaceFilter=filter;this.workspaceVisibleLimit=20;this.workspaceSearch='';
  }
  get monthGroups():{name:string;leader_name:string|null;people:number;contacted:number}[]{
   return this.monthlyReport?.group_breakdown||[];
