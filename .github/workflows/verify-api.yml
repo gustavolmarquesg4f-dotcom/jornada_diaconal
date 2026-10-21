@@ -31,6 +31,12 @@ jobs:
             STATUS=$(curl -sS -o /tmp/jd-protected-route.json -w "%{http_code}" --max-time 20 "$API/$ROUTE")
             test "$STATUS" = "401" || { echo "$ROUTE retornou $STATUS"; exit 1; }
           done
+      - name: Bloquear remoção anônima de integrantes
+        run: |
+          set -euo pipefail
+          API="https://wscvdtrmplqokceaztrv.supabase.co/functions/v1/jornada-gestao-api"
+          STATUS=$(curl -sS -o /tmp/jd-anon-delete.json -w "%{http_code}" --max-time 20 -X DELETE "$API/groups/00000000-0000-4000-8000-000000000000/members/00000000-0000-4000-8000-000000000000")
+          test "$STATUS" = "401" || { echo "DELETE anônimo retornou $STATUS"; exit 1; }
       - name: Verificar login inválido e comunicação com o banco
         run: |
           set -euo pipefail
