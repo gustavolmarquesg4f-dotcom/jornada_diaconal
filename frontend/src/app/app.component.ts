@@ -208,26 +208,48 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   this.sidebarCollapsed=!this.sidebarCollapsed;
   try{sessionStorage.setItem('jdg_compact_sidebar',this.sidebarCollapsed?'yes':'no')}catch{}
  }
+ private clearViewCache():void{
+  this.dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
+  this.deacons=[];this.groups=[];this.users=[];this.followups=[];
+  this.selected=null;this.selectedAvailability=null;this.selectedRegistry=null;
+  this.observations=[];this.observationsLoaded=false;this.observationsLoading=false;
+  this.workspace=null;this.workspaceLoaded=false;this.workspaceLoading=false;
+  this.monthlyReport=null;this.reportLoaded=false;this.reportLoading=false;
+  this.readiness=null;this.recentAudit=[];this.auditLoading=false;
+  this.pastoralSlots=[];this.pastoralLoaded=false;this.pastoralQueue=[];
+  this.pastoralQueueLoaded=false;this.pastoralVerifyCandidates=[];this.pastoralDraft={};
+  this.intercessionTemplates=[];this.intercessionDraws=[];this.intercessionLoaded=false;
+  this.intercessionCandidates={};this.intercessionReplacements={};
+  this.showPrintPanel=false;this.printReady=false;this.showFollowup=false;
+  this.showNewDeacon=false;this.showNewGroup=false;this.showNewUser=false;
+  this.showMenu=false;this.showHelp=false;this.closeQuickSearch();
+  this.search='';this.observationSearch='';this.pastoralQueueSearch='';
+  this.page='dashboard';this.notice='';this.error='';
+ }
  async ngOnInit():Promise<void>{
   if(this.api.authorized){
    try{const u=await this.api.me();this.showChangePassword=!!u.must_change_password;
       if(!this.showChangePassword){await this.reload();this.restoreWorkspace()}}
-   catch{this.api.clear()}
+   catch{this.api.clear();this.clearViewCache()}
   }
   this.loading=false;
  }
  async login():Promise<void>{
   this.busy=true;this.error='';
   try{const u=await this.api.login(this.email,this.password);this.password='';
+   this.clearViewCache();
    this.showChangePassword=!!u.must_change_password;
    if(!this.showChangePassword){await this.reload();this.restoreWorkspace()}
   }catch(e){this.error=this.msg(e)}finally{this.busy=false}
  }
  async changePassword():Promise<void>{this.error='';if(this.changeNew.length<12){this.error='A senha precisa ter pelo menos 12 caracteres.';return}if(this.changeNew!==this.changeNewConfirm){this.error='A confirmação da senha não confere.';return}this.busy=true;try{await this.api.changePassword(this.changeOld,this.changeNew);if(this.api.user)this.api.user.must_change_password=false;this.changeOld='';this.changeNew='';this.changeNewConfirm='';this.showChangePassword=false;this.notice='Senha atualizada com sucesso.';await this.reload()}catch(e){this.error=this.msg(e)}finally{this.busy=false}}
  async logout():Promise<void>{
-  await this.api.logout();
-  try{sessionStorage.removeItem('jdg_current_module');sessionStorage.removeItem('jdg_compact_sidebar')}catch{}
-  this.showChangePassword=false;this.closeQuickSearch();this.showHelp=false;this.page='dashboard';this.selected=null;
+  try{await this.api.logout()}
+  finally{
+   this.api.clear();this.clearViewCache();
+   try{sessionStorage.removeItem('jdg_current_module');sessionStorage.removeItem('jdg_compact_sidebar')}catch{}
+   this.showChangePassword=false;
+  }
  }
  async reload():Promise<void>{this.error='';try{const [d,people,groups]=await Promise.all([this.api.dashboard(),this.api.deacons(),this.api.groups()]);this.dashboard=d;this.deacons=people;this.groups=groups;if(this.canManage)this.users=await this.api.users();else this.users=[]}catch(e){this.error=this.msg(e)}}
  goto(page:Page):void{
