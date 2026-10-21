@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, timeout, TimeoutError } from 'rxjs';
 
 declare global { interface Window { __DIACONATO_CONFIG__?: { apiUrl: string } } }
 export type Role = 'admin'|'coordinator'|'leader';
@@ -96,8 +96,8 @@ export class ApiService {
  private headers():HttpHeaders{return new HttpHeaders(this.token?{'Authorization':`Bearer ${this.token}`}:{})}
  private async send<T>(method:'GET'|'POST'|'PATCH'|'DELETE',path:string,body?:unknown):Promise<T>{
    if (!this.apiUrl) throw new Error('A API ainda não foi configurada. Confira a configuração do serviço Supabase da Jornada Diaconal.');
-   try {return await firstValueFrom(this.http.request<T>(method,this.apiUrl+path,{headers:this.headers(),body})) as T}
-   catch(e){if(e instanceof HttpErrorResponse){if(e.status===401){this.clear()}throw Error(e.error?.error||`Falha de comunicação (${e.status||'rede'}).`)}throw e}
+   try {return await firstValueFrom(this.http.request<T>(method,this.apiUrl+path,{headers:this.headers(),body}).pipe(timeout({first:30000}))) as T}
+   catch(e){if(e instanceof TimeoutError)throw Error('O servidor demorou para responder. Confira sua conexão e tente atualizar os dados.');if(e instanceof HttpErrorResponse){if(e.status===401){this.clear()}throw Error(e.error?.error||`Falha de comunicação (${e.status||'rede'}).`)}throw e}
  }
  clear():void{sessionStorage.removeItem('diaconato_access_token');this.user=null}
  async login(email:string,password:string):Promise<User>{const result=await this.send<{user:User;token:string}>('POST','/auth/login',{email,password});sessionStorage.setItem('diaconato_access_token',result.token);this.user=result.user;return result.user}

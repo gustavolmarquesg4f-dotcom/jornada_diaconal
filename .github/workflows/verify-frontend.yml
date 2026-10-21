@@ -1,0 +1,36 @@
+name: Validar frontend Jornada Diaconal
+on:
+  push:
+    branches: [melhorias-velocidade-usabilidade-out2026]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-and-static-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar pacotes
+        working-directory: frontend
+        run: npm install --no-audit --no-fund
+      - name: Compilar Angular para produção
+        working-directory: frontend
+        run: npx ng build --configuration production --base-href "/jornada_diaconal/"
+      - name: Verificar artefatos e fluxo de acesso
+        run: |
+          set -euo pipefail
+          DIST="frontend/dist/jornada-diaconal-web/browser"
+          test -f "$DIST/index.html"
+          test -f "$DIST/config.js"
+          test -f "$DIST/demo.html"
+          grep -q "jornada-gestao-api" "$DIST/config.js"
+          grep -q "Carregando acessos" frontend/src/app/app.component.html
+          grep -q "trackBy: trackDeacon" frontend/src/app/app.component.html
+          grep -q "async loadUsers" frontend/src/app/app.component.ts
+          grep -q "Promise.all(\[this.api.deacons(),this.api.groups()\])" frontend/src/app/app.component.ts
