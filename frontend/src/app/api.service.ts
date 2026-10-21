@@ -94,8 +94,8 @@ export class ApiService {
  get token():string|null{return sessionStorage.getItem('diaconato_access_token')}
  get authorized():boolean{return !!this.token}
  private headers():HttpHeaders{return new HttpHeaders(this.token?{'Authorization':`Bearer ${this.token}`}:{})}
- private async send<T>(method:'GET'|'POST'|'PATCH',path:string,body?:unknown):Promise<T>{
-   if (!this.apiUrl) throw new Error('A API ainda não foi configurada. Aguarde a ativação do servidor PHP.');
+ private async send<T>(method:'GET'|'POST'|'PATCH'|'DELETE',path:string,body?:unknown):Promise<T>{
+   if (!this.apiUrl) throw new Error('A API ainda não foi configurada. Confira a configuração do serviço Supabase da Jornada Diaconal.');
    try {return await firstValueFrom(this.http.request<T>(method,this.apiUrl+path,{headers:this.headers(),body})) as T}
    catch(e){if(e instanceof HttpErrorResponse){if(e.status===401){this.clear()}throw Error(e.error?.error||`Falha de comunicação (${e.status||'rede'}).`)}throw e}
  }
