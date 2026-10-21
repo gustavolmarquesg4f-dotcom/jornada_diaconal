@@ -498,6 +498,9 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   if(this.draftUser.password.length<12){
     this.modalError='A senha provisória deve ter pelo menos 12 caracteres.';return;
   }
+  if(this.draftUser.role==='leader'&&!this.draftUser.linked_deacon_id){
+    this.modalError='Escolha o diácono que terá acesso como líder de grupo.';return;
+  }
   await this.run(async()=>{
    await this.api.createUser({...this.draftUser,
     linked_deacon_id:this.draftUser.role==='leader'?(this.draftUser.linked_deacon_id||null):null});
