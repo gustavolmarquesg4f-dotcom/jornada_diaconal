@@ -93,17 +93,134 @@
 @media(max-width:680px){.availability-options{grid-template-columns:1fr}.availability-form-footer{flex-direction:column;align-items:stretch}.availability-form-footer button{width:100%}}
 
 /* Integrantes dos grupos, com movimentação segura e confirmação para desvincular */
-.group-members-panel{border-top:1px solid #e0edf0;margin-top:13px;padding-top:13px}
-.group-member-line{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid #ebf1f2}
-.group-member-line>div:first-child{min-width:0;flex:1}
-.group-member-line strong,.group-member-line small{display:block;overflow-wrap:anywhere}
-.group-member-line strong{font-size:12px;color:#1d5365}
-.group-member-line small{font-size:11px;color:#78929b;margin-top:4px}
-.group-member-tools{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
-.group-member-tools select{max-width:150px;min-width:112px;border:1px solid #cce0e7;border-radius:8px;background:white;color:#205569;min-height:36px;padding:6px;font-size:11px}
-.group-member-tools button{min-height:34px;padding:7px;font-size:11px}
-@media(max-width:1000px){.group-member-line{flex-direction:column;align-items:stretch}.group-member-tools{justify-content:flex-start;align-items:stretch}.group-member-tools select{flex:1;max-width:none}}
+/* Layout estável: nomes e ações nunca dividem a mesma linha estreita. */
+.group-members-panel{
+ border-top:1px solid #e0edf0;
+ margin-top:15px;
+ padding-top:12px;
+ min-width:0;
+ width:100%;
+}
+.group-member-line{
+ display:flex;
+ flex-direction:column;
+ align-items:stretch;
+ gap:11px;
+ min-width:0;
+ width:100%;
+ padding:14px 0;
+ border-top:1px solid #ebf1f2;
+}
+.group-member-line:first-child{border-top:0}
+.group-member-identity{
+ display:flex;
+ gap:10px;
+ align-items:flex-start;
+ flex:0 0 auto;
+ min-width:0;
+ width:100%;
+}
+.group-member-identity>.person-circle{
+ flex:0 0 36px;
+ width:36px;
+ height:36px;
+}
+.group-member-identity-text{
+ flex:1 1 auto;
+ min-width:0;
+ width:100%;
+ max-width:100%;
+ overflow-wrap:break-word;
+ word-break:normal;
+}
+.group-member-identity-text strong{
+ display:block;
+ color:#154d60;
+ font-size:13px;
+ font-weight:800;
+ line-height:1.45;
+ white-space:normal;
+ overflow-wrap:break-word;
+ word-break:normal;
+}
+.group-member-identity-text small{
+ display:block;
+ font-size:11px;
+ color:#78929b;
+ margin-top:4px;
+ line-height:1.5;
+ overflow-wrap:break-word;
+ word-break:normal;
+}
+.group-member-tools{
+ display:flex;
+ flex-wrap:wrap;
+ width:100%;
+ min-width:0;
+ align-items:center;
+ justify-content:flex-start;
+ gap:8px;
+}
+.group-member-tools button{
+ min-height:39px;
+ border-radius:9px;
+ padding:9px 12px;
+ font-size:11px;
+ line-height:1.3;
+ white-space:nowrap;
+}
+.group-member-open{flex:0 0 auto}
+.group-member-remove{margin-left:auto}
+.group-member-transfer{
+ display:flex;
+ align-items:center;
+ flex:1 1 210px;
+ min-width:0;
+ gap:7px;
+}
+.group-member-transfer select{
+ width:100%;
+ min-width:0;
+ max-width:none;
+ flex:1 1 145px;
+ min-height:39px;
+ border:1px solid #cce0e7;
+ border-radius:9px;
+ background:white;
+ color:#205569;
+ padding:8px 9px;
+ font-size:11px;
+}
+.group-member-transfer button{flex:0 0 auto}
+@media(max-width:700px){
+ .group-member-tools{align-items:stretch}
+ .group-member-open{flex:1 1 130px}
+ .group-member-transfer{order:3;flex-basis:100%;width:100%}
+ .group-member-remove{margin-left:0}
+}
+@media(max-width:440px){
+ .group-member-line{gap:10px;padding:13px 0}
+ .group-member-tools button{min-height:42px}
+ .group-member-remove{margin-left:0}
+}
 
+/* Cartões amplos: uma ou duas colunas de acordo com espaço real do conteúdo. */
+.group-cards{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(min(100%,500px),1fr));
+ align-items:start;
+ gap:18px;
+ min-width:0;
+ width:100%;
+}
+.group-card{min-width:0;width:100%;max-width:100%;overflow-wrap:normal;word-break:normal;}
+.group-card-top{flex-wrap:wrap}
+.group-card .pill{white-space:normal;max-width:100%;text-align:right;}
+@media(max-width:740px){
+ .group-cards{grid-template-columns:minmax(0,1fr);}
+ .group-card{padding:18px;}
+ .group-card-top{margin-bottom:17px;}
+}
 /* Jornada consolidada: uma seção para vínculos, uma para acompanhamento */
 .navigation-subheading{font-size:10px;letter-spacing:.09em;color:#688ca0;margin:14px 0 8px;white-space:nowrap;pointer-events:none}
 .group-heading-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
