@@ -41,7 +41,7 @@
     <nav class="navigation" aria-label="Menu principal">
       <button type="button" title="Visão geral" aria-label="Visão geral" [class.active]="page==='dashboard'" [attr.aria-current]="page==='dashboard'?'page':null" (click)="goto('dashboard')"><span class="nav-icon">◫</span> Visão geral</button>
       <button type="button" title="Diáconos" aria-label="Diáconos" [class.active]="page==='deacons'" [attr.aria-current]="page==='deacons'?'page':null" (click)="goto('deacons')"><span class="nav-icon">♙</span> Diáconos</button>
-      <button type="button" title="Grupos e liderança" aria-label="Grupos e liderança" [class.active]="page==='groups'" [attr.aria-current]="page==='groups'?'page':null" (click)="goto('groups')"><span class="nav-icon">♧</span> Grupos e liderança</button>
+      <button type="button" title="Grupos e liderança" aria-label="Grupos e liderança" [class.active]="page==='groups'" [attr.aria-current]="page==='groups'?'page':null" (click)="goto('groups')"><span class="nav-icon">♧</span> {{canManage?'Grupos e liderança':'Minha equipe'}}</button>
       <button type="button" title="Acompanhamento" aria-label="Acompanhamento" [class.active]="page==='followups'" [attr.aria-current]="page==='followups'?'page':null" (click)="goto('followups')"><span class="nav-icon">♡</span> Acompanhamento</button>
       <button *ngIf="canManage" type="button" title="Escala de intercessão" aria-label="Escala de intercessão" [class.active]="page==='intercession'" [attr.aria-current]="page==='intercession'?'page':null" (click)="goto('intercession')"><span class="nav-icon">✦</span> Escala de intercessão</button>
       <button *ngIf="canManage" type="button" title="Agenda do Pr. Sato" aria-label="Agenda do Pr. Sato" [class.active]="page==='pastoral'" [attr.aria-current]="page==='pastoral'?'page':null" (click)="goto('pastoral')"><span class="nav-icon">▤</span> Agenda do Pr. Sato</button>
@@ -669,8 +669,9 @@
 
       <section *ngIf="page==='groups'">
         <div class="page-heading group-heading">
-          <div><span class="eyebrow">CUIDADO DE PROXIMIDADE · LIDERANÇA</span><h1>Grupos e liderança</h1>
-            <p>Aqui são definidos os responsáveis, as equipes e seus vínculos — uma única área de organização do diaconato.</p>
+          <div><span class="eyebrow">CUIDADO DE PROXIMIDADE · LIDERANÇA</span>
+            <h1>{{canManage?'Grupos e liderança':'Minha equipe'}}</h1>
+            <p>{{canManage?'Defina responsáveis, selecione integrantes e organize os vínculos de cada grupo.':'Consulte apenas os integrantes dos grupos sob sua responsabilidade e registre seus contatos de cuidado.'}}</p>
           </div>
           <div class="group-heading-actions">
             <button type="button" class="outline" (click)="refreshCurrentPage()" [disabled]="busy||refreshing">{{refreshing?'Atualizando...':'↻ Atualizar'}}</button>
@@ -679,11 +680,11 @@
           </div>
         </div>
         <div class="group-leadership-summary">
-          <div class="group-pastoral-director"><span class="eyebrow">ORIENTAÇÃO PASTORAL</span><strong>Pr. Sato</strong><small>Acompanha os responsáveis dos grupos, sem substituir o cuidado de proximidade.</small></div>
+          <div class="group-pastoral-director"><span class="eyebrow">{{canManage?'ORIENTAÇÃO PASTORAL':'MEUS GRUPOS DE CUIDADO'}}</span><strong>{{canManage?'Pr. Sato':(currentUser?.name||'Minha equipe')}}</strong><small>{{canManage?'Acompanha os responsáveis dos grupos, sem substituir o cuidado de proximidade.':'Você pode consultar sua equipe, acompanhar pessoas e registrar retornos. Outros grupos e observações reservadas não são exibidos.'}}</small></div>
           <div class="group-leadership-stat"><strong>{{groups.length}}</strong><span>Grupos cadastrados</span></div>
-          <div class="group-leadership-stat"><strong>{{unassigned.length}}</strong><span>Diáconos sem grupo</span></div>
+          <div class="group-leadership-stat"><strong>{{canManage?unassigned.length:deacons.length}}</strong><span>{{canManage?'Diáconos sem grupo':'Pessoas sob meu cuidado'}}</span></div>
         </div>
-        <div class="context-strip"><span>♡</span><div><strong>Um grupo, um responsável de referência.</strong><p>O líder cuida do contato e dos retornos pelo menu Acompanhamento. Os vínculos e as transferências de equipe são administrados aqui; a definição dos líderes depende da aprovação do Pr. Sato.</p></div></div>
+        <div class="context-strip"><span>♡</span><div><strong>{{canManage?'Um grupo, um responsável de referência.':'Meu compromisso de cuidado.'}}</strong><p>{{canManage?'Organize os membros aqui. O líder registra os contatos em Acompanhamento.':'Abra um integrante para registrar conversas, combinar retornos ou sinalizar a necessidade de atenção pastoral.'}}</p></div></div>
         <div class="group-cards"><div *ngFor="let g of groups" class="group-card"><div class="group-card-top"><div class="group-initial large">{{g.name.charAt(0)}}</div><span class="pill">{{g.members}} DE {{g.target_size}} VAGAS DE REFERÊNCIA</span></div><h3>{{g.name}}</h3><p>Responsável: <strong>{{g.leader_name||'Ainda não definido'}}</strong></p>
           <div class="group-leader-actions">
             <button *ngIf="canManage" class="outline" type="button" (click)="openNewLeader(g)" [disabled]="busy">
@@ -697,8 +698,32 @@
             <span *ngIf="g.leader_deacon_id && !g.leader_access_enabled && !admin" class="leader-access-state">
               Sem acesso individual ainda
             </span>
-          </div><div class="capacity"><span [style.width.%]="capacityPercent(g)"></span></div><small>Quantidade ajustável segundo a realidade do grupo</small><div class="group-card-bottom"><span>{{g.members}} diáconos acompanhados</span><button type="button" (click)="expandedGroupId=expandedGroupId===g.id?null:g.id" [attr.aria-expanded]="expandedGroupId===g.id">{{expandedGroupId===g.id?'Recolher integrantes':'Ver integrantes →'}}</button></div>
-          <div *ngIf="expandedGroupId===g.id" class="group-members-panel">
+          </div><div class="capacity"><span [style.width.%]="capacityPercent(g)"></span></div><small>Quantidade ajustável segundo a realidade do grupo</small><div class="group-card-bottom"><span>{{g.members}} integrantes</span>
+            <button *ngIf="canManage" type="button" (click)="expandedGroupId=expandedGroupId===g.id?null:g.id"
+              [attr.aria-expanded]="expandedGroupId===g.id">{{expandedGroupId===g.id?'Recolher integrantes':'Ver integrantes →'}}</button>
+            <span *ngIf="!canManage" class="leader-roster-caption">Lista da sua equipe</span>
+          </div>
+          <div class="group-card-buttons" *ngIf="canManage">
+            <button type="button" class="primary" (click)="openMemberPicker(g)" [disabled]="busy">
+              + Associar integrantes
+            </button>
+            <button type="button" class="outline" [attr.aria-expanded]="leaderPreviewGroupId===g.id"
+              (click)="leaderPreviewGroupId=leaderPreviewGroupId===g.id?null:g.id">
+              {{leaderPreviewGroupId===g.id?'Fechar prévia':'Prévia da visão do líder'}}
+            </button>
+          </div>
+          <div class="group-leader-preview" *ngIf="canManage && leaderPreviewGroupId===g.id">
+            <span class="eyebrow">SIMULAÇÃO VISUAL · NÃO ALTERA PERMISSÕES</span>
+            <h4>O que o líder verá após receber acesso</h4>
+            <p>Apenas {{g.name}} e seus integrantes, com acesso aos registros de acompanhamento autorizados. Nenhum dado de outro grupo ou observação reservada será disponibilizado.</p>
+            <div class="leader-preview-stats">
+              <div><strong>{{g.members}}</strong><small>Integrantes</small></div>
+              <div><strong>{{previewContactedRecently}}</strong><small>Com contato nos últimos 30 dias</small></div>
+              <div><strong>{{g.members-previewContactedRecently}}</strong><small>Sem contato recente</small></div>
+            </div>
+            <p *ngIf="!g.members">Associe integrantes para visualizar os indicadores da equipe.</p>
+          </div>
+          <div *ngIf="expandedGroupId===g.id || !canManage" class="group-members-panel">
             <div *ngFor="let person of membersForGroup(g.id)" class="group-member-line">
               <div><strong>{{person.full_name}}</strong><small>{{person.phone||'Sem telefone'}} · {{cohortLabel(person.cohort)}}</small></div>
               <div class="group-member-tools" *ngIf="canManage">
@@ -715,7 +740,14 @@
           </div>
         </div></div>
         <div *ngIf="!groups.length" class="surface empty-inline big-empty"><span>♧</span><h3>Ainda não temos grupos de cuidado</h3><p>Crie os primeiros grupos e atribua responsáveis. A equipe poderá começar com um projeto-piloto antes de ampliar.</p><button *ngIf="canManage" class="primary" type="button" (click)="openNewGroup()">Criar um grupo</button></div>
-        <div *ngIf="canManage && unassigned.length && groups.length" class="surface assignment"><div class="surface-head"><h3>Vincular diáconos a grupos</h3><span class="pill">{{unassigned.length}} SEM GRUPO</span></div><div *ngFor="let d of unassigned" class="assignment-row"><div class="person"><span class="person-circle">{{d.full_name.charAt(0)}}</span><strong>{{d.full_name}}</strong></div><select #chosen aria-label="Escolher grupo" [disabled]="busy"><option value="">Escolher grupo...</option><option *ngFor="let g of groups" [value]="g.id">{{g.name}} ({{g.members}}/{{g.target_size}})</option></select><button class="small-primary" (click)="assign(d.id,chosen.value)" [disabled]="busy || !chosen.value">Vincular</button></div></div>
+        <div *ngIf="canManage && unassigned.length && groups.length" class="surface group-assign-guidance">
+          <div class="surface-head"><div><h3>{{unassigned.length}} diáconos aguardam grupo</h3>
+            <p>Para associar pessoas, clique em <strong>+ Associar integrantes</strong> no cartão do grupo desejado. Você poderá pesquisar nomes e selecionar várias pessoas de uma vez.</p></div>
+            <span class="pill">CADASTRO ÚNICO</span></div>
+          <button type="button" class="primary" (click)="openMemberPicker(groups[0])" [disabled]="busy||!groups.length">
+            Associar integrantes ao {{groups[0].name}}
+          </button>
+        </div>
       </section>
 
       <section *ngIf="page==='followups' && selected">
@@ -831,6 +863,64 @@
 
 <!-- Modais administrativos e de cuidado -->
 <div *ngIf="showNewDeacon" class="modal-backdrop" (click)="showNewDeacon=false"><form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="createDeacon()"><div class="modal-head"><div><span class="eyebrow">CADASTRO</span><h2>Novo diácono</h2></div><button type="button" class="modal-close" (click)="showNewDeacon=false">×</button></div><div class="form-grid"><label class="span-2">Nome completo<input name="full_name" required [(ngModel)]="draftDeacon.full_name"></label><label>Turma<select name="cohort" [(ngModel)]="draftDeacon.cohort"><option value="antigo">Antigo</option><option value="novo">Novo</option></select></label><label>Situação<select name="status" [(ngModel)]="draftDeacon.status"><option value="active">Ativo</option><option value="away">Afastamento temporário</option><option value="inactive">Inativo</option></select></label><label>Telefone<input name="phone" [(ngModel)]="draftDeacon.phone"></label><label>E-mail<input type="email" name="email" [(ngModel)]="draftDeacon.email"></label><label class="span-2">Disponibilidade (opcional)<textarea name="availability" [(ngModel)]="draftDeacon.availability" rows="2" placeholder="Ex.: domingos de manhã, exceto último domingo"></textarea></label></div><div class="modal-actions"><button class="outline" type="button" (click)="showNewDeacon=false">Cancelar</button><button class="primary" [disabled]="busy">Salvar cadastro</button></div></form></div>
+<div *ngIf="memberPickerGroupId && canManage" class="modal-backdrop member-picker-backdrop" (click)="closeMemberPicker()">
+  <div class="modal member-picker-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true"
+    aria-labelledby="member-picker-title">
+    <div class="modal-head">
+      <div><span class="eyebrow">GRUPOS E LIDERANÇA</span><h2 id="member-picker-title">Associar integrantes</h2>
+        <p class="hint">Grupo: <strong>{{pickerGroup?.name||'Selecione o grupo'}}</strong></p>
+      </div>
+      <button type="button" class="modal-close" (click)="closeMemberPicker()" [disabled]="busy" aria-label="Fechar">×</button>
+    </div>
+    <p class="modal-hint">Marque os diáconos que farão parte deste grupo. Apenas pessoas sem grupo aparecem aqui. A associação será salva de uma vez e preservará os cadastros existentes.</p>
+    <div *ngIf="memberPickerError" role="alert" class="modal-inline-error">{{memberPickerError}}</div>
+    <div class="member-picker-toolbar">
+      <label for="member-picker-search">Buscar por nome ou telefone
+        <input id="member-picker-search" type="search" name="member-picker-search"
+          [(ngModel)]="memberPickerSearch" (ngModelChange)="memberPickerLimit=25"
+          placeholder="Ex.: Gustavo, Elaine..." autocomplete="off">
+      </label>
+      <div class="member-picker-stats">
+        <strong>{{memberPickerSelected.length}}</strong> selecionado(s)
+        <span>· {{pickerCandidates.length}} resultado(s)</span>
+      </div>
+    </div>
+    <div class="member-picker-controls">
+      <button type="button" class="outline" (click)="selectVisibleMembers()" [disabled]="busy||!pickerVisibleCandidates.length">
+        Selecionar os nomes exibidos
+      </button>
+      <button type="button" class="text-button" (click)="memberPickerSelected=[];memberPickerError=''"
+        [disabled]="busy||!memberPickerSelected.length">Limpar seleção</button>
+    </div>
+    <div class="member-picker-list" role="group" aria-label="Diáconos disponíveis para associação">
+      <label *ngFor="let d of pickerVisibleCandidates" class="member-picker-row" [class.picked]="isMemberPicked(d.id)">
+        <input type="checkbox" [checked]="isMemberPicked(d.id)" [disabled]="busy"
+          (change)="toggleMemberPick(d.id,!isMemberPicked(d.id))">
+        <span class="person-circle" aria-hidden="true">{{d.full_name.charAt(0)}}</span>
+        <span class="member-picker-person"><strong>{{d.full_name}}</strong>
+          <small>{{cohortLabel(d.cohort)}} · {{statusLabel(d.status)}} · {{d.phone||'Sem telefone'}}</small>
+        </span>
+      </label>
+      <p *ngIf="!pickerCandidates.length" class="empty-inline">
+        Não foram encontrados diáconos sem grupo com essa pesquisa.
+      </p>
+    </div>
+    <button type="button" class="outline member-picker-more" *ngIf="pickerVisibleCandidates.length<pickerCandidates.length"
+      (click)="memberPickerLimit=memberPickerLimit+25" [disabled]="busy">
+      Exibir mais ({{pickerCandidates.length-pickerVisibleCandidates.length}} restantes)
+    </button>
+    <div class="member-picker-footer">
+      <p>{{memberPickerSelected.length}} pessoa(s) escolhida(s). Capacidade de referência: {{pickerGroup?.target_size||0}} por grupo; não é um limite rígido.</p>
+      <div class="modal-actions">
+        <button type="button" class="outline" (click)="closeMemberPicker()" [disabled]="busy">Cancelar</button>
+        <button type="button" class="primary" (click)="saveMemberPicker()"
+          [disabled]="busy||!memberPickerSelected.length">
+          {{busy?'Salvando...':'Associar '+memberPickerSelected.length+' integrante(s)'}}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 <div *ngIf="showNewGroup" class="modal-backdrop" (click)="showNewGroup=false;modalError=''">
  <form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="createGroup()" #groupForm="ngForm" aria-label="Criar grupo de cuidado">
   <div class="modal-head"><div><span class="eyebrow">GRUPOS E LIDERANÇA</span><h2>Criar grupo</h2>
