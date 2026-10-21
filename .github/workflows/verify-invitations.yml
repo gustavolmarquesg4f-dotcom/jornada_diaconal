@@ -1,0 +1,48 @@
+name: Validar convites da Jornada Diaconal
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'supabase/functions/jornada-convites-api/**'
+      - 'supabase/migrations/20261021_jornada_user_invites.sql'
+      - 'frontend/**'
+      - '.github/workflows/verify-invitations.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Validar função Deno
+        run: deno check supabase/functions/jornada-convites-api/index.ts
+      - name: Garantir convite sem senha enviada por e-mail
+        run: |
+          set -euo pipefail
+          grep -q 'expires_at:new Date(Date.now()+24\*60\*60\*1000)' supabase/functions/jornada-convites-api/index.ts
+          grep -q 'rpc/jdg_complete_user_invite' supabase/functions/jornada-convites-api/index.ts
+          grep -q 'must_change_password = false' supabase/migrations/20261021_jornada_user_invites.sql
+          grep -q 'REVOKE ALL ON FUNCTION public.jdg_complete_user_invite' supabase/migrations/20261021_jornada_user_invites.sql
+          test -f frontend/public/convite-acesso.html
+          test -f frontend/public/ativar-acesso.html
+      - name: Instalar dependências
+        working-directory: frontend
+        run: npm install --no-audit --no-fund
+      - name: Compilar aplicação Angular
+        working-directory: frontend
+        run: npx ng build --configuration production --base-href "/jornada_diaconal/"
+      - name: Verificar arquivos de ativação no pacote
+        run: |
+          set -euo pipefail
+          DIST="frontend/dist/jornada-diaconal-web/browser"
+          test -f "$DIST/index.html"
+          test -f "$DIST/convite-acesso.html"
+          test -f "$DIST/ativar-acesso.html"
