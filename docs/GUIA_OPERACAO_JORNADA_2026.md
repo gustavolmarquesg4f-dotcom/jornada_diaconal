@@ -10,13 +10,26 @@ Manter um cadastro íntegro, acompanhar o vínculo dos diáconos, organizar os r
 
 A aplicação **não determina** o estado espiritual ou emocional de ninguém. Observações pessoais e confidências não devem ser transformadas em avaliações automatizadas ou enviadas por mensageria.
 
+## Navegação única (sem módulos redundantes)
+
+- **Visão geral** — indicadores resumidos, sem lançamentos ou edição
+- **Diáconos** — cadastro, pesquisa, impressão e exportação de listas
+- **Grupos e liderança** — estrutura pastoral, indicação de responsáveis, equipes, vínculos e transferências
+- **Acompanhamento** — pendências de contato, histórico individual, retornos e disponibilidade operacional
+- **Escala de intercessão** — sorteio, dupla por posto, confirmação e publicação
+- **Agenda do Pr. Sato** — fila de acolhimento e horários aprovados
+- **Relatórios** — indicadores mensais, CSV, prontidão e auditoria
+- **Observações reservadas** e **Usuários e acessos** — somente administradores
+
+A disponibilidade dos cultos é editada **apenas** no formulário operacional do perfil individual; o cadastro reservado mantém somente informações familiares e observações originais. As informações reservadas não são enviadas ao painel de acompanhamento.
+
 ## 2. Perfis
 
 | Perfil | Uso previsto |
 |---|---|
 | Administrador | Cadastros, configuração de lideranças, observações originais, relatórios, auditoria, agenda pastoral e escalas |
 | Coordenação | Cadastro operacional, grupos, disponibilidade, escalas, agenda e acompanhamento autorizado; sem acesso a observações originais |
-| Líder de grupo | Apenas diáconos vinculados aos seus grupos: contatos, disponibilidade operacional, Meu Ministério e relatórios de seu escopo |
+| Líder de grupo | Apenas diáconos vinculados aos seus grupos: contatos, disponibilidade operacional, Acompanhamento e relatórios de seu escopo |
 
 Sempre criar **credenciais individuais**. Não compartilhar senha de administrador. Senhas provisórias devem ser alteradas no primeiro acesso.
 
@@ -24,8 +37,8 @@ Sempre criar **credenciais individuais**. Não compartilhar senha de administrad
 
 1. Confirmar com o Pr. Sato quais pessoas serão líderes e qual será o grupo-piloto. Não atribuir automaticamente lideranças ou grupos.
 2. Em **Usuários e acesso**, criar acessos individuais com perfil de responsável.
-3. Em **Grupos de cuidado**, criar os grupos, vincular responsáveis e distribuir os diáconos. É possível transferir ou desvincular sem excluir histórico.
-4. Em **Meu Ministério**, cada responsável acompanha contatos a realizar, pessoas sem contato recente e encaminhamentos sinalizados.
+3. Em **Grupos e liderança**, criar os grupos, vincular responsáveis e distribuir os diáconos. É possível transferir ou desvincular sem excluir histórico.
+4. Em **Acompanhamento**, cada responsável acompanha contatos a realizar, pessoas sem contato recente e encaminhamentos sinalizados.
 5. No **Acompanhamento** individual, registrar o contato objetivo, a próxima data e eventual necessidade de atenção pastoral.
 6. Registrar disponibilidade dos cultos no perfil de cada diácono; conferir **os dois cônjuges** quando ambos são diáconos.
 7. Em **Escala de intercessão**, sortear rascunho, conferir a distribuição de duas pessoas em cada uma das duas portas, confirmar individualmente e somente então publicar.
@@ -45,7 +58,7 @@ Sempre criar **credenciais individuais**. Não compartilhar senha de administrad
 - [ ] O acesso sem sessão é rejeitado em painéis, relatórios, auditoria e disponibilidade.
 - [ ] Um líder **não** consegue acessar cadastro, disponibilidade ou histórico fora de seus grupos.
 - [ ] Administrador consegue criar grupo, vincular e transferir integrante sem perder histórico.
-- [ ] Registro de contato gera próximo retorno e aparece no Meu Ministério.
+- [ ] Registro de contato gera próximo retorno e aparece no Acompanhamento.
 - [ ] A disponibilidade atualizada aparece no sorteio de uma semana futura.
 - [ ] Casais vinculados não são separados em um sorteio; nenhuma escala com vagas não confirmadas é publicada.
 - [ ] O resultado impresso e o CSV respeitam o grupo selecionado e não contêm observações pessoais.
