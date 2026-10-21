@@ -37,6 +37,15 @@ jobs:
           API="https://wscvdtrmplqokceaztrv.supabase.co/functions/v1/jornada-gestao-api"
           STATUS=$(curl -sS -o /tmp/jd-anon-delete.json -w "%{http_code}" --max-time 20 -X DELETE "$API/groups/00000000-0000-4000-8000-000000000000/members/00000000-0000-4000-8000-000000000000")
           test "$STATUS" = "401" || { echo "DELETE anônimo retornou $STATUS"; exit 1; }
+      - name: Impedir associação anônima em lote
+        run: |
+          set -euo pipefail
+          API="https://wscvdtrmplqokceaztrv.supabase.co/functions/v1/jornada-gestao-api"
+          ROUTE="groups/e5309aa9-9994-465e-99b8-c8a3f6ab0d02/members/batch"
+          STATUS=$(curl -sS -o /tmp/jdg-batch-auth.json -w "%{http_code}" --max-time 20 \
+            -X POST -H "Content-Type: application/json" \
+            --data '{"deacon_ids":["00000000-0000-4000-8000-000000000000"]}' "$API/$ROUTE")
+          test "$STATUS" = "401" || { echo "Associação anônima retornou $STATUS"; exit 1; }
       - name: Bloquear criação anônima de grupos e líderes
         run: |
           set -euo pipefail
