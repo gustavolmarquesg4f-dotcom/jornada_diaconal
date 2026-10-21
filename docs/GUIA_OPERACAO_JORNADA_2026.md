@@ -51,6 +51,15 @@ Após a criação de uma conta individual de líder, a API associa o usuário ao
 
 Não tem acesso à criação de grupos, à indicação de outros líderes, aos usuários administrativos ou às observações reservadas. O administrador pode verificar o layout usando **Prévia da visão do líder**, disponível em cada cartão de grupo. Essa prévia não se faz passar por outro usuário nem concede novas permissões.
 
+## Excluir grupo sem perder o histórico
+
+Apenas administradores podem usar **Excluir grupo**, no cartão do grupo em **Grupos e liderança**.
+
+- Se houver integrantes, transferir ou desvincular todos antes de confirmar a exclusão. A aplicação e a API bloqueiam a operação enquanto existir vínculo.
+- Quando o grupo estiver vazio, digitar o nome exato na janela de confirmação e clicar em **Confirmar exclusão**.
+- A exclusão desativa o grupo em vez de apagar definitivamente o registro, preservando o histórico administrativo; não exclui nenhum diácono nem a conta individual do responsável.
+- Após confirmar, conferir se o grupo desapareceu da listagem ativa e se os demais cadastros continuam acessíveis.
+
 ## 4. Privacidade e comunicação
 
 - A ferramenta de WhatsApp **prepara** uma mensagem genérica para revisão; ninguém é contatado automaticamente.
