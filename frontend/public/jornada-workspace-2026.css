@@ -128,3 +128,17 @@
 .workspace-search-tools span{margin-left:auto;font-size:11px;color:#75909d;white-space:nowrap}
 .workspace-more{margin:18px auto 8px;display:block;min-height:40px;width:min(100%,360px);text-align:center}
 @media(max-width:560px){.workspace-search-tools{align-items:stretch;flex-direction:column}.workspace-search-tools input{width:100%;max-width:none;flex:auto}.workspace-search-tools span{margin-left:0}}
+
+/* Correções de cadastro de grupos e designação de responsáveis */
+.group-leader-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:11px 0 12px}
+.group-leader-actions button{font-size:12px;min-height:38px}
+.group-leader-actions .text-button{text-align:left;font-weight:750;color:#087f91}
+.leader-access-state{display:inline-flex;align-items:center;gap:6px;color:#69828c;font-size:11px;font-weight:700}
+.leader-access-state span{color:#128d72;font-size:15px}
+.modal-backdrop{z-index:70}
+.modal-backdrop .modal{max-height:calc(100dvh - 36px);overflow-y:auto;overscroll-behavior:contain}
+.modal-inline-error{background:#fff2ef;color:#9f3328;border:1px solid #ebb5aa;border-radius:9px;padding:12px 14px;margin:0 0 16px;font-size:12px;line-height:1.6;font-weight:750}
+.modal .modal-head .hint{margin:6px 0 0;font-size:12px;line-height:1.5;color:#718793;font-weight:400}
+.modal .form-grid select{min-height:46px;max-width:100%}
+.modal .modal-actions button{min-height:42px}
+@media(max-width:600px){.group-leader-actions{align-items:stretch;flex-direction:column}.group-leader-actions button{width:100%}.modal-backdrop{padding:10px}.modal-backdrop .modal{max-height:calc(100dvh - 20px);padding:20px}}
