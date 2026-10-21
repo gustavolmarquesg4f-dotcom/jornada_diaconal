@@ -12,6 +12,8 @@ export class AppComponent implements OnInit {
  printSelection:'all'|'antigo'|'novo'='all';printGeneratedAt=new Date();
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
  deacons:Deacon[]=[];groups:Group[]=[];users:User[]=[];followups:Followup[]=[];
+ usersLoaded=false;usersLoading=false;
+ private deaconFilterCache:{source:Deacon[];search:string;filter:string;items:Deacon[]}|null=null;
  expandedGroupId:string|null=null;
  deleteGroupTarget:Group|null=null;deleteGroupConfirmName='';deleteGroupError='';
 
@@ -157,15 +159,20 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
  }
 
  get filteredDeacons():Deacon[]{
-  const q=this.normalizeSearch(this.search);
-  const digits=q.replace(/\D/g,'');
-  return this.deacons.filter(d=>
+  const cached=this.deaconFilterCache;
+  if(cached?.source===this.deacons&&cached.search===this.search&&cached.filter===this.filter)return cached.items;
+  const q=this.normalizeSearch(this.search),digits=q.replace(/\D/g,'');
+  const items=this.deacons.filter(d=>
     (this.filter==='all'||(this.filter==='unassigned'?!d.group_id:d.cohort===this.filter))&&
     (!q||this.normalizeSearch(d.full_name).includes(q)||
      this.normalizeSearch(d.group_name||'').includes(q)||
      (digits.length>=3&&(d.phone||'').replace(/\D/g,'').includes(digits)))
   ).slice().sort((a,b)=>this.printCollator.compare(a.full_name,b.full_name));
+  this.deaconFilterCache={source:this.deacons,search:this.search,filter:this.filter,items};
+  return items;
  }
+ trackDeacon(_index:number,d:Deacon):string{return d.id;}
+ trackGroup(_index:number,g:Group):string{return g.id;}
 
  get observationsWithNotes():number{
   return this.observations.filter(item=>!!item.restrictions_observations?.trim()).length;
@@ -230,6 +237,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
  private clearViewCache():void{
   this.dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
   this.deacons=[];this.groups=[];this.users=[];this.followups=[];
+  this.usersLoaded=false;this.usersLoading=false;this.deaconFilterCache=null;
   this.selected=null;this.selectedAvailability=null;this.selectedRegistry=null;
   this.observations=[];this.observationsLoaded=false;this.observationsLoading=false;
   this.workspace=null;this.workspaceLoaded=false;this.workspaceLoading=false;
@@ -275,18 +283,33 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
  async reload():Promise<void>{
   this.error='';
   try{
-   const [d,people,groups]=await Promise.all([this.api.dashboard(),this.api.deacons(),this.api.groups()]);
-   this.dashboard=d;this.deacons=people;this.groups=groups;
-   if(this.canManage){
-     try{this.users=await this.api.users()}
-     catch{this.users=[];this.error='Os cadastros e grupos foram carregados, mas não foi possível consultar os usuários de acesso.'}
-   }else this.users=[];
+   // Dashboard e catálogo compartilham os mesmos dados. Evita uma chamada à API
+   // que repetia leituras de cadastros, grupos e contatos no banco.
+   const [people,groups]=await Promise.all([this.api.deacons(),this.api.groups()]);
+   this.deacons=people;this.groups=groups;
+   const cutoff=Date.now()-30*86400000;
+   const recentlyContacted=(person:Deacon)=>!!person.last_contact &&
+     Number.isFinite(Date.parse(person.last_contact)) && Date.parse(person.last_contact)>=cutoff;
+   this.dashboard={totals:{
+     deacons:people.length,
+     without_group:people.filter(person=>!person.group_id).length,
+     contacted_30_days:people.filter(recentlyContacted).length,
+     without_recent_contact:people.filter(person=>person.status==='active'&&!recentlyContacted(person)).length
+   },groups};
    if(this.selected){
     this.selected=people.find(person=>person.id===this.selected?.id)||null;
    }
-   // As métricas dependem dos cadastros, vínculos e contatos recém-salvos.
    this.workspaceLoaded=false;this.reportLoaded=false;
+   // Carregar usuários apenas na administração, não a cada edição em qualquer área.
+   if(this.page==='settings'&&this.admin)await this.loadUsers(true);
   }catch(e){this.error=this.msg(e)}
+ }
+ async loadUsers(force=false):Promise<void>{
+  if(!this.admin||this.usersLoading||(!force&&this.usersLoaded))return;
+  this.usersLoading=true;
+  try{this.users=await this.api.users();this.usersLoaded=true;}
+  catch(e){this.error='Não foi possível consultar os usuários: '+this.msg(e);}
+  finally{this.usersLoading=false;}
  }
  goto(page:Page):void{
   if(page==='observations'&&!this.admin){this.error='Esta área é exclusiva do administrador.';return}
@@ -301,6 +324,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   if(page==='intercession'&&!this.intercessionLoaded)void this.loadIntercession();
   if(page==='followups'&&!this.workspaceLoaded)void this.loadWorkspace();
   if(page==='reports'&&!this.reportLoaded)void this.loadReports();
+  if(page==='settings'&&!this.usersLoaded)void this.loadUsers();
  }
 
  async loadWorkspace():Promise<void>{
