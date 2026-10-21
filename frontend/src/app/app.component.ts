@@ -8,7 +8,7 @@ type Page = 'dashboard'|'reports'|'deacons'|'observations'|'groups'|'intercessio
 export class AppComponent implements OnInit {
  api=inject(ApiService);
  loading=true;busy=false;refreshing=false;showQuickSearch=false;showHelp=false;quickQuery='';error='';notice='';page:Page='dashboard';
- email='';password='';changeOld='';changeNew='';changeNewConfirm='';showChangePassword=false;showMenu=false;showNewDeacon=false;showNewGroup=false;showNewUser=false;showFollowup=false;sidebarCollapsed=false;showPrintPanel=false;printReady=false;printWithPhone=false;
+ email='';password='';changeOld='';changeNew='';changeNewConfirm='';showChangePassword=false;showMenu=false;showNewDeacon=false;showNewGroup=false;showNewUser=false;showAssignLeader=false;showFollowup=false;modalError='';sidebarCollapsed=false;showPrintPanel=false;printReady=false;printWithPhone=false;
  printSelection:'all'|'antigo'|'novo'='all';printGeneratedAt=new Date();
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
  deacons:Deacon[]=[];groups:Group[]=[];users:User[]=[];followups:Followup[]=[];
@@ -42,12 +42,14 @@ export class AppComponent implements OnInit {
  selectedAvailability:AvailabilityProfile|null=null;availabilityLoading=false;
 filter:'all'|'antigo'|'novo'|'unassigned'='all';
  draftDeacon={full_name:'',cohort:'antigo',status:'active',phone:'',email:'',availability:''};
- draftGroup={name:'',target_size:10,leader_id:''};
- draftUser={name:'',email:'',password:'',role:'leader'};
+ draftGroup={name:'',target_size:10,leader_deacon_id:''};
+ leaderAssignment={group_id:'',deacon_id:''};
+ draftUser={name:'',email:'',password:'',role:'leader',linked_deacon_id:''};
  draftFollowup={method:'mensagem',outcome:'contato_realizado',summary:'',next_contact_on:'',needs_pastoral_attention:false};
  get currentUser():User|null{return this.api.user}
  get canManage():boolean{return this.currentUser?.role==='admin'||this.currentUser?.role==='coordinator'}
  get admin():boolean{return this.currentUser?.role==='admin'}
+ get eligibleLeaders():Deacon[]{return this.deacons.filter(d=>d.status==='active').slice().sort((a,b)=>this.printCollator.compare(a.full_name,b.full_name));}
 
  readonly printCollator=new Intl.Collator('pt-BR',{sensitivity:'base'});
  get printOld():Deacon[]{return this.printPeople('antigo')}
@@ -234,7 +236,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   this.intercessionTemplates=[];this.intercessionDraws=[];this.intercessionLoaded=false;
   this.intercessionCandidates={};this.intercessionReplacements={};
   this.showPrintPanel=false;this.printReady=false;this.showFollowup=false;
-  this.showNewDeacon=false;this.showNewGroup=false;this.showNewUser=false;
+  this.showNewDeacon=false;this.showNewGroup=false;this.showNewUser=false;this.showAssignLeader=false;this.modalError='';
   this.showMenu=false;this.showHelp=false;this.closeQuickSearch();
   this.search='';this.observationSearch='';this.pastoralQueueSearch='';
   this.page='dashboard';this.notice='';this.error='';
@@ -465,9 +467,65 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
    await this.reload();
   },'Diácono cadastrado. Confirme a disponibilidade no perfil antes de incluí-lo nas escalas.');
  }
- async createGroup():Promise<void>{await this.run(async()=>{await this.api.createGroup({...this.draftGroup,leader_id:this.draftGroup.leader_id||null});this.showNewGroup=false;this.draftGroup={name:'',target_size:10,leader_id:''};await this.reload()},'Grupo criado com sucesso.')}
- async createUser():Promise<void>{await this.run(async()=>{await this.api.createUser(this.draftUser);this.showNewUser=false;this.draftUser={name:'',email:'',password:'',role:'leader'};await this.reload()},'Responsável cadastrado.')}
- async changeLeader(groupId:string,leaderId:string):Promise<void>{await this.run(async()=>{await this.api.updateGroup(groupId,{leader_id:leaderId||null});await this.reload()},'Responsável atualizado.')}
+ async createGroup():Promise<void>{
+  if(!this.canManage)return;
+  const name=this.draftGroup.name.trim(),capacity=Number(this.draftGroup.target_size);
+  if(name.length<3){this.modalError='Informe um nome com pelo menos três caracteres.';return}
+  if(!Number.isInteger(capacity)||capacity<1||capacity>30){
+   this.modalError='Defina entre 1 e 30 pessoas para o grupo.';return;
+  }
+  if(this.groups.some(g=>g.name.trim().toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR'))){
+   this.modalError='Já existe um grupo com esse nome. Utilize o grupo existente.';return;
+  }
+  if(this.draftGroup.leader_deacon_id&&!this.eligibleLeaders.some(x=>x.id===this.draftGroup.leader_deacon_id)){
+   this.modalError='Selecione um diácono ativo para responsável.';return;
+  }
+  await this.run(async()=>{
+   await this.api.createGroup({name,target_size:capacity,leader_deacon_id:this.draftGroup.leader_deacon_id||null});
+   await this.reload();
+   this.showNewGroup=false;
+   this.draftGroup={name:'',target_size:10,leader_deacon_id:''};
+  },'Grupo criado. Agora você pode vincular os diáconos.');
+ }
+ async createUser():Promise<void>{
+  if(!this.admin)return;
+  if(!this.draftUser.name.trim()||!this.draftUser.email.trim()){
+    this.modalError='Nome e e-mail são obrigatórios.';return;
+  }
+  if(this.draftUser.password.length<12){
+    this.modalError='A senha provisória deve ter pelo menos 12 caracteres.';return;
+  }
+  await this.run(async()=>{
+   await this.api.createUser({...this.draftUser,
+    linked_deacon_id:this.draftUser.role==='leader'?(this.draftUser.linked_deacon_id||null):null});
+   this.showNewUser=false;
+   this.draftUser={name:'',email:'',password:'',role:'leader',linked_deacon_id:''};
+   await this.reload();
+  },'Acesso criado. A senha provisória deve ser entregue por canal seguro e alterada no primeiro login.');
+ }
+ async assignLeader():Promise<void>{
+  if(!this.canManage)return;
+  const {group_id,deacon_id}=this.leaderAssignment;
+  if(!this.groups.some(g=>g.id===group_id)){
+    this.modalError='Escolha um grupo existente.';return;
+  }
+  if(deacon_id&&!this.eligibleLeaders.some(d=>d.id===deacon_id)){
+    this.modalError='Escolha um diácono ativo para responsável.';return;
+  }
+  await this.run(async()=>{
+   await this.api.updateGroup(group_id,{leader_deacon_id:deacon_id||null});
+   await this.reload();
+   this.showAssignLeader=false;
+   this.leaderAssignment={group_id:'',deacon_id:''};
+  },deacon_id?'Responsável definido no grupo. O acesso ao sistema é opcional e separado.':'Responsável removido do grupo.');
+ }
+ async changeLeader(groupId:string,deaconId:string):Promise<void>{
+  if(!this.canManage)return;
+  await this.run(async()=>{
+   await this.api.updateGroup(groupId,{leader_deacon_id:deaconId||null});
+   await this.reload();
+  },'Responsável atualizado.');
+ }
 
  membersForGroup(groupId:string):Deacon[]{
   return this.deacons.filter(person=>person.group_id===groupId)
@@ -493,7 +551,15 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
 
  async record():Promise<void>{if(!this.selected)return;await this.run(async()=>{await this.api.createFollowup({...this.draftFollowup,deacon_id:this.selected!.id,next_contact_on:this.draftFollowup.next_contact_on||null});this.showFollowup=false;this.draftFollowup={method:'mensagem',outcome:'contato_realizado',summary:'',next_contact_on:'',needs_pastoral_attention:false};await this.fetchFollowups();await this.reload();this.workspaceLoaded=false;this.reportLoaded=false},'Acompanhamento registrado.')}
  async updateStatus(d:Deacon,status:string):Promise<void>{await this.run(async()=>{await this.api.updateDeacon(d.id,{status});await this.reload()},'Situação atualizada.')}
- private async run(action:()=>Promise<void>,success:string):Promise<void>{this.error='';this.notice='';this.busy=true;try{await action();this.notice=success}catch(e){this.error=this.msg(e)}finally{this.busy=false}}
+ private async run(action:()=>Promise<void>,success:string):Promise<void>{
+ this.error='';this.modalError='';this.notice='';this.busy=true;
+ try{await action();this.notice=success}
+ catch(e){
+  const message=this.msg(e);
+  if(this.showNewGroup||this.showNewUser||this.showAssignLeader)this.modalError=message;
+  else this.error=message;
+ }finally{this.busy=false}
+}
  private msg(e:unknown):string{return e instanceof Error?e.message:'Não foi possível concluir a operação.'}
 
 
@@ -529,7 +595,31 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   return draw.assignments.filter(a=>a.service_post===post).sort((a,b)=>a.rotation_order-b.rotation_order);
  }
  showMinistryLeaders():void{this.goto('groups')}
- openNewLeader():void{this.draftUser={name:'',email:'',password:'',role:'leader'};this.showNewUser=true}
+ openNewGroup():void{
+  if(!this.canManage)return;
+  this.modalError='';
+  this.draftGroup={name:'',target_size:10,leader_deacon_id:''};
+  this.showNewGroup=true;
+ }
+ openNewLeader(group?:Group):void{
+  if(!this.canManage)return;
+  this.modalError='';
+  if(!this.groups.length){
+   this.openNewGroup();
+   this.notice='Crie primeiro o grupo; o formulário já permite escolher um responsável.';
+   return;
+  }
+  this.leaderAssignment={group_id:group?.id||this.groups[0].id,deacon_id:group?.leader_deacon_id||''};
+  this.showAssignLeader=true;
+ }
+ openLeaderAccess(group:Group):void{
+  if(!this.admin||!group.leader_deacon_id||group.leader_access_enabled)return;
+  const person=this.deacons.find(d=>d.id===group.leader_deacon_id);
+  if(!person){this.error='Responsável não encontrado no cadastro.';return;}
+  this.modalError='';
+  this.draftUser={name:person.full_name,email:person.email||'',password:'',role:'leader',linked_deacon_id:person.id};
+  this.showNewUser=true;
+ }
  async loadPastoral():Promise<void>{
   if(!this.canManage)return;this.pastoralLoading=true;this.error='';
   try{
