@@ -1,9 +1,9 @@
 import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiService, User, Deacon, RegistryDetails, ObservationEntry, Group, Followup, Dashboard, IntercessionTemplate, IntercessionDraw, IntercessionCandidate, PastoralSlot, PastoralQueueItem, PastoralCareReason, PastoralCareStage, PastoralCarePerson } from './api.service';
+import { ApiService, User, Deacon, RegistryDetails, ObservationEntry, Group, Followup, Dashboard, IntercessionTemplate, IntercessionDraw, IntercessionCandidate, PastoralSlot, PastoralQueueItem, PastoralCareReason, PastoralCareStage, PastoralCarePerson, LeaderWorkspace, WorkspaceMember, MonthlyReport, ReadinessSummary, AuditEvent } from './api.service';
 
-type Page = 'dashboard'|'deacons'|'observations'|'groups'|'leadership'|'intercession'|'pastoral'|'followups'|'settings';
+type Page = 'dashboard'|'workspace'|'reports'|'deacons'|'observations'|'groups'|'leadership'|'intercession'|'pastoral'|'followups'|'settings';
 @Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule],templateUrl:'./app.component.html'})
 export class AppComponent implements OnInit {
  api=inject(ApiService);
@@ -12,6 +12,10 @@ export class AppComponent implements OnInit {
  printSelection:'all'|'antigo'|'novo'='all';printGeneratedAt=new Date();
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
  deacons:Deacon[]=[];groups:Group[]=[];users:User[]=[];followups:Followup[]=[];
+ workspace:LeaderWorkspace|null=null;workspaceLoading=false;workspaceLoaded=false;workspaceFilter:'due'|'without_contact'|'referrals'='due';
+ monthlyReport:MonthlyReport|null=null;reportMonth=new Date().toISOString().slice(0,7);reportLoading=false;reportLoaded=false;
+ readiness:ReadinessSummary|null=null;recentAudit:AuditEvent[]=[];auditLoading=false;
+
  observations:ObservationEntry[]=[];observationsLoading=false;observationsLoaded=false;observationSearch='';observationFilter:'all'|'with'|'without'='all';
  readonly intercessionPosts:{id:'pastores'|'bateria';label:string}[]=[
   {id:'pastores',label:'Porta lateral próxima aos pastores'},
@@ -48,7 +52,7 @@ export class AppComponent implements OnInit {
  get newCount():number{return this.deacons.filter(d=>d.cohort==='novo').length}
  get pageTitle():string{
   const labels:Record<Page,string>={
-   dashboard:'Visão geral',deacons:'Diáconos',observations:'Observações',
+   dashboard:'Visão geral',workspace:'Meu Ministério',reports:'Relatórios',deacons:'Diáconos',observations:'Observações',
    groups:'Grupos de cuidado',leadership:'Liderança',intercession:'Intercessão',
    pastoral:'Agenda pastoral',followups:'Acompanhamento',settings:'Usuários e acesso'
   };
@@ -116,6 +120,9 @@ export class AppComponent implements OnInit {
    if(this.page==='observations'&&this.admin)await this.loadObservations();
    if(this.page==='pastoral'&&this.canManage)await this.loadPastoral();
    if(this.page==='intercession'&&this.canManage)await this.loadIntercession();
+   if(this.page==='workspace')await this.loadWorkspace();
+   if(this.page==='reports')await this.loadReports();
+
    if(this.page==='followups'&&this.selected){
      const recent=this.deacons.find(d=>d.id===this.selected?.id);
      if(recent)this.selected=recent;
@@ -163,7 +170,20 @@ export class AppComponent implements OnInit {
       (value||'').toLocaleLowerCase('pt-BR').includes(query));
   });
  }
- get unassigned():Deacon[]{return this.deacons.filter(d=>!d.group_id)}
+
+ get visibleWorkspaceItems():WorkspaceMember[]{
+  if(!this.workspace)return [];
+  return this.workspaceFilter==='due'?this.workspace.due:
+   this.workspaceFilter==='without_contact'?this.workspace.without_contact:this.workspace.referrals;
+ }
+ get monthGroups():{name:string;leader_name:string|null;people:number;contacted:number}[]{
+  return this.monthlyReport?.group_breakdown||[];
+ }
+ get monthCoverage():number{
+  const t=this.monthlyReport?.totals;
+  return t?.people?Math.round(t.contacted/t.people*100):0;
+ }
+  get unassigned():Deacon[]{return this.deacons.filter(d=>!d.group_id)}
  capacityPercent(g:Group):number{return g.target_size ? Math.min(100,Math.round(g.members/g.target_size*100)) : 0}
  get coverage():number{return this.dashboard.totals.deacons?Math.round(this.dashboard.totals.contacted_30_days/this.dashboard.totals.deacons*100):0}
 
@@ -171,7 +191,7 @@ export class AppComponent implements OnInit {
   try{
    this.sidebarCollapsed=sessionStorage.getItem('jdg_compact_sidebar')==='yes';
    const page=sessionStorage.getItem('jdg_current_module') as Page|null;
-   const allowed:Page[]=['dashboard','deacons','observations','groups','leadership','intercession','pastoral','settings'];
+   const allowed:Page[]=['dashboard','workspace','reports','deacons','observations','groups','leadership','intercession','pastoral','settings'];
    if(page&&allowed.includes(page)&&
       !(page==='observations'&&!this.admin)&&!(page==='settings'&&!this.admin)&&
       !((page==='pastoral'||page==='intercession')&&!this.canManage)){
@@ -207,6 +227,7 @@ export class AppComponent implements OnInit {
  async reload():Promise<void>{this.error='';try{const [d,people,groups]=await Promise.all([this.api.dashboard(),this.api.deacons(),this.api.groups()]);this.dashboard=d;this.deacons=people;this.groups=groups;if(this.canManage)this.users=await this.api.users();else this.users=[]}catch(e){this.error=this.msg(e)}}
  goto(page:Page):void{
   if(page==='observations'&&!this.admin){this.error='Esta área é exclusiva do administrador.';return}
+  if(page==='reports'&&!this.currentUser){this.error='É necessário entrar no sistema.';return}
   if((page==='pastoral'||page==='intercession')&&!this.canManage){this.error='Esta área é exclusiva da coordenação.';return}
   this.page=page;this.showMenu=false;this.closeQuickSearch();this.notice='';this.error='';
   if(page!=='followups')try{sessionStorage.setItem('jdg_current_module',page)}catch{}
@@ -215,8 +236,72 @@ export class AppComponent implements OnInit {
   if(page==='observations'&&!this.observationsLoaded)void this.loadObservations();
   if(page==='pastoral'&&!this.pastoralLoaded)void this.loadPastoral();
   if(page==='intercession'&&!this.intercessionLoaded)void this.loadIntercession();
+  if(page==='workspace'&&!this.workspaceLoaded)void this.loadWorkspace();
+  if(page==='reports'&&!this.reportLoaded)void this.loadReports();
+
  }
- async loadObservations():Promise<void>{
+
+ async loadWorkspace():Promise<void>{
+  this.workspaceLoading=true;this.error='';
+  try{
+   this.workspace=await this.api.workspace();this.workspaceLoaded=true;
+  }catch(e){this.error=this.msg(e)}
+  finally{this.workspaceLoading=false}
+ }
+ async loadReports():Promise<void>{
+  this.reportLoading=true;this.error='';
+  try{
+   this.monthlyReport=await this.api.monthlyReport(this.reportMonth);
+   this.reportLoaded=true;
+   if(this.admin){
+    const [readiness,audit]=await Promise.all([
+      this.api.readiness(),this.api.auditRecent()
+    ]);
+    this.readiness=readiness;this.recentAudit=audit;
+   }else{this.readiness=null;this.recentAudit=[];}
+  }catch(e){this.error=this.msg(e)}
+  finally{this.reportLoading=false}
+ }
+ openWorkspaceMember(member:WorkspaceMember):void{
+  const deacon=this.deacons.find(d=>d.id===member.id);
+  if(deacon){this.select(deacon);window.scrollTo(0,0)}
+  else this.error='A pessoa não está entre os seus cadastros autorizados. Atualize os dados.';
+ }
+ openWhatsapp(member:WorkspaceMember):void{
+  const phone=(member.phone||'').replace(/\D/g,'');
+  if(phone.length!==11&&phone.length!==10){
+   this.error='Telefone inválido ou não cadastrado. Corrija antes de preparar a mensagem.';return;
+  }
+  const message='A paz do Senhor! Gostaríamos de saber como você está e combinar um momento de conversa, se desejar. Deus abençoe!';
+  const url='https://wa.me/55'+phone+'?text='+encodeURIComponent(message);
+  window.open(url,'_blank','noopener,noreferrer');
+ }
+ exportMonthlyReport():void{
+  const report=this.monthlyReport;
+  if(!report){this.error='Carregue o relatório antes de exportar.';return}
+  const lines:string[][]=[
+   ['Jornada Diaconal','Relatório mensal',report.month],
+   ['Indicador','Quantidade'],
+   ['Pessoas acompanhadas',String(report.totals.people)],
+   ['Contatadas no período',String(report.totals.contacted)],
+   ['Registros de contatos',String(report.totals.contact_records)],
+   ['Sem grupo',String(report.totals.no_group)],
+   ['Encaminhamentos pastorais sinalizados',String(report.totals.referred)],
+   ['','',''],
+   ['Grupo','Responsável','Pessoas','Contatadas'],
+   ...report.group_breakdown.map(g=>[g.name,g.leader_name||'Não definido',String(g.people),String(g.contacted)])
+  ];
+  if(report.ministry)lines.push(['','',''],['Escalas publicadas',String(report.ministry.published_draws)],
+   ['Atendimentos confirmados',String(report.ministry.confirmed_appointments)],
+   ['Atendimentos realizados',String(report.ministry.completed_appointments)]);
+  const csv='\uFEFF'+lines.map(row=>row.map(value=>'"'+String(value??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');
+  const file=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(file);
+  const link=document.createElement('a');link.href=url;link.download='jornada_relatorio_'+report.month+'.csv';
+  document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
+ }
+
+  async loadObservations():Promise<void>{
   if(!this.admin)return;
   this.observationsLoading=true;this.error='';
   try{
