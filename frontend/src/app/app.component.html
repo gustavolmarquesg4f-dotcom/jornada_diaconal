@@ -733,6 +733,32 @@
       </section>
 
 
+
+      <section *ngIf="page==='followups' && selected" class="surface ministry-availability">
+        <div class="surface-head"><div>
+          <span class="eyebrow">ESCALAS E ORGANIZAÇÃO DO SERVIÇO</span>
+          <h3>Disponibilidade para os cultos</h3>
+          <p>Atualize os horários combinados com esta pessoa. Somente os responsáveis autorizados podem editar.</p>
+        </div>
+          <span class="pill">SEPARADO DAS OBSERVAÇÕES PESSOAIS</span>
+        </div>
+        <p *ngIf="availabilityLoading" class="modal-hint">Carregando disponibilidade...</p>
+        <div *ngIf="selectedAvailability as availability" class="availability-form">
+          <div class="availability-options">
+            <label><input type="checkbox" name="availabilityWed15" [(ngModel)]="availability.available_wed_15"> Quarta-feira, 15h</label>
+            <label><input type="checkbox" name="availabilityWed20" [(ngModel)]="availability.available_wed_20"> Quarta-feira, 20h</label>
+            <label><input type="checkbox" name="availabilitySun10" [(ngModel)]="availability.available_sun_10"> Domingo, 10h</label>
+            <label><input type="checkbox" name="availabilitySun19" [(ngModel)]="availability.available_sun_19"> Domingo, 19h</label>
+            <label><input type="checkbox" name="availabilityFirstSunday" [(ngModel)]="availability.only_first_sunday"> Só no primeiro domingo</label>
+            <label><input type="checkbox" name="availabilityMorningOnly" [(ngModel)]="availability.mornings_only"> Disponível apenas pela manhã</label>
+          </div>
+          <div class="availability-form-footer">
+            <p>Se o(a) diácono(a) é casado(a) com outro(a) diácono(a), confirme a disponibilidade de ambos. O sorteio só inclui casais quando os dois podem servir no mesmo culto.</p>
+            <button type="button" class="primary" (click)="saveAvailability()" [disabled]="busy||availabilityLoading">Salvar disponibilidade</button>
+          </div>
+        </div>
+      </section>
+
       <section *ngIf="page==='followups' && selected && admin" class="surface" style="padding:24px;margin-top:22px;margin-bottom:26px">
         <div class="surface-head"><div><span class="eyebrow">ACESSO RESTRITO AO ADMINISTRADOR</span><h3>Cadastro original · Disponibilidade e observações</h3><p style="margin:10px 0 0;color:#66798c;font-size:13px">Informações importadas da planilha Atmosfera 2026, incluindo registros familiares e observações pessoais. Trate com confidencialidade.</p></div></div>
         <p *ngIf="registryLoading">Carregando informações do cadastro...</p>
