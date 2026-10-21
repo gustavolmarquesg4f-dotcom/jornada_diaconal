@@ -658,8 +658,21 @@
       </section>
 
       <section *ngIf="page==='groups'">
-        <div class="page-heading"><div><span class="eyebrow">CUIDADO DE PROXIMIDADE</span><h1>Grupos de cuidado</h1><p>Organize pequenos grupos com responsáveis de referência. Dez pessoas é um ponto de partida, não uma regra.</p></div><button *ngIf="canManage" class="primary" (click)="showNewGroup=true">+ Novo grupo</button></div>
-        <div class="context-strip"><span>♡</span><div><strong>Cuidado, não fiscalização.</strong><p>O responsável mantém contato, percebe necessidades e encaminha assuntos pastorais à liderança quando necessário.</p></div></div>
+        <div class="page-heading group-heading">
+          <div><span class="eyebrow">CUIDADO DE PROXIMIDADE · LIDERANÇA</span><h1>Grupos e liderança</h1>
+            <p>Aqui são definidos os responsáveis, as equipes e seus vínculos — uma única área de organização do diaconato.</p>
+          </div>
+          <div class="group-heading-actions">
+            <button *ngIf="admin" class="outline" type="button" (click)="openNewLeader()">+ Cadastrar líder</button>
+            <button *ngIf="canManage" class="primary" type="button" (click)="showNewGroup=true">+ Criar grupo</button>
+          </div>
+        </div>
+        <div class="group-leadership-summary">
+          <div class="group-pastoral-director"><span class="eyebrow">ORIENTAÇÃO PASTORAL</span><strong>Pr. Sato</strong><small>Acompanha os responsáveis dos grupos, sem substituir o cuidado de proximidade.</small></div>
+          <div class="group-leadership-stat"><strong>{{groups.length}}</strong><span>Grupos cadastrados</span></div>
+          <div class="group-leadership-stat"><strong>{{unassigned.length}}</strong><span>Diáconos sem grupo</span></div>
+        </div>
+        <div class="context-strip"><span>♡</span><div><strong>Um grupo, um responsável de referência.</strong><p>O líder cuida do contato e dos retornos pelo menu Acompanhamento. Os vínculos e as transferências de equipe são administrados aqui; a definição dos líderes depende da aprovação do Pr. Sato.</p></div></div>
         <div class="group-cards"><div *ngFor="let g of groups" class="group-card"><div class="group-card-top"><div class="group-initial large">{{g.name.charAt(0)}}</div><span class="pill">{{g.members}} DE {{g.target_size}} VAGAS DE REFERÊNCIA</span></div><h3>{{g.name}}</h3><p>Responsável: <strong>{{g.leader_name||'Ainda não definido'}}</strong></p>
           <label *ngIf="canManage" class="group-leader-editor">Alterar responsável
             <select #leaderSelect [value]="g.leader_id||''" (change)="changeLeader(g.id,leaderSelect.value)" [disabled]="busy">
