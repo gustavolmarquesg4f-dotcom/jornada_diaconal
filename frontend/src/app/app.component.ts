@@ -13,6 +13,8 @@ export class AppComponent implements OnInit {
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
  deacons:Deacon[]=[];groups:Group[]=[];users:User[]=[];followups:Followup[]=[];
  expandedGroupId:string|null=null;
+ memberPickerGroupId:string|null=null;memberPickerSearch='';memberPickerSelected:string[]=[];
+ memberPickerLimit=25;memberPickerError='';leaderPreviewGroupId:string|null=null;
  workspace:LeaderWorkspace|null=null;workspaceLoading=false;workspaceLoaded=false;workspaceFilter:'due'|'without_contact'|'referrals'='due';
  workspaceSearch='';workspaceVisibleLimit=20;
  monthlyReport:MonthlyReport|null=null;reportMonth=new Date().toISOString().slice(0,7);reportLoading=false;reportLoaded=false;
@@ -237,6 +239,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   this.intercessionCandidates={};this.intercessionReplacements={};
   this.showPrintPanel=false;this.printReady=false;this.showFollowup=false;
   this.showNewDeacon=false;this.showNewGroup=false;this.showNewUser=false;this.showAssignLeader=false;this.modalError='';
+  this.memberPickerGroupId=null;this.memberPickerSelected=[];this.memberPickerError='';this.leaderPreviewGroupId=null;
   this.showMenu=false;this.showHelp=false;this.closeQuickSearch();
   this.search='';this.observationSearch='';this.pastoralQueueSearch='';
   this.page='dashboard';this.notice='';this.error='';
@@ -533,6 +536,77 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   },'Responsável atualizado.');
  }
 
+ get pickerGroup():Group|null{
+  return this.groups.find(g=>g.id===this.memberPickerGroupId)||null;
+ }
+ get pickerCandidates():Deacon[]{
+  const search=this.normalizeSearch(this.memberPickerSearch);
+  const digits=search.replace(/\\D/g,'');
+  return this.unassigned.filter(person=>
+    !search||this.normalizeSearch(person.full_name).includes(search)||
+      (digits.length>=3&&(person.phone||'').replace(/\\D/g,'').includes(digits))
+  ).slice().sort((a,b)=>this.printCollator.compare(a.full_name,b.full_name));
+ }
+ get pickerVisibleCandidates():Deacon[]{
+  return this.pickerCandidates.slice(0,this.memberPickerLimit);
+ }
+ isMemberPicked(id:string):boolean{return this.memberPickerSelected.includes(id)}
+ openMemberPicker(group:Group):void{
+  if(!this.canManage)return;
+  this.memberPickerGroupId=group.id;
+  this.memberPickerSearch='';this.memberPickerSelected=[];
+  this.memberPickerLimit=25;this.memberPickerError='';
+ }
+ closeMemberPicker():void{
+  if(this.busy)return;
+  this.memberPickerGroupId=null;this.memberPickerSelected=[];this.memberPickerError='';
+ }
+ toggleMemberPick(id:string,checked:boolean):void{
+  this.memberPickerError='';
+  if(!checked){this.memberPickerSelected=this.memberPickerSelected.filter(x=>x!==id);return}
+  if(this.memberPickerSelected.includes(id))return;
+  if(this.memberPickerSelected.length>=40){
+    this.memberPickerError='É possível incluir até 40 pessoas por operação.';return;
+  }
+  this.memberPickerSelected=[...this.memberPickerSelected,id];
+ }
+ selectVisibleMembers():void{
+  const ids=this.pickerVisibleCandidates.filter(d=>!this.memberPickerSelected.includes(d.id)).map(d=>d.id);
+  if(ids.length+this.memberPickerSelected.length>40){
+    this.memberPickerError='A seleção é limitada a 40 pessoas por operação.';return;
+  }
+  this.memberPickerSelected=[...this.memberPickerSelected,...ids];this.memberPickerError='';
+ }
+ async saveMemberPicker():Promise<void>{
+  if(!this.canManage||this.busy)return;
+  const groupId=this.memberPickerGroupId,ids=[...this.memberPickerSelected];
+  if(!groupId||!this.groups.some(g=>g.id===groupId)){
+    this.memberPickerError='O grupo não está disponível. Atualize e tente novamente.';return;
+  }
+  if(!ids.length){this.memberPickerError='Selecione pelo menos uma pessoa.';return}
+  if(ids.length>40||ids.some(id=>!this.unassigned.some(d=>d.id===id))){
+    this.memberPickerError='A seleção precisa ser atualizada. Revise os nomes sem grupo.';return;
+  }
+  this.busy=true;this.memberPickerError='';this.error='';
+  try{
+   const result=await this.api.assignBatch(groupId,ids);
+   this.memberPickerGroupId=null;this.memberPickerSelected=[];
+   this.expandedGroupId=groupId;this.leaderPreviewGroupId=null;
+   await this.reload();
+   this.workspaceLoaded=false;this.reportLoaded=false;
+   this.notice=this.error
+     ?result.assigned+' pessoas associadas no banco. Use Atualizar para conferir os integrantes.'
+     :result.assigned+' diácono(s) associado(s). Abra Integrantes para conferir.';
+  }catch(e){this.memberPickerError=this.msg(e)}
+  finally{this.busy=false}
+ }
+ get previewContactedRecently():number{
+  const group=this.groups.find(g=>g.id===this.leaderPreviewGroupId);
+  if(!group)return 0;
+  const days=30*24*60*60*1000;
+  return this.membersForGroup(group.id).filter(d=>d.last_contact &&
+    Date.now()-new Date(d.last_contact).getTime()<=days).length;
+ }
  membersForGroup(groupId:string):Deacon[]{
   return this.deacons.filter(person=>person.group_id===groupId)
     .slice().sort((a,b)=>this.printCollator.compare(a.full_name,b.full_name));
