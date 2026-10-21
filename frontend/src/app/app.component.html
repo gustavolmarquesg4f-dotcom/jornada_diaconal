@@ -274,6 +274,9 @@
             <button type="button" class="primary" (click)="printDeacons()" [disabled]="!deacons.length">
               <span aria-hidden="true">▤</span> Imprimir agora
             </button>
+            <button type="button" class="outline" (click)="exportRosterCsv()" [disabled]="!deacons.length">
+              Exportar CSV
+            </button>
           </div>
           <p class="privacy-hint">Por padrão, a impressão contém apenas nomes. Não inclui observações, estado civil nem informações pastorais.</p>
         </div>
