@@ -725,16 +725,30 @@
           </div>
           <div *ngIf="expandedGroupId===g.id || !canManage" class="group-members-panel">
             <div *ngFor="let person of membersForGroup(g.id)" class="group-member-line">
-              <div><strong>{{person.full_name}}</strong><small>{{person.phone||'Sem telefone'}} · {{cohortLabel(person.cohort)}}</small></div>
-              <div class="group-member-tools" *ngIf="canManage">
-                <select #moveTo [disabled]="busy" [attr.aria-label]="'Transferir '+person.full_name+' para outro grupo'">
-                  <option value="">Transferir...</option>
-                  <option *ngFor="let other of groups" [value]="other.id" [disabled]="other.id===g.id">{{other.name}}</option>
-                </select>
-                <button type="button" class="outline" [disabled]="busy||!moveTo.value" (click)="moveMember(person,moveTo.value)">Mover</button>
-                <button type="button" class="text-button" [disabled]="busy" (click)="unassignMember(person)">Desvincular</button>
+              <div class="group-member-identity">
+                <span class="person-circle" aria-hidden="true">{{person.full_name.charAt(0)}}</span>
+                <div class="group-member-identity-text">
+                  <strong>{{person.full_name}}</strong>
+                  <small>{{person.phone||'Sem telefone'}} · {{cohortLabel(person.cohort)}}</small>
+                </div>
               </div>
-              <button *ngIf="!canManage" type="button" class="text-button" (click)="select(person)">Acompanhar →</button>
+              <div class="group-member-tools">
+                <button type="button" class="outline group-member-open" (click)="select(person)">
+                  Acompanhar <span aria-hidden="true">→</span>
+                </button>
+                <ng-container *ngIf="canManage">
+                  <div class="group-member-transfer" *ngIf="groups.length>1">
+                    <select #moveTo [disabled]="busy" [attr.aria-label]="'Transferir '+person.full_name+' para outro grupo'">
+                      <option value="">Transferir para...</option>
+                      <option *ngFor="let other of groups" [value]="other.id" [disabled]="other.id===g.id">{{other.name}}</option>
+                    </select>
+                    <button type="button" class="outline" [disabled]="busy||!moveTo.value"
+                      (click)="moveMember(person,moveTo.value)">Mover</button>
+                  </div>
+                  <button type="button" class="text-button group-member-remove" [disabled]="busy"
+                    (click)="unassignMember(person)">Desvincular</button>
+                </ng-container>
+              </div>
             </div>
             <p *ngIf="!membersForGroup(g.id).length" class="modal-hint">Este grupo ainda não possui diáconos vinculados.</p>
           </div>
