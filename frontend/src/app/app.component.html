@@ -40,6 +40,8 @@
     <div class="nav-heading">ÁREA DE TRABALHO</div>
     <nav class="navigation" aria-label="Menu principal">
       <button title="Visão geral" aria-label="Visão geral" [class.active]="page==='dashboard'" [attr.aria-current]="page==='dashboard'?'page':null" (click)="goto('dashboard')"><span class="nav-icon">◫</span> Visão geral</button>
+      <button type="button" title="Meu Ministério" aria-label="Meu Ministério" [attr.aria-current]="page==='workspace'?'page':null" [class.active]="page==='workspace'" (click)="goto('workspace')"><span class="nav-icon">♡</span> Meu Ministério</button>
+      <button type="button" title="Relatórios" aria-label="Relatórios" [attr.aria-current]="page==='reports'?'page':null" [class.active]="page==='reports'" (click)="goto('reports')"><span class="nav-icon">▥</span> Relatórios e indicadores</button>
       <button title="Diáconos" aria-label="Diáconos" [class.active]="page==='deacons'" [attr.aria-current]="page==='deacons'?'page':null" (click)="goto('deacons')"><span class="nav-icon">♙</span> Diáconos</button>
       <button *ngIf="admin" title="Observações" aria-label="Observações" [class.active]="page==='observations'" [attr.aria-current]="page==='observations'?'page':null" (click)="goto('observations')"><span class="nav-icon">☷</span> Observações</button>
       <button title="Liderança e grupos" aria-label="Liderança e grupos" [class.active]="page==='leadership'" [attr.aria-current]="page==='leadership'?'page':null" (click)="goto('leadership')"><span class="nav-icon">♧</span> Liderança e grupos</button>
@@ -85,6 +87,154 @@
         </div><div class="surface"><div class="surface-head"><h3>Como estamos cuidando?</h3><span class="pill">ÚLTIMOS 30 DIAS</span></div><div class="progress-ring"><div class="ring" [style.--coverage]="coverage+'%'">{{coverage}}<small>%</small></div><div><strong>Diáconos com registro de contato</strong><p>O indicador mostra registros, não a qualidade do cuidado. A conversa e a proximidade continuam sendo essenciais.</p></div></div><div class="advice-box"><strong>Próximo passo</strong><p>Comece com poucos grupos, avalie o acompanhamento e ajuste a quantidade de pessoas por responsável.</p></div></div></div>
       </section>
 
+
+
+      <section *ngIf="page==='workspace'" class="workspace-section">
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow">CENTRO DE TRABALHO · JORNADA DIACONAL</span>
+            <h1>Meu Ministério</h1>
+            <p>O que precisa da sua atenção, com acesso apenas aos diáconos sob sua responsabilidade.</p>
+          </div>
+          <button type="button" class="outline" (click)="loadWorkspace()" [disabled]="workspaceLoading">
+            {{workspaceLoading?'Atualizando...':'↻ Atualizar'}}
+          </button>
+        </div>
+        <div *ngIf="workspaceLoading" class="surface work-loading">Buscando suas informações de acompanhamento...</div>
+        <ng-container *ngIf="workspace as data">
+          <div class="workspace-intro surface">
+            <div><span class="eyebrow">REDE DE CUIDADO</span><h2>{{currentUser?.role==='leader'?'Minha equipe':'Visão de acompanhamento'}}</h2>
+              <p>{{data.groups.length ? 'Escolha uma atividade abaixo para avançar no cuidado de cada pessoa.' : 'Os grupos ainda precisam ser definidos e vinculados pela coordenação. Enquanto isso, os cadastros disponíveis podem ser acompanhados.'}}</p>
+            </div>
+            <button class="outline" type="button" (click)="goto('groups')">Consultar grupos →</button>
+          </div>
+          <div class="workspace-metrics">
+            <button class="workspace-metric" type="button" (click)="workspaceFilter='due'" [class.active]="workspaceFilter==='due'">
+              <span>Contatos a realizar</span><strong>{{data.totals.due}}</strong><small>Com data de retorno vencida ou para hoje</small>
+            </button>
+            <button class="workspace-metric" type="button" (click)="workspaceFilter='without_contact'" [class.active]="workspaceFilter==='without_contact'">
+              <span>Sem contato recente</span><strong>{{data.totals.without_contact}}</strong><small>Ativos sem registro nos últimos 30 dias</small>
+            </button>
+            <button class="workspace-metric" type="button" (click)="workspaceFilter='referrals'" [class.active]="workspaceFilter==='referrals'">
+              <span>Atenção pastoral sinalizada</span><strong>{{data.totals.pastoral_referrals}}</strong><small>Sinalização operacional, não diagnóstico</small>
+            </button>
+          </div>
+          <div class="surface workspace-people">
+            <div class="surface-head"><div>
+              <h3>{{workspaceFilter==='due'?'Próximos contatos':workspaceFilter==='without_contact'?'Retomar a aproximação':'Acompanhamentos sinalizados'}}</h3>
+              <p>Priorize contato voluntário, com respeito e discrição. O botão WhatsApp prepara uma mensagem, mas não a envia.</p>
+            </div><span class="pill">{{visibleWorkspaceItems.length}} exibidos</span></div>
+            <div class="workspace-person" *ngFor="let person of visibleWorkspaceItems">
+              <div class="workspace-person-main">
+                <span class="person-circle">{{person.full_name.charAt(0)}}</span>
+                <div><strong>{{person.full_name}}</strong>
+                  <small>{{person.group_name||'Sem grupo'}} · {{cohortLabel(person.cohort)}} · {{person.phone||'Sem telefone'}}</small>
+                  <small *ngIf="person.next_contact_on">Retorno previsto: {{person.next_contact_on | date:'dd/MM/yyyy':'UTC'}}</small>
+                </div>
+              </div>
+              <div class="workspace-person-actions">
+                <button type="button" class="outline" (click)="openWorkspaceMember(person)">Registrar contato →</button>
+                <button type="button" class="outline" (click)="openWhatsapp(person)" [disabled]="!person.phone" title="Abre mensagem para revisão, sem enviá-la">Preparar WhatsApp</button>
+              </div>
+            </div>
+            <div *ngIf="!visibleWorkspaceItems.length" class="empty-inline">
+              <span>✓</span><strong>Nenhum item nesta categoria</strong>
+              <p>Use as outras categorias ou consulte os diáconos para iniciar um acompanhamento.</p>
+              <button class="outline" type="button" (click)="goto('deacons')">Ver cadastros →</button>
+            </div>
+          </div>
+          <div class="workspace-next-grid">
+            <div class="surface">
+              <div class="surface-head"><h3>Grupos sob sua visão</h3><span class="pill">{{data.totals.groups}} GRUPOS</span></div>
+              <div *ngFor="let group of data.groups" class="workspace-group-line">
+                <strong>{{group.name}}</strong><span>{{group.leader_name||'Sem responsável'}} · {{group.members}}/{{group.target_size}} pessoas</span>
+              </div>
+              <p *ngIf="!data.groups.length" class="modal-hint">Nenhum grupo foi vinculado ao seu perfil. O administrador deverá designá-lo após aprovação pastoral.</p>
+            </div>
+            <div class="surface">
+              <div class="surface-head"><h3>Como trabalhar com este painel?</h3></div>
+              <div class="workspace-step"><span>1</span><p>Escolha uma pendência e entre em contato respeitosamente.</p></div>
+              <div class="workspace-step"><span>2</span><p>Registre apenas data, resultado e próximo retorno, sem confidências.</p></div>
+              <div class="workspace-step"><span>3</span><p>Quando precisar do pastor, sinalize a atenção pastoral no registro.</p></div>
+              <button class="outline" type="button" (click)="showHelp=true">Consultar orientações →</button>
+            </div>
+          </div>
+        </ng-container>
+      </section>
+
+      <section *ngIf="page==='reports'" class="reports-section">
+        <div class="page-heading"><div>
+          <span class="eyebrow">ACOMPANHAMENTO DO MINISTÉRIO</span><h1>Relatórios e indicadores</h1>
+          <p>Dados de gestão, sem transcrever observações pessoais ou confidências pastorais.</p>
+        </div></div>
+        <div class="surface report-controls">
+          <label>Período de referência
+            <input type="month" name="reportMonth" [(ngModel)]="reportMonth" aria-label="Escolher mês do relatório">
+          </label>
+          <button type="button" class="primary" (click)="loadReports()" [disabled]="reportLoading">
+            {{reportLoading?'Consultando...':'Gerar relatório'}}
+          </button>
+          <button type="button" class="outline" (click)="exportMonthlyReport()" [disabled]="!monthlyReport||reportLoading">
+            Exportar CSV
+          </button>
+        </div>
+        <p class="modal-hint" *ngIf="reportLoading">Consultando registros e indicadores da liderança...</p>
+        <ng-container *ngIf="monthlyReport as report">
+          <div class="report-metrics">
+            <div><span>Pessoas no escopo</span><strong>{{report.totals.people}}</strong><small>{{report.cohorts.antigo}} antigos · {{report.cohorts.novo}} novos</small></div>
+            <div><span>Pessoas contatadas</span><strong>{{report.totals.contacted}}</strong><small>{{monthCoverage}}% no período</small></div>
+            <div><span>Registros de contato</span><strong>{{report.totals.contact_records}}</strong><small>Contatos registrados no mês</small></div>
+            <div><span>Sem grupo</span><strong>{{report.totals.no_group}}</strong><small>Aguardando vínculo</small></div>
+          </div>
+          <div class="workspace-next-grid">
+            <div class="surface">
+              <div class="surface-head"><h3>Visão geral do mês</h3><span class="pill">{{report.month}}</span></div>
+              <div class="report-line"><span>Ativos</span><strong>{{report.totals.active}}</strong></div>
+              <div class="report-line"><span>Inativos no cadastro</span><strong>{{report.totals.inactive}}</strong></div>
+              <div class="report-line"><span>Afastamento temporário registrado</span><strong>{{report.totals.away}}</strong></div>
+              <div class="report-line"><span>Encaminhamentos sinalizados</span><strong>{{report.totals.referred}}</strong></div>
+              <p class="modal-hint">Indicadores de registros; não são avaliação de condição espiritual ou emocional.</p>
+            </div>
+            <div class="surface">
+              <div class="surface-head"><h3>Atividades e atendimentos</h3></div>
+              <ng-container *ngIf="report.ministry as ministry">
+                <div class="report-line"><span>Escalas geradas</span><strong>{{ministry.draws}}</strong></div>
+                <div class="report-line"><span>Escalas publicadas</span><strong>{{ministry.published_draws}}</strong></div>
+                <div class="report-line"><span>Atendimentos confirmados</span><strong>{{ministry.confirmed_appointments}}</strong></div>
+                <div class="report-line"><span>Atendimentos realizados</span><strong>{{ministry.completed_appointments}}</strong></div>
+              </ng-container>
+              <div *ngIf="!report.ministry" class="empty-inline"><p>Indicadores de agenda disponíveis somente para coordenação e administração.</p></div>
+            </div>
+          </div>
+          <div class="surface report-groups">
+            <div class="surface-head"><h3>Cobertura por grupo</h3><span class="pill">{{monthGroups.length}} GRUPOS</span></div>
+            <div class="report-group" *ngFor="let group of monthGroups">
+              <div><strong>{{group.name}}</strong><small>{{group.leader_name||'Responsável a definir'}}</small></div>
+              <div class="report-bar-wrap"><div class="report-bar" [style.width.%]="group.people?group.contacted/group.people*100:0"></div></div>
+              <span>{{group.contacted}} / {{group.people}} contatados</span>
+            </div>
+            <p *ngIf="!monthGroups.length" class="modal-hint">Os indicadores por grupo aparecerão depois que os responsáveis e integrantes forem cadastrados.</p>
+          </div>
+        </ng-container>
+        <div class="surface" *ngIf="admin && readiness as pending">
+          <div class="surface-head"><div><h3>Prontidão para a operação</h3><p>Indicadores cadastrais que precisam ser tratados antes de ampliar as escalas.</p></div></div>
+          <div class="readiness-tiles">
+            <div><strong>{{pending.totals.without_availability}}</strong><span>Ativos sem disponibilidade registrada</span><button type="button" class="text-button" (click)="goto('deacons')">Conferir cadastros →</button></div>
+            <div><strong>{{pending.totals.without_group}}</strong><span>Sem grupo de cuidado</span><button type="button" class="text-button" (click)="goto('groups')">Organizar grupos →</button></div>
+            <div><strong>{{pending.totals.leaders}}</strong><span>Líderes com acesso</span><button type="button" class="text-button" (click)="goto('settings')">Gerenciar acessos →</button></div>
+            <div><strong>{{pending.totals.published_draws}}</strong><span>Escalas publicadas</span><button type="button" class="text-button" (click)="goto('intercession')">Gerenciar escalas →</button></div>
+          </div>
+        </div>
+        <div class="surface" *ngIf="admin">
+          <div class="surface-head"><div><h3>Registro de alterações recentes</h3><p>Quem realizou ações administrativas e quando; sem apresentar detalhes pastorais.</p></div></div>
+          <div class="audit-scroll">
+            <div *ngFor="let item of recentAudit" class="audit-line">
+              <strong>{{item.actor}}</strong><span>{{item.event}}</span><small>{{item.created_at | date:'dd/MM/yyyy HH:mm'}}</small>
+            </div>
+            <p *ngIf="!recentAudit.length" class="modal-hint">Nenhum evento retornado para o histórico recente.</p>
+          </div>
+        </div>
+      </section>
 
       <section *ngIf="page==='deacons'" class="deacon-directory">
         <div class="page-heading directory-heading">
