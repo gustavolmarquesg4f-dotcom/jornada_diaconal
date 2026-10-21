@@ -251,7 +251,19 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
    this.showChangePassword=false;
   }
  }
- async reload():Promise<void>{this.error='';try{const [d,people,groups]=await Promise.all([this.api.dashboard(),this.api.deacons(),this.api.groups()]);this.dashboard=d;this.deacons=people;this.groups=groups;if(this.canManage)this.users=await this.api.users();else this.users=[]}catch(e){this.error=this.msg(e)}}
+ async reload():Promise<void>{
+  this.error='';
+  try{
+   const [d,people,groups]=await Promise.all([this.api.dashboard(),this.api.deacons(),this.api.groups()]);
+   const users=this.canManage?await this.api.users():[];
+   this.dashboard=d;this.deacons=people;this.groups=groups;this.users=users;
+   if(this.selected){
+    this.selected=people.find(person=>person.id===this.selected?.id)||null;
+   }
+   // As métricas dependem dos cadastros, vínculos e contatos recém-salvos.
+   this.workspaceLoaded=false;this.reportLoaded=false;
+  }catch(e){this.error=this.msg(e)}
+ }
  goto(page:Page):void{
   if(page==='observations'&&!this.admin){this.error='Esta área é exclusiva do administrador.';return}
   if(page==='settings'&&!this.admin){this.error='Esta área é exclusiva do administrador.';return}
