@@ -1,7 +1,7 @@
 import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiService, User, Deacon, RegistryDetails, ObservationEntry, Group, Followup, Dashboard, IntercessionTemplate, IntercessionDraw, IntercessionCandidate, PastoralSlot, PastoralQueueItem, PastoralCareReason, PastoralCareStage, PastoralCarePerson, LeaderWorkspace, WorkspaceMember, MonthlyReport, ReadinessSummary, AuditEvent } from './api.service';
+import { ApiService, User, Deacon, RegistryDetails, ObservationEntry, Group, Followup, Dashboard, IntercessionTemplate, IntercessionDraw, IntercessionCandidate, PastoralSlot, PastoralQueueItem, PastoralCareReason, PastoralCareStage, PastoralCarePerson, LeaderWorkspace, WorkspaceMember, MonthlyReport, ReadinessSummary, AuditEvent, AvailabilityProfile } from './api.service';
 
 type Page = 'dashboard'|'workspace'|'reports'|'deacons'|'observations'|'groups'|'leadership'|'intercession'|'pastoral'|'followups'|'settings';
 @Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule],templateUrl:'./app.component.html'})
@@ -36,7 +36,9 @@ export class AppComponent implements OnInit {
  pastoralQueueDraft:Record<string,{priority:number;reason:PastoralCareReason;stage:PastoralCareStage}>={};
 
  pastoralDraft:Record<string,{start_time:string;deacon_id:string;status:PastoralSlot['status'];approval_status:PastoralSlot['approval_status']}>={};
-  selected:Deacon|null=null;selectedRegistry:RegistryDetails|null=null;registryLoading=false;search='';filter:'all'|'antigo'|'novo'|'unassigned'='all';
+  selected:Deacon|null=null;selectedRegistry:RegistryDetails|null=null;registryLoading=false;search='';
+ selectedAvailability:AvailabilityProfile|null=null;availabilityLoading=false;
+filter:'all'|'antigo'|'novo'|'unassigned'='all';
  draftDeacon={full_name:'',cohort:'antigo',status:'active',phone:'',email:'',availability:''};
  draftGroup={name:'',target_size:10,leader_id:''};
  draftUser={name:'',email:'',password:'',role:'leader'};
@@ -127,6 +129,7 @@ export class AppComponent implements OnInit {
      const recent=this.deacons.find(d=>d.id===this.selected?.id);
      if(recent)this.selected=recent;
      await this.fetchFollowups();
+     if(this.selected)await this.loadAvailability(this.selected.id);
    }
    if(!this.error)this.notice='Informações atualizadas.';
   }catch(e){this.error=this.msg(e)}
@@ -324,6 +327,7 @@ export class AppComponent implements OnInit {
   this.followups=[];
   this.fetchFollowups();
   if(this.admin)this.loadRegistry(d.id);
+  void this.loadAvailability(d.id);
  }
  async loadRegistry(id:string):Promise<void>{
   this.registryLoading=true;
@@ -331,7 +335,33 @@ export class AppComponent implements OnInit {
   catch(e){this.error=this.msg(e)}
   finally{this.registryLoading=false}
  }
- async saveRegistry():Promise<void>{
+
+ async loadAvailability(id:string):Promise<void>{
+  this.availabilityLoading=true;this.selectedAvailability=null;
+  try{
+   const item=await this.api.availability(id);
+   if(this.selected?.id===id)this.selectedAvailability=item;
+  }catch(e){if(this.selected?.id===id)this.error=this.msg(e)}
+  finally{this.availabilityLoading=false}
+ }
+ async saveAvailability():Promise<void>{
+  if(!this.selected||!this.selectedAvailability)return;
+  const id=this.selected.id;
+  const changes=this.selectedAvailability;
+  await this.run(async()=>{
+   await this.api.updateAvailability(id,{
+    available_wed_15:changes.available_wed_15,
+    available_wed_20:changes.available_wed_20,
+    available_sun_10:changes.available_sun_10,
+    available_sun_19:changes.available_sun_19,
+    only_first_sunday:changes.only_first_sunday,
+    mornings_only:changes.mornings_only
+   });
+   await this.loadAvailability(id);
+   if(this.admin)await this.loadRegistry(id);
+  },'Disponibilidade atualizada; será considerada nos próximos sorteios.');
+ }
+  async saveRegistry():Promise<void>{
   if(!this.admin||!this.selected||!this.selectedRegistry)return;
   const id=this.selected.id,details=this.selectedRegistry;
   await this.run(async()=>{
