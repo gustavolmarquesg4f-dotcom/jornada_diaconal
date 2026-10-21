@@ -31,13 +31,13 @@ A disponibilidade dos cultos é editada **apenas** no formulário operacional do
 | Coordenação | Cadastro operacional, grupos, disponibilidade, escalas, agenda e acompanhamento autorizado; sem acesso a observações originais |
 | Líder de grupo | Apenas diáconos vinculados aos seus grupos: contatos, disponibilidade operacional, Acompanhamento e relatórios de seu escopo |
 
-Sempre criar **credenciais individuais**. Não compartilhar senha de administrador. Senhas provisórias devem ser alteradas no primeiro acesso.
+Criar **credenciais individuais apenas para quem precisa usar o sistema**. A liderança ministerial pode ser designada antes do login. Não compartilhar senha de administrador. Senhas provisórias devem ser alteradas no primeiro acesso.
 
 ## 3. Sequência para começar
 
 1. Confirmar com o Pr. Sato quais pessoas serão líderes e qual será o grupo-piloto. Não atribuir automaticamente lideranças ou grupos.
-2. Em **Usuários e acesso**, criar acessos individuais com perfil de responsável.
-3. Em **Grupos e liderança**, criar os grupos, vincular responsáveis e distribuir os diáconos. É possível transferir ou desvincular sem excluir histórico.
+2. Em **Grupos e liderança**, criar ou abrir o grupo existente (ex.: Cuidado 1), escolher um diácono ativo como responsável e distribuir os integrantes. **Designar líder não exige e-mail nem senha.**
+3. Se o responsável precisar acessar o sistema, o administrador usa **Criar acesso para o líder**, informa o e-mail e uma senha provisória de 12+ caracteres, e o sistema vincula a conta ao grupo correspondente. Essa etapa é opcional e distinta da designação pastoral.
 4. Em **Acompanhamento**, cada responsável acompanha contatos a realizar, pessoas sem contato recente e encaminhamentos sinalizados.
 5. No **Acompanhamento** individual, registrar o contato objetivo, a próxima data e eventual necessidade de atenção pastoral.
 6. Registrar disponibilidade dos cultos no perfil de cada diácono; conferir **os dois cônjuges** quando ambos são diáconos.
