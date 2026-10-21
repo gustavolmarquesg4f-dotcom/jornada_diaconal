@@ -121,6 +121,9 @@ export class ApiService {
  async groups():Promise<Group[]>{return (await this.send<{items:Group[]}>('GET','/groups')).items}
  createGroup(g:unknown):Promise<{id:string}>{return this.send('POST','/groups',g)}
  updateGroup(id:string,g:unknown):Promise<{ok:boolean}>{return this.send('PATCH',`/groups/${encodeURIComponent(id)}`,g)}
+ archiveGroup(id:string):Promise<{ok:boolean;archived:boolean}>{
+  return this.send('DELETE',`/groups/${encodeURIComponent(id)}`);
+ }
  assign(group:string,deacon:string):Promise<{ok:boolean}>{return this.send('POST',`/groups/${encodeURIComponent(group)}/members`,{deacon_id:deacon})}
  assignBatch(group:string,deacons:string[]):Promise<{ok:boolean;assigned:number}>{
   return this.send('POST',`/groups/${encodeURIComponent(group)}/members/batch`,{deacon_ids:deacons});
