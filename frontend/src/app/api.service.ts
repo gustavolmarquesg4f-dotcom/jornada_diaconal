@@ -31,7 +31,7 @@ export interface ObservationEntry {
  available_sun_10:boolean; available_sun_19:boolean;
  only_first_sunday:boolean; mornings_only:boolean;
 }
-export interface Group { id: string; name: string; leader_id: string|null; leader_name: string|null; members: number; target_size: number }
+export interface Group { id: string; name: string; leader_id: string|null; leader_deacon_id: string|null; leader_access_enabled:boolean; leader_name: string|null; members: number; target_size: number }
 export interface Followup { id: string; contacted_at: string; author: string; method: string; outcome: string; summary: string; next_contact_on?: string; needs_pastoral_attention: boolean }
 export interface IntercessionTemplate {
  id:string;label:string;weekday:number;start_time:string;people_per_service:number|null;active:boolean;
