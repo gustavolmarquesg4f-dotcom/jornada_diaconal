@@ -673,8 +673,8 @@
             <p>Aqui são definidos os responsáveis, as equipes e seus vínculos — uma única área de organização do diaconato.</p>
           </div>
           <div class="group-heading-actions">
-            <button *ngIf="admin" class="outline" type="button" (click)="openNewLeader()">+ Cadastrar líder</button>
-            <button *ngIf="canManage" class="primary" type="button" (click)="showNewGroup=true">+ Criar grupo</button>
+            <button *ngIf="canManage" class="outline" type="button" (click)="openNewLeader()">+ Designar responsável</button>
+            <button *ngIf="canManage" class="primary" type="button" (click)="openNewGroup()">+ Criar grupo</button>
           </div>
         </div>
         <div class="group-leadership-summary">
@@ -684,11 +684,19 @@
         </div>
         <div class="context-strip"><span>♡</span><div><strong>Um grupo, um responsável de referência.</strong><p>O líder cuida do contato e dos retornos pelo menu Acompanhamento. Os vínculos e as transferências de equipe são administrados aqui; a definição dos líderes depende da aprovação do Pr. Sato.</p></div></div>
         <div class="group-cards"><div *ngFor="let g of groups" class="group-card"><div class="group-card-top"><div class="group-initial large">{{g.name.charAt(0)}}</div><span class="pill">{{g.members}} DE {{g.target_size}} VAGAS DE REFERÊNCIA</span></div><h3>{{g.name}}</h3><p>Responsável: <strong>{{g.leader_name||'Ainda não definido'}}</strong></p>
-          <label *ngIf="canManage" class="group-leader-editor">Alterar responsável
-            <select #leaderSelect [value]="g.leader_id||''" (change)="changeLeader(g.id,leaderSelect.value)" [disabled]="busy">
-              <option value="">Ainda não definido</option><option *ngFor="let u of users" [value]="u.id" [disabled]="u.role!=='leader'">{{u.name}}</option>
-            </select>
-          </label><div class="capacity"><span [style.width.%]="capacityPercent(g)"></span></div><small>Quantidade ajustável segundo a realidade do grupo</small><div class="group-card-bottom"><span>{{g.members}} diáconos acompanhados</span><button type="button" (click)="expandedGroupId=expandedGroupId===g.id?null:g.id" [attr.aria-expanded]="expandedGroupId===g.id">{{expandedGroupId===g.id?'Recolher integrantes':'Ver integrantes →'}}</button></div>
+          <div class="group-leader-actions">
+            <button *ngIf="canManage" class="outline" type="button" (click)="openNewLeader(g)" [disabled]="busy">
+              {{g.leader_deacon_id?'Alterar responsável':'Definir responsável'}}
+            </button>
+            <span *ngIf="g.leader_deacon_id && g.leader_access_enabled" class="leader-access-state">
+              <span aria-hidden="true">✓</span> Acesso liberado
+            </span>
+            <button *ngIf="admin && g.leader_deacon_id && !g.leader_access_enabled" type="button"
+              class="text-button" (click)="openLeaderAccess(g)" [disabled]="busy">Criar acesso para o líder →</button>
+            <span *ngIf="g.leader_deacon_id && !g.leader_access_enabled && !admin" class="leader-access-state">
+              Sem acesso individual ainda
+            </span>
+          </div><div class="capacity"><span [style.width.%]="capacityPercent(g)"></span></div><small>Quantidade ajustável segundo a realidade do grupo</small><div class="group-card-bottom"><span>{{g.members}} diáconos acompanhados</span><button type="button" (click)="expandedGroupId=expandedGroupId===g.id?null:g.id" [attr.aria-expanded]="expandedGroupId===g.id">{{expandedGroupId===g.id?'Recolher integrantes':'Ver integrantes →'}}</button></div>
           <div *ngIf="expandedGroupId===g.id" class="group-members-panel">
             <div *ngFor="let person of membersForGroup(g.id)" class="group-member-line">
               <div><strong>{{person.full_name}}</strong><small>{{person.phone||'Sem telefone'}} · {{cohortLabel(person.cohort)}}</small></div>
@@ -705,7 +713,7 @@
             <p *ngIf="!membersForGroup(g.id).length" class="modal-hint">Este grupo ainda não possui diáconos vinculados.</p>
           </div>
         </div></div>
-        <div *ngIf="!groups.length" class="surface empty-inline big-empty"><span>♧</span><h3>Ainda não temos grupos de cuidado</h3><p>Crie os primeiros grupos e atribua responsáveis. A equipe poderá começar com um projeto-piloto antes de ampliar.</p><button *ngIf="canManage" class="primary" (click)="showNewGroup=true">Criar um grupo</button></div>
+        <div *ngIf="!groups.length" class="surface empty-inline big-empty"><span>♧</span><h3>Ainda não temos grupos de cuidado</h3><p>Crie os primeiros grupos e atribua responsáveis. A equipe poderá começar com um projeto-piloto antes de ampliar.</p><button *ngIf="canManage" class="primary" type="button" (click)="openNewGroup()">Criar um grupo</button></div>
         <div *ngIf="canManage && unassigned.length && groups.length" class="surface assignment"><div class="surface-head"><h3>Vincular diáconos a grupos</h3><span class="pill">{{unassigned.length}} SEM GRUPO</span></div><div *ngFor="let d of unassigned" class="assignment-row"><div class="person"><span class="person-circle">{{d.full_name.charAt(0)}}</span><strong>{{d.full_name}}</strong></div><select #chosen aria-label="Escolher grupo" [disabled]="busy"><option value="">Escolher grupo...</option><option *ngFor="let g of groups" [value]="g.id">{{g.name}} ({{g.members}}/{{g.target_size}})</option></select><button class="small-primary" (click)="assign(d.id,chosen.value)" [disabled]="busy || !chosen.value">Vincular</button></div></div>
       </section>
 
@@ -822,6 +830,95 @@
 
 <!-- Modais administrativos e de cuidado -->
 <div *ngIf="showNewDeacon" class="modal-backdrop" (click)="showNewDeacon=false"><form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="createDeacon()"><div class="modal-head"><div><span class="eyebrow">CADASTRO</span><h2>Novo diácono</h2></div><button type="button" class="modal-close" (click)="showNewDeacon=false">×</button></div><div class="form-grid"><label class="span-2">Nome completo<input name="full_name" required [(ngModel)]="draftDeacon.full_name"></label><label>Turma<select name="cohort" [(ngModel)]="draftDeacon.cohort"><option value="antigo">Antigo</option><option value="novo">Novo</option></select></label><label>Situação<select name="status" [(ngModel)]="draftDeacon.status"><option value="active">Ativo</option><option value="away">Afastamento temporário</option><option value="inactive">Inativo</option></select></label><label>Telefone<input name="phone" [(ngModel)]="draftDeacon.phone"></label><label>E-mail<input type="email" name="email" [(ngModel)]="draftDeacon.email"></label><label class="span-2">Disponibilidade (opcional)<textarea name="availability" [(ngModel)]="draftDeacon.availability" rows="2" placeholder="Ex.: domingos de manhã, exceto último domingo"></textarea></label></div><div class="modal-actions"><button class="outline" type="button" (click)="showNewDeacon=false">Cancelar</button><button class="primary" [disabled]="busy">Salvar cadastro</button></div></form></div>
-<div *ngIf="showNewGroup" class="modal-backdrop" (click)="showNewGroup=false"><form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="createGroup()"><div class="modal-head"><div><span class="eyebrow">REDE DE CUIDADO</span><h2>Novo grupo</h2></div><button class="modal-close" type="button" (click)="showNewGroup=false">×</button></div><div class="form-grid"><label class="span-2">Nome do grupo<input name="group_name" required [(ngModel)]="draftGroup.name" placeholder="Ex.: Grupo de cuidado 01"></label><label>Quantidade sugerida<input name="target_size" type="number" min="1" max="30" required [(ngModel)]="draftGroup.target_size"></label><label>Responsável<select name="leader_id" [(ngModel)]="draftGroup.leader_id"><option value="">Definir depois</option><option *ngFor="let u of users" [value]="u.id" [disabled]="u.role!=='leader'">{{u.name}} — {{u.role==='leader'?'Responsável':'Outro perfil'}}</option></select></label></div><p class="modal-hint">A referência de dez diáconos pode ser ajustada pela coordenação.</p><div class="modal-actions"><button class="outline" type="button" (click)="showNewGroup=false">Cancelar</button><button class="primary" [disabled]="busy">Criar grupo</button></div></form></div>
-<div *ngIf="showNewUser && admin" class="modal-backdrop" (click)="showNewUser=false"><form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="createUser()"><div class="modal-head"><div><span class="eyebrow">ACESSO RESERVADO</span><h2>Novo usuário</h2></div><button class="modal-close" type="button" (click)="showNewUser=false">×</button></div><div class="form-grid"><label class="span-2">Nome<input name="uname" required [(ngModel)]="draftUser.name"></label><label class="span-2">E-mail<input name="uemail" type="email" required [(ngModel)]="draftUser.email"></label><label>Perfil<select name="urole" [(ngModel)]="draftUser.role"><option value="leader">Responsável</option><option value="coordinator">Coordenação</option><option value="admin">Administrador</option></select></label><label>Senha provisória (12+ caracteres)<input name="upassword" type="password" minlength="12" required [(ngModel)]="draftUser.password"></label></div><div class="modal-actions"><button class="outline" type="button" (click)="showNewUser=false">Cancelar</button><button class="primary" [disabled]="busy">Criar usuário</button></div></form></div>
+<div *ngIf="showNewGroup" class="modal-backdrop" (click)="showNewGroup=false;modalError=''">
+ <form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="createGroup()" #groupForm="ngForm" aria-label="Criar grupo de cuidado">
+  <div class="modal-head"><div><span class="eyebrow">GRUPOS E LIDERANÇA</span><h2>Criar grupo</h2>
+    <p class="hint">Defina o grupo e, se já souber, escolha o responsável entre os diáconos cadastrados.</p></div>
+    <button type="button" class="modal-close" (click)="showNewGroup=false;modalError=''" aria-label="Fechar">×</button>
+  </div>
+  <div *ngIf="modalError" role="alert" class="modal-inline-error">{{modalError}}</div>
+  <div class="form-grid">
+    <label class="span-2">Nome do grupo
+      <input name="group_name" required minlength="3" maxlength="120" [(ngModel)]="draftGroup.name"
+        placeholder="Ex.: Cuidado 2" autocomplete="off">
+    </label>
+    <label>Quantidade de participantes
+      <input name="target_size" type="number" min="1" max="30" required [(ngModel)]="draftGroup.target_size">
+    </label>
+    <label>Responsável ministerial (opcional)
+      <select name="leader_deacon_id" [(ngModel)]="draftGroup.leader_deacon_id">
+        <option value="">Definir depois</option>
+        <option *ngFor="let person of eligibleLeaders" [value]="person.id">{{person.full_name}}</option>
+      </select>
+    </label>
+  </div>
+  <p class="modal-hint">Não precisa criar senha nem e-mail para designar o responsável. Acesso ao sistema é uma etapa separada.</p>
+  <div class="modal-actions">
+    <button class="outline" type="button" (click)="showNewGroup=false;modalError=''">Cancelar</button>
+    <button class="primary" type="submit" [disabled]="busy||groupForm.invalid">{{busy?'Salvando...':'Criar grupo'}}</button>
+  </div>
+ </form>
+</div>
+<div *ngIf="showAssignLeader" class="modal-backdrop" (click)="showAssignLeader=false;modalError=''">
+ <form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="assignLeader()" aria-label="Designar responsável do grupo">
+  <div class="modal-head"><div><span class="eyebrow">GRUPOS E LIDERANÇA</span><h2>Designar responsável</h2>
+    <p class="hint">Escolha uma pessoa da relação oficial de diáconos. Não é necessário criar um usuário.</p></div>
+    <button type="button" class="modal-close" (click)="showAssignLeader=false;modalError=''" aria-label="Fechar">×</button>
+  </div>
+  <div *ngIf="modalError" role="alert" class="modal-inline-error">{{modalError}}</div>
+  <div class="form-grid">
+    <label class="span-2">Grupo
+      <select name="assign_group" [(ngModel)]="leaderAssignment.group_id" required>
+        <option value="">Selecione o grupo</option>
+        <option *ngFor="let group of groups" [value]="group.id">{{group.name}}</option>
+      </select>
+    </label>
+    <label class="span-2">Diácono responsável
+      <select name="assign_leader" [(ngModel)]="leaderAssignment.deacon_id">
+        <option value="">Ainda sem responsável</option>
+        <option *ngFor="let person of eligibleLeaders" [value]="person.id">{{person.full_name}}</option>
+      </select>
+    </label>
+  </div>
+  <p class="modal-hint">A escolha do responsável não concede automaticamente acesso aos registros. Se precisar, crie o acesso individual depois.</p>
+  <div class="modal-actions">
+    <button class="outline" type="button" (click)="showAssignLeader=false;modalError=''">Cancelar</button>
+    <button class="primary" type="submit" [disabled]="busy||!leaderAssignment.group_id">{{busy?'Salvando...':'Salvar responsável'}}</button>
+  </div>
+ </form>
+</div>
+<div *ngIf="showNewUser && admin" class="modal-backdrop" (click)="showNewUser=false;modalError=''">
+ <form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="createUser()" #userForm="ngForm" aria-label="Criar acesso ao sistema">
+  <div class="modal-head"><div><span class="eyebrow">ACESSO RESERVADO</span>
+    <h2>{{draftUser.linked_deacon_id?'Criar acesso do responsável':'Novo usuário do sistema'}}</h2></div>
+    <button class="modal-close" type="button" (click)="showNewUser=false;modalError=''" aria-label="Fechar">×</button>
+  </div>
+  <div *ngIf="modalError" role="alert" class="modal-inline-error">{{modalError}}</div>
+  <p class="modal-hint" *ngIf="draftUser.linked_deacon_id">O líder já foi designado no grupo. Aqui você cria somente o login para que acompanhe sua equipe.</p>
+  <div class="form-grid">
+    <label class="span-2">Nome
+      <input name="uname" required minlength="2" maxlength="160" [(ngModel)]="draftUser.name" autocomplete="name">
+    </label>
+    <label class="span-2">E-mail
+      <input name="uemail" type="email" required [(ngModel)]="draftUser.email" autocomplete="off">
+    </label>
+    <label>Perfil de acesso
+      <select name="urole" [(ngModel)]="draftUser.role" [disabled]="!!draftUser.linked_deacon_id">
+        <option value="leader">Líder de grupo</option>
+        <option value="coordinator">Coordenação</option>
+        <option value="admin">Administrador</option>
+      </select>
+    </label>
+    <label>Senha provisória (mínimo 12 caracteres)
+      <input name="upassword" type="password" minlength="12" maxlength="128" required
+        [(ngModel)]="draftUser.password" autocomplete="new-password">
+    </label>
+  </div>
+  <p class="modal-hint">A senha deverá ser trocada no primeiro acesso. Compartilhe-a apenas com o usuário por canal seguro.</p>
+  <div class="modal-actions">
+    <button class="outline" type="button" (click)="showNewUser=false;modalError=''">Cancelar</button>
+    <button class="primary" type="submit" [disabled]="busy||userForm.invalid">{{busy?'Criando...':'Criar acesso'}}</button>
+  </div>
+ </form>
+</div>
 <div *ngIf="showFollowup && selected" class="modal-backdrop" (click)="showFollowup=false"><form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="record()"><div class="modal-head"><div><span class="eyebrow">ACOMPANHAMENTO</span><h2>Registrar contato</h2><p class="hint">{{selected.full_name}}</p></div><button type="button" class="modal-close" (click)="showFollowup=false">×</button></div><div class="form-grid"><label>Como foi o contato?<select name="method" [(ngModel)]="draftFollowup.method"><option value="mensagem">Mensagem</option><option value="presencial">Presencial</option><option value="telefone">Telefone</option><option value="outro">Outro</option></select></label><label>Resultado<select name="outcome" [(ngModel)]="draftFollowup.outcome"><option value="contato_realizado">Contato realizado</option><option value="retornar">Precisa retornar</option><option value="sem_resposta">Não respondeu</option><option value="encaminhar">Encaminhar à liderança</option></select></label><label class="span-2">Resumo objetivo (evite informações íntimas)<textarea name="summary" rows="3" maxlength="1000" [(ngModel)]="draftFollowup.summary" placeholder="Ex.: Conversamos sobre disponibilidade; combinar retorno em duas semanas."></textarea></label><label>Próxima conversa (opcional)<input name="next_contact_on" type="date" [(ngModel)]="draftFollowup.next_contact_on"></label><label class="check-label"><input name="needs_pastoral_attention" type="checkbox" [(ngModel)]="draftFollowup.needs_pastoral_attention"> Pedir atenção pastoral</label></div><div class="modal-actions"><button class="outline" type="button" (click)="showFollowup=false">Cancelar</button><button class="primary" [disabled]="busy">Salvar contato</button></div></form></div>
