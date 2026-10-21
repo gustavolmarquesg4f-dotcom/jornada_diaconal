@@ -824,7 +824,44 @@
         </div>
       </section>
 
-      <section *ngIf="page==='settings' && admin"><div class="page-heading"><div><span class="eyebrow">CONTROLE DE ACESSO</span><h1>Equipe e permissões</h1><p>Cadastre quem pode administrar o sistema e quem acompanha grupos de diáconos.</p></div><button class="primary" (click)="openNewUser()">+ Novo usuário</button></div><div class="surface table-surface"><p *ngIf="usersLoading" class="modal-hint" role="status">Carregando acessos...</p><p *ngIf="!usersLoading && usersLoaded && !users.length" class="modal-hint">Nenhum usuário ativo encontrado.</p><div class="scroll-table"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Permissão</th><th>Situação</th></tr></thead><tbody><tr *ngFor="let u of users"><td><strong>{{u.name}}</strong></td><td>{{u.email}}</td><td><span class="pill">{{u.role==='admin'?'Administrador':u.role==='coordinator'?'Coordenação':'Responsável'}}</span></td><td>{{u.active===false?'Desativado':'Ativo'}}</td></tr></tbody></table></div></div></section>
+      <section *ngIf="page==='settings' && admin">
+        <div class="page-heading">
+          <div><span class="eyebrow">CONTROLE DE ACESSO</span><h1>Equipe e permissões</h1>
+            <p>Cadastre quem pode administrar o sistema e acompanhar os grupos de diáconos.</p></div>
+          <button class="primary" type="button" (click)="openNewUser()">+ Novo usuário</button>
+        </div>
+        <div class="surface" style="margin-bottom:16px">
+          <div class="surface-head"><h3>Convites para novos acessos</h3></div>
+          <p class="modal-hint" *ngIf="usersLoading">Verificando o serviço de e-mail...</p>
+          <p class="modal-hint" *ngIf="!usersLoading && inviteEmailReady">
+            ✓ Envio automático configurado. O usuário recebe um link individual, válido por 24 horas, para definir a própria senha.
+          </p>
+          <p class="modal-hint" *ngIf="!usersLoading && !inviteEmailReady">
+            O envio automático está indisponível até a configuração de um remetente verificado.
+            Os acessos podem continuar sendo cadastrados manualmente com senha provisória.
+          </p>
+        </div>
+        <div class="surface table-surface">
+          <p *ngIf="usersLoading" class="modal-hint" role="status">Carregando acessos...</p>
+          <p *ngIf="!usersLoading && usersLoaded && !users.length" class="modal-hint">Nenhum usuário ativo encontrado.</p>
+          <div class="scroll-table">
+            <table>
+              <thead><tr><th>Nome</th><th>E-mail</th><th>Permissão</th><th>Situação</th><th *ngIf="inviteEmailReady">Ações</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let u of users">
+                  <td><strong>{{u.name}}</strong></td><td>{{u.email}}</td>
+                  <td><span class="pill">{{u.role==='admin'?'Administrador':u.role==='coordinator'?'Coordenação':'Responsável'}}</span></td>
+                  <td>{{u.active===false?'Desativado':'Ativo'}}</td>
+                  <td *ngIf="inviteEmailReady">
+                    <button *ngIf="invitePendingIds.has(u.id)" class="outline" type="button" [disabled]="busy" (click)="resendUserInvite(u.id)">Enviar convite</button>
+                    <span *ngIf="!invitePendingIds.has(u.id)" class="modal-hint">—</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 </div>
@@ -1056,6 +1093,10 @@
     <label class="span-2">E-mail
       <input name="uemail" type="email" required [(ngModel)]="draftUser.email" autocomplete="off">
     </label>
+    <label *ngIf="inviteEmailReady" class="span-2 check-label">
+      <input name="inviteMode" type="checkbox" [(ngModel)]="inviteMode">
+      Enviar convite por e-mail para definir a senha (recomendado)
+    </label>
     <label>Perfil de acesso
       <select name="urole" [(ngModel)]="draftUser.role">
         <option value="leader">Líder de grupo</option>
@@ -1069,15 +1110,16 @@
         <option *ngFor="let person of eligibleLeaders" [value]="person.id">{{person.full_name}}</option>
       </select>
     </label>
-    <label>Senha provisória (mínimo 12 caracteres)
+    <label *ngIf="!inviteMode">Senha provisória (mínimo 12 caracteres)
       <input name="upassword" type="password" minlength="12" maxlength="128" required
         [(ngModel)]="draftUser.password" autocomplete="new-password">
     </label>
   </div>
-  <p class="modal-hint">A senha deverá ser trocada no primeiro acesso. Compartilhe-a apenas com o usuário por canal seguro.</p>
+  <p class="modal-hint" *ngIf="inviteMode">O sistema enviará um convite de uso único com validade de 24 horas. A pessoa criará a própria senha; nenhuma senha será enviada por e-mail.</p>
+  <p class="modal-hint" *ngIf="!inviteMode">A senha provisória deverá ser trocada no primeiro acesso. Compartilhe-a por canal seguro.</p>
   <div class="modal-actions">
     <button class="outline" type="button" (click)="showNewUser=false;modalError=''">Cancelar</button>
-    <button class="primary" type="submit" [disabled]="busy||userForm.invalid">{{busy?'Criando...':'Criar acesso'}}</button>
+    <button class="primary" type="submit" [disabled]="busy||userForm.invalid">{{busy?'Criando...':inviteMode?'Criar e enviar convite':'Criar acesso'}}</button>
   </div>
  </form>
 </div>
