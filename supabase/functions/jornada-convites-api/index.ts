@@ -80,7 +80,7 @@ function escapeHtml(s:string):string {
   return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]||c));
 }
 async function deliver(name:string,email:string,rawToken:string):Promise<boolean>{
-  const activation=SITE+"/ativar-acesso.html#token="+rawToken;
+  const activation=SITE+"/convite-acesso.html#token="+rawToken;
   const safeName=escapeHtml(name);
   const html="<div style='font-family:Arial,sans-serif;line-height:1.7;color:#214033;max-width:560px'>"+
     "<h2>Jornada Diaconal — acesso à liderança</h2>"+
