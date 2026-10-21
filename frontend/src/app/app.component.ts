@@ -270,8 +270,11 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   this.error='';
   try{
    const [d,people,groups]=await Promise.all([this.api.dashboard(),this.api.deacons(),this.api.groups()]);
-   const users=this.canManage?await this.api.users():[];
-   this.dashboard=d;this.deacons=people;this.groups=groups;this.users=users;
+   this.dashboard=d;this.deacons=people;this.groups=groups;
+   if(this.canManage){
+     try{this.users=await this.api.users()}
+     catch{this.users=[];this.error='Os cadastros e grupos foram carregados, mas não foi possível consultar os usuários de acesso.'}
+   }else this.users=[];
    if(this.selected){
     this.selected=people.find(person=>person.id===this.selected?.id)||null;
    }
@@ -611,6 +614,12 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   }
   this.leaderAssignment={group_id:group?.id||this.groups[0].id,deacon_id:group?.leader_deacon_id||''};
   this.showAssignLeader=true;
+ }
+ openNewUser():void{
+  if(!this.admin)return;
+  this.modalError='';
+  this.draftUser={name:'',email:'',password:'',role:'leader',linked_deacon_id:''};
+  this.showNewUser=true;
  }
  openLeaderAccess(group:Group):void{
   if(!this.admin||!group.leader_deacon_id||group.leader_access_enabled)return;
