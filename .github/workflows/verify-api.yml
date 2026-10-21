@@ -37,6 +37,16 @@ jobs:
           API="https://wscvdtrmplqokceaztrv.supabase.co/functions/v1/jornada-gestao-api"
           STATUS=$(curl -sS -o /tmp/jd-anon-delete.json -w "%{http_code}" --max-time 20 -X DELETE "$API/groups/00000000-0000-4000-8000-000000000000/members/00000000-0000-4000-8000-000000000000")
           test "$STATUS" = "401" || { echo "DELETE anônimo retornou $STATUS"; exit 1; }
+      - name: Bloquear criação anônima de grupos e líderes
+        run: |
+          set -euo pipefail
+          API="https://wscvdtrmplqokceaztrv.supabase.co/functions/v1/jornada-gestao-api"
+          for ROUTE in groups users; do
+            STATUS=$(curl -sS -o /tmp/jd-create-denied.json -w "%{http_code}" --max-time 20 \
+              -X POST -H "Content-Type: application/json" \
+              --data '{"name":"Teste não autorizado","target_size":10,"leader_deacon_id":null}' "$API/$ROUTE")
+            test "$STATUS" = "401" || { echo "POST /$ROUTE retornou $STATUS"; exit 1; }
+          done
       - name: Verificar login inválido e comunicação com o banco
         run: |
           set -euo pipefail
