@@ -12,6 +12,7 @@ export class AppComponent implements OnInit {
  printSelection:'all'|'antigo'|'novo'='all';printGeneratedAt=new Date();
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
  deacons:Deacon[]=[];groups:Group[]=[];users:User[]=[];followups:Followup[]=[];
+ expandedGroupId:string|null=null;
  workspace:LeaderWorkspace|null=null;workspaceLoading=false;workspaceLoaded=false;workspaceFilter:'due'|'without_contact'|'referrals'='due';
  monthlyReport:MonthlyReport|null=null;reportMonth=new Date().toISOString().slice(0,7);reportLoading=false;reportLoaded=false;
  readiness:ReadinessSummary|null=null;recentAudit:AuditEvent[]=[];auditLoading=false;
