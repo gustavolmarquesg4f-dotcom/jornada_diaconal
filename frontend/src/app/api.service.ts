@@ -57,6 +57,29 @@ export interface PastoralSlot {
  approval_status:'awaiting_pastor'|'approved';
  deacon:{id:string;full_name:string;phone:string|null;status:string;cohort:string}|null;
 }
+export interface WorkspaceMember {
+ id:string;full_name:string;phone:string|null;group_id:string|null;group_name:string|null;
+ cohort:Cohort;status:DeaconStatus;last_contact:string|null;next_contact_on:string|null;
+ due:boolean;no_recent_contact:boolean;needs_pastoral_attention:boolean;
+}
+export interface LeaderWorkspace {
+ role:Role;groups:Group[];
+ totals:{people:number;groups:number;due:number;without_contact:number;without_group:number;pastoral_referrals:number};
+ due:WorkspaceMember[];without_contact:WorkspaceMember[];referrals:WorkspaceMember[];
+}
+export interface MonthlyReport {
+ month:string;scope:Role;period:{start:string;end_exclusive:string};
+ totals:{people:number;active:number;inactive:number;away:number;contacted:number;contact_records:number;no_group:number;groups:number;referred:number};
+ cohorts:{antigo:number;novo:number};by_method:Record<string,number>;by_outcome:Record<string,number>;
+ group_breakdown:{id:string;name:string;leader_name:string|null;people:number;contacted:number}[];
+ ministry?:{draws:number;published_draws:number;pastoral_slots:number;confirmed_appointments:number;completed_appointments:number};
+}
+export interface ReadinessSummary {
+ totals:{people:number;old:number;new:number;without_availability:number;groups:number;without_group:number;leaders:number;coordinators:number;pending_pastoral:number;pastoral_approved:number;draws:number;published_draws:number};
+}
+export interface AuditEvent {
+ id:number;event:string;target_id:string|null;created_at:string;actor:string;
+}
 export interface Dashboard { totals: {deacons:number;without_group:number;contacted_30_days:number;without_recent_contact:number};groups:Group[] }
 @Injectable({providedIn:'root'})
 export class ApiService {
@@ -98,6 +121,18 @@ export class ApiService {
  createUser(u:unknown):Promise<{item:User}>{return this.send('POST','/users',u)}
  async followups(deaconId:string):Promise<Followup[]>{return (await this.send<{items:Followup[]}>('GET',`/followups?deacon_id=${encodeURIComponent(deaconId)}`)).items}
  createFollowup(f:unknown):Promise<{id:string}>{return this.send('POST','/followups',f)}
+ workspace():Promise<LeaderWorkspace>{
+   return this.send('GET','/workspace');
+ }
+ monthlyReport(month:string):Promise<MonthlyReport>{
+   return this.send('GET',`/reports/monthly?month=${encodeURIComponent(month)}`);
+ }
+ readiness():Promise<ReadinessSummary>{
+   return this.send('GET','/readiness');
+ }
+ async auditRecent():Promise<AuditEvent[]>{
+   return (await this.send<{items:AuditEvent[]}>('GET','/audit/recent')).items;
+ }
  pastoralQueue():Promise<{items:PastoralQueueItem[];needs_verification:PastoralCarePerson[]}>{
    return this.send('GET','/pastoral/queue');
  }
