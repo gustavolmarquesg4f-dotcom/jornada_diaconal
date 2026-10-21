@@ -425,7 +425,29 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
  async createGroup():Promise<void>{await this.run(async()=>{await this.api.createGroup({...this.draftGroup,leader_id:this.draftGroup.leader_id||null});this.showNewGroup=false;this.draftGroup={name:'',target_size:10,leader_id:''};await this.reload()},'Grupo criado com sucesso.')}
  async createUser():Promise<void>{await this.run(async()=>{await this.api.createUser(this.draftUser);this.showNewUser=false;this.draftUser={name:'',email:'',password:'',role:'leader'};await this.reload()},'Responsável cadastrado.')}
  async changeLeader(groupId:string,leaderId:string):Promise<void>{await this.run(async()=>{await this.api.updateGroup(groupId,{leader_id:leaderId||null});await this.reload()},'Responsável atualizado.')}
- async assign(deaconId:string,groupId:string):Promise<void>{if(!groupId)return;await this.run(async()=>{await this.api.assign(groupId,deaconId);await this.reload()},'Grupo atualizado.')}
+
+ membersForGroup(groupId:string):Deacon[]{
+  return this.deacons.filter(person=>person.group_id===groupId)
+    .slice().sort((a,b)=>this.printCollator.compare(a.full_name,b.full_name));
+ }
+ async moveMember(person:Deacon,newGroupId:string):Promise<void>{
+  if(!this.canManage||!newGroupId||newGroupId===person.group_id)return;
+  await this.run(async()=>{
+    await this.api.assign(newGroupId,person.id);
+    await this.reload();
+    this.workspaceLoaded=false;this.reportLoaded=false;
+  },'Diácono transferido para o grupo selecionado. O histórico de contatos foi mantido.');
+ }
+ async unassignMember(person:Deacon):Promise<void>{
+  if(!this.canManage||!person.group_id)return;
+  if(!window.confirm('Desvincular '+person.full_name+' do grupo atual? O histórico de contatos será preservado.'))return;
+  await this.run(async()=>{
+    await this.api.unassign(person.group_id!,person.id);
+    await this.reload();this.workspaceLoaded=false;this.reportLoaded=false;
+  },'Vínculo removido, sem excluir o cadastro ou histórico.');
+ }
+  async assign(deaconId:string,groupId:string):Promise<void>{if(!groupId)return;await this.run(async()=>{await this.api.assign(groupId,deaconId);await this.reload()},'Grupo atualizado.')}
+
  async record():Promise<void>{if(!this.selected)return;await this.run(async()=>{await this.api.createFollowup({...this.draftFollowup,deacon_id:this.selected!.id,next_contact_on:this.draftFollowup.next_contact_on||null});this.showFollowup=false;this.draftFollowup={method:'mensagem',outcome:'contato_realizado',summary:'',next_contact_on:'',needs_pastoral_attention:false};await this.fetchFollowups();await this.reload()},'Acompanhamento registrado.')}
  async updateStatus(d:Deacon,status:string):Promise<void>{await this.run(async()=>{await this.api.updateDeacon(d.id,{status});await this.reload()},'Situação atualizada.')}
  private async run(action:()=>Promise<void>,success:string):Promise<void>{this.error='';this.notice='';this.busy=true;try{await action();this.notice=success}catch(e){this.error=this.msg(e)}finally{this.busy=false}}
