@@ -122,6 +122,8 @@ export class ApiService {
  createGroup(g:unknown):Promise<{id:string}>{return this.send('POST','/groups',g)}
  updateGroup(id:string,g:unknown):Promise<{ok:boolean}>{return this.send('PATCH',`/groups/${encodeURIComponent(id)}`,g)}
  assign(group:string,deacon:string):Promise<{ok:boolean}>{return this.send('POST',`/groups/${encodeURIComponent(group)}/members`,{deacon_id:deacon})}
+ unassign(group:string,deacon:string):Promise<{ok:boolean}>{return this.send('DELETE',`/groups/${encodeURIComponent(group)}/members/${encodeURIComponent(deacon)}`)}
+
  async users():Promise<User[]>{return (await this.send<{items:User[]}>('GET','/users')).items}
  createUser(u:unknown):Promise<{item:User}>{return this.send('POST','/users',u)}
  async followups(deaconId:string):Promise<Followup[]>{return (await this.send<{items:Followup[]}>('GET',`/followups?deacon_id=${encodeURIComponent(deaconId)}`)).items}
