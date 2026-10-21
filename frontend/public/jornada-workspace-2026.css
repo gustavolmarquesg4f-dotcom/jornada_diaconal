@@ -142,3 +142,60 @@
 .modal .form-grid select{min-height:46px;max-width:100%}
 .modal .modal-actions button{min-height:42px}
 @media(max-width:600px){.group-leader-actions{align-items:stretch;flex-direction:column}.group-leader-actions button{width:100%}.modal-backdrop{padding:10px}.modal-backdrop .modal{max-height:calc(100dvh - 20px);padding:20px}}
+
+/* Cuidado 1 — associação de vários diáconos com pesquisa e confirmação */
+.group-card-buttons{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+.group-card-buttons button{min-height:42px;flex:1 1 150px;font-size:12px}
+.group-assign-guidance{margin-top:20px}
+.group-assign-guidance .surface-head{align-items:center;gap:14px}
+.group-assign-guidance .surface-head p{font-size:12px;line-height:1.55;color:#6d8793;margin:7px 0 0}
+.group-assign-guidance>.primary{margin-top:13px;min-height:44px}
+.leader-roster-caption{font-size:11px;font-weight:750;color:#648492}
+.group-leader-preview{margin:16px 0;background:#f0fafb;border:1px solid #b9dfe5;padding:17px;border-radius:12px}
+.group-leader-preview h4{font-size:16px;color:#0f5065;margin:7px 0}
+.group-leader-preview p{font-size:12px;line-height:1.5;color:#5e808c}
+.leader-preview-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}
+.leader-preview-stats div{background:#fff;border:1px solid #d7e9ed;border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.leader-preview-stats strong{font-size:22px;color:#096781}
+.leader-preview-stats small{font-size:10px;line-height:1.35;color:#6c8a97}
+.member-picker-backdrop{z-index:75}
+.member-picker-modal{width:min(760px,100%)!important;max-height:min(94dvh,900px)!important;display:flex;flex-direction:column;overflow:hidden!important;gap:0}
+.member-picker-modal .modal-head{flex:none;margin-bottom:10px}
+.member-picker-modal>.modal-hint{flex:none;margin:8px 0 12px;font-size:12px;line-height:1.5}
+.member-picker-toolbar{display:flex;gap:15px;align-items:flex-end;justify-content:space-between;flex:none}
+.member-picker-toolbar label{font-size:12px;font-weight:750;color:#436b78;display:flex;flex-direction:column;gap:7px;flex:1;min-width:0}
+.member-picker-toolbar input{border:1px solid #b7d7e0;border-radius:9px;padding:11px 12px;width:100%;min-height:45px;background:#fff;color:#1a4f65;font-size:13px}
+.member-picker-stats{font-size:12px;color:#648491;white-space:nowrap;padding-bottom:12px}
+.member-picker-stats strong{font-size:21px;color:#086c87}
+.member-picker-controls{display:flex;gap:13px;align-items:center;justify-content:space-between;margin:13px 0;flex:none}
+.member-picker-controls button{font-size:12px;min-height:37px}
+.member-picker-list{min-height:96px;overflow-y:auto;overscroll-behavior:contain;flex:1;background:#f9fcfd;border:1px solid #dfebef;border-radius:10px;padding:6px 10px;scrollbar-width:thin}
+.member-picker-row{display:flex;align-items:center;gap:12px;min-height:60px;border-bottom:1px solid #e8f0f2;padding:10px;border-radius:6px;cursor:pointer}
+.member-picker-row:hover{background:#e7f6f9}
+.member-picker-row.picked{background:#e0f6f9}
+.member-picker-row input{flex:none;accent-color:#158ba0;width:19px;height:19px}
+.member-picker-row .person-circle{width:34px;height:34px;flex:none;font-size:14px}
+.member-picker-person{min-width:0}
+.member-picker-person strong{font-size:12px;color:#154e63;display:block;line-height:1.4;overflow-wrap:anywhere}
+.member-picker-person small{font-size:10px;color:#708d9a;display:block;line-height:1.4;margin-top:4px}
+.member-picker-more{margin-top:9px;flex:none;font-size:12px;min-height:37px}
+.member-picker-footer{flex:none;border-top:1px solid #e6eef1;padding-top:10px;margin-top:12px}
+.member-picker-footer>p{font-size:11px;line-height:1.5;color:#688390;margin:0}
+.member-picker-footer .modal-actions{margin-top:10px;padding-top:10px}
+.member-picker-footer .modal-actions button{min-height:43px}
+@media(max-width:660px){
+ .group-card-buttons{flex-direction:column}
+ .group-card-buttons button{width:100%}
+ .leader-preview-stats{gap:6px}
+ .leader-preview-stats div{padding:8px}
+ .member-picker-backdrop{padding:7px}
+ .member-picker-modal{padding:15px!important;max-height:calc(100dvh - 14px)!important;border-radius:12px}
+ .member-picker-toolbar{flex-direction:column;align-items:stretch;gap:5px}
+ .member-picker-stats{padding:0}
+ .member-picker-controls{gap:6px}
+ .member-picker-controls button{font-size:10px}
+ .member-picker-list{padding:4px}
+ .member-picker-row{gap:8px;padding:7px}
+ .member-picker-footer .modal-actions{display:grid;grid-template-columns:1fr 1.3fr;gap:8px}
+ .member-picker-footer .modal-actions button{font-size:11px;padding:9px 7px}
+}
