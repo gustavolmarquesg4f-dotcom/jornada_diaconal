@@ -673,6 +673,7 @@
             <p>Aqui são definidos os responsáveis, as equipes e seus vínculos — uma única área de organização do diaconato.</p>
           </div>
           <div class="group-heading-actions">
+            <button type="button" class="outline" (click)="refreshCurrentPage()" [disabled]="busy||refreshing">{{refreshing?'Atualizando...':'↻ Atualizar'}}</button>
             <button *ngIf="canManage" class="outline" type="button" (click)="openNewLeader()">+ Designar responsável</button>
             <button *ngIf="canManage" class="primary" type="button" (click)="openNewGroup()">+ Criar grupo</button>
           </div>
@@ -903,10 +904,16 @@
       <input name="uemail" type="email" required [(ngModel)]="draftUser.email" autocomplete="off">
     </label>
     <label>Perfil de acesso
-      <select name="urole" [(ngModel)]="draftUser.role" [disabled]="!!draftUser.linked_deacon_id">
+      <select name="urole" [(ngModel)]="draftUser.role">
         <option value="leader">Líder de grupo</option>
         <option value="coordinator">Coordenação</option>
         <option value="admin">Administrador</option>
+      </select>
+    </label>
+    <label *ngIf="draftUser.role==='leader'">Diácono vinculado ao acesso
+      <select name="linked_deacon_id" [(ngModel)]="draftUser.linked_deacon_id" required>
+        <option value="">Escolha o diácono</option>
+        <option *ngFor="let person of eligibleLeaders" [value]="person.id">{{person.full_name}}</option>
       </select>
     </label>
     <label>Senha provisória (mínimo 12 caracteres)
