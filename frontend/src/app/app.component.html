@@ -723,7 +723,23 @@
             <select #leaderSelect [value]="g.leader_id||''" (change)="changeLeader(g.id,leaderSelect.value)" [disabled]="busy">
               <option value="">Ainda não definido</option><option *ngFor="let u of users" [value]="u.id" [disabled]="u.role!=='leader'">{{u.name}}</option>
             </select>
-          </label><div class="capacity"><span [style.width.%]="capacityPercent(g)"></span></div><small>Quantidade ajustável segundo a realidade do grupo</small><div class="group-card-bottom"><span>{{g.members}} diáconos acompanhados</span><button (click)="goto('deacons');filter='unassigned'">Ver diáconos →</button></div></div></div>
+          </label><div class="capacity"><span [style.width.%]="capacityPercent(g)"></span></div><small>Quantidade ajustável segundo a realidade do grupo</small><div class="group-card-bottom"><span>{{g.members}} diáconos acompanhados</span><button type="button" (click)="expandedGroupId=expandedGroupId===g.id?null:g.id" [attr.aria-expanded]="expandedGroupId===g.id">{{expandedGroupId===g.id?'Recolher integrantes':'Ver integrantes →'}}</button></div>
+          <div *ngIf="expandedGroupId===g.id" class="group-members-panel">
+            <div *ngFor="let person of membersForGroup(g.id)" class="group-member-line">
+              <div><strong>{{person.full_name}}</strong><small>{{person.phone||'Sem telefone'}} · {{cohortLabel(person.cohort)}}</small></div>
+              <div class="group-member-tools" *ngIf="canManage">
+                <select #moveTo [disabled]="busy" [attr.aria-label]="'Transferir '+person.full_name+' para outro grupo'">
+                  <option value="">Transferir...</option>
+                  <option *ngFor="let other of groups" [value]="other.id" [disabled]="other.id===g.id">{{other.name}}</option>
+                </select>
+                <button type="button" class="outline" [disabled]="busy||!moveTo.value" (click)="moveMember(person,moveTo.value)">Mover</button>
+                <button type="button" class="text-button" [disabled]="busy" (click)="unassignMember(person)">Desvincular</button>
+              </div>
+              <button *ngIf="!canManage" type="button" class="text-button" (click)="select(person)">Acompanhar →</button>
+            </div>
+            <p *ngIf="!membersForGroup(g.id).length" class="modal-hint">Este grupo ainda não possui diáconos vinculados.</p>
+          </div>
+        </div></div>
         <div *ngIf="!groups.length" class="surface empty-inline big-empty"><span>♧</span><h3>Ainda não temos grupos de cuidado</h3><p>Crie os primeiros grupos e atribua responsáveis. A equipe poderá começar com um projeto-piloto antes de ampliar.</p><button *ngIf="canManage" class="primary" (click)="showNewGroup=true">Criar um grupo</button></div>
         <div *ngIf="canManage && unassigned.length && groups.length" class="surface assignment"><div class="surface-head"><h3>Vincular diáconos a grupos</h3><span class="pill">{{unassigned.length}} SEM GRUPO</span></div><div *ngFor="let d of unassigned" class="assignment-row"><div class="person"><span class="person-circle">{{d.full_name.charAt(0)}}</span><strong>{{d.full_name}}</strong></div><select #chosen aria-label="Escolher grupo" [disabled]="busy"><option value="">Escolher grupo...</option><option *ngFor="let g of groups" [value]="g.id">{{g.name}} ({{g.members}}/{{g.target_size}})</option></select><button class="small-primary" (click)="assign(d.id,chosen.value)" [disabled]="busy || !chosen.value">Vincular</button></div></div>
       </section>
