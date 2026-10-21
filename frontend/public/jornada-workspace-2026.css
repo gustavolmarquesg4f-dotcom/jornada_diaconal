@@ -91,3 +91,15 @@
 .availability-form-footer p{font-size:11px;line-height:1.55;color:#778f9a;margin:0;flex:1}
 .availability-form-footer button{min-height:43px;white-space:nowrap}
 @media(max-width:680px){.availability-options{grid-template-columns:1fr}.availability-form-footer{flex-direction:column;align-items:stretch}.availability-form-footer button{width:100%}}
+
+/* Integrantes dos grupos, com movimentação segura e confirmação para desvincular */
+.group-members-panel{border-top:1px solid #e0edf0;margin-top:13px;padding-top:13px}
+.group-member-line{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid #ebf1f2}
+.group-member-line>div:first-child{min-width:0;flex:1}
+.group-member-line strong,.group-member-line small{display:block;overflow-wrap:anywhere}
+.group-member-line strong{font-size:12px;color:#1d5365}
+.group-member-line small{font-size:11px;color:#78929b;margin-top:4px}
+.group-member-tools{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.group-member-tools select{max-width:150px;min-width:112px;border:1px solid #cce0e7;border-radius:8px;background:white;color:#205569;min-height:36px;padding:6px;font-size:11px}
+.group-member-tools button{min-height:34px;padding:7px;font-size:11px}
+@media(max-width:1000px){.group-member-line{flex-direction:column;align-items:stretch}.group-member-tools{justify-content:flex-start;align-items:stretch}.group-member-tools select{flex:1;max-width:none}}
