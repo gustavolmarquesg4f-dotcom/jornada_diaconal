@@ -13,6 +13,8 @@ export class AppComponent implements OnInit {
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
  deacons:Deacon[]=[];groups:Group[]=[];users:User[]=[];followups:Followup[]=[];
  expandedGroupId:string|null=null;
+ deleteGroupTarget:Group|null=null;deleteGroupConfirmName='';deleteGroupError='';
+
  memberPickerGroupId:string|null=null;memberPickerSearch='';memberPickerSelected:string[]=[];
  memberPickerLimit=25;memberPickerError='';leaderPreviewGroupId:string|null=null;
  workspace:LeaderWorkspace|null=null;workspaceLoading=false;workspaceLoaded=false;workspaceFilter:'due'|'without_contact'|'referrals'='due';
@@ -240,6 +242,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   this.showPrintPanel=false;this.printReady=false;this.showFollowup=false;
   this.showNewDeacon=false;this.showNewGroup=false;this.showNewUser=false;this.showAssignLeader=false;this.modalError='';
   this.memberPickerGroupId=null;this.memberPickerSelected=[];this.memberPickerError='';this.leaderPreviewGroupId=null;
+  this.deleteGroupTarget=null;this.deleteGroupConfirmName='';this.deleteGroupError='';
   this.showMenu=false;this.showHelp=false;this.closeQuickSearch();
   this.search='';this.observationSearch='';this.pastoralQueueSearch='';
   this.page='dashboard';this.notice='';this.error='';
@@ -618,6 +621,55 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
     await this.reload();
     this.workspaceLoaded=false;this.reportLoaded=false;
   },'Diácono transferido para o grupo selecionado. O histórico de contatos foi mantido.');
+ }
+ openDeleteGroup(group:Group):void{
+  if(!this.admin||this.busy)return;
+  this.deleteGroupTarget=group;
+  this.deleteGroupConfirmName='';
+  this.deleteGroupError='';
+ }
+ closeDeleteGroup():void{
+  if(this.busy)return;
+  this.deleteGroupTarget=null;
+  this.deleteGroupConfirmName='';
+  this.deleteGroupError='';
+ }
+ get canConfirmDeleteGroup():boolean{
+  const group=this.deleteGroupTarget;
+  return this.admin && !!group && group.members===0 &&
+   this.deleteGroupConfirmName.trim()===group.name &&
+   !this.busy;
+ }
+ async archiveSelectedGroup():Promise<void>{
+  if(!this.admin||this.busy)return;
+  const group=this.deleteGroupTarget;
+  if(!group){return}
+  if(group.members>0){
+    this.deleteGroupError='Transfira ou desvincule os integrantes antes de excluir este grupo.';
+    return;
+  }
+  if(this.deleteGroupConfirmName.trim()!==group.name){
+    this.deleteGroupError='Digite o nome exato do grupo para confirmar a exclusão.';
+    return;
+  }
+  this.busy=true;
+  this.deleteGroupError='';
+  this.error='';
+  this.notice='';
+  try{
+    const result=await this.api.archiveGroup(group.id);
+    if(!result.ok||!result.archived)throw Error('A exclusão não foi confirmada pelo servidor.');
+    this.deleteGroupTarget=null;
+    this.deleteGroupConfirmName='';
+    if(this.expandedGroupId===group.id)this.expandedGroupId=null;
+    if(this.leaderPreviewGroupId===group.id)this.leaderPreviewGroupId=null;
+    await this.reload();
+    this.notice='Grupo "'+group.name+'" excluído da operação. Os registros históricos foram preservados.';
+  }catch(e){
+    this.deleteGroupError=this.msg(e);
+  }finally{
+    this.busy=false;
+  }
  }
  async unassignMember(person:Deacon):Promise<void>{
   if(!this.canManage||!person.group_id)return;
