@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService, User, Deacon, RegistryDetails, ObservationEntry, Group, Followup, Dashboard, IntercessionTemplate, IntercessionDraw, IntercessionCandidate, PastoralSlot, PastoralQueueItem, PastoralCareReason, PastoralCareStage, PastoralCarePerson, LeaderWorkspace, WorkspaceMember, MonthlyReport, ReadinessSummary, AuditEvent, AvailabilityProfile } from './api.service';
 
-type Page = 'dashboard'|'workspace'|'reports'|'deacons'|'observations'|'groups'|'leadership'|'intercession'|'pastoral'|'followups'|'settings';
+type Page = 'dashboard'|'reports'|'deacons'|'observations'|'groups'|'intercession'|'pastoral'|'followups'|'settings';
 @Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule],templateUrl:'./app.component.html'})
 export class AppComponent implements OnInit {
  api=inject(ApiService);
@@ -55,8 +55,8 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
  get newCount():number{return this.deacons.filter(d=>d.cohort==='novo').length}
  get pageTitle():string{
   const labels:Record<Page,string>={
-   dashboard:'Visão geral',workspace:'Meu Ministério',reports:'Relatórios',deacons:'Diáconos',observations:'Observações',
-   groups:'Grupos de cuidado',leadership:'Liderança',intercession:'Intercessão',
+   dashboard:'Visão geral',reports:'Relatórios',deacons:'Diáconos',observations:'Observações',
+   groups:'Grupos e liderança',intercession:'Intercessão',
    pastoral:'Agenda pastoral',followups:'Acompanhamento',settings:'Usuários e acesso'
   };
   return labels[this.page];
@@ -123,7 +123,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
    if(this.page==='observations'&&this.admin)await this.loadObservations();
    if(this.page==='pastoral'&&this.canManage)await this.loadPastoral();
    if(this.page==='intercession'&&this.canManage)await this.loadIntercession();
-   if(this.page==='workspace')await this.loadWorkspace();
+   if(this.page==='followups'&&!this.selected)await this.loadWorkspace();
    if(this.page==='reports')await this.loadReports();
 
    if(this.page==='followups'&&this.selected){
@@ -194,8 +194,9 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
  private restoreWorkspace():void{
   try{
    this.sidebarCollapsed=sessionStorage.getItem('jdg_compact_sidebar')==='yes';
-   const page=sessionStorage.getItem('jdg_current_module') as Page|null;
-   const allowed:Page[]=['dashboard','workspace','reports','deacons','observations','groups','leadership','intercession','pastoral','settings'];
+   const stored=sessionStorage.getItem('jdg_current_module');
+   const page=(stored==='workspace'?'followups':stored==='leadership'?'groups':stored) as Page|null;
+   const allowed:Page[]=['dashboard','followups','reports','deacons','observations','groups','intercession','pastoral','settings'];
    if(page&&allowed.includes(page)&&
       !(page==='observations'&&!this.admin)&&!(page==='settings'&&!this.admin)&&
       !((page==='pastoral'||page==='intercession')&&!this.canManage)){
@@ -231,18 +232,17 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
  async reload():Promise<void>{this.error='';try{const [d,people,groups]=await Promise.all([this.api.dashboard(),this.api.deacons(),this.api.groups()]);this.dashboard=d;this.deacons=people;this.groups=groups;if(this.canManage)this.users=await this.api.users();else this.users=[]}catch(e){this.error=this.msg(e)}}
  goto(page:Page):void{
   if(page==='observations'&&!this.admin){this.error='Esta área é exclusiva do administrador.';return}
-  if(page==='reports'&&!this.currentUser){this.error='É necessário entrar no sistema.';return}
+  if(page==='settings'&&!this.admin){this.error='Esta área é exclusiva do administrador.';return}
   if((page==='pastoral'||page==='intercession')&&!this.canManage){this.error='Esta área é exclusiva da coordenação.';return}
-  this.page=page;this.showMenu=false;this.closeQuickSearch();this.notice='';this.error='';
-  if(page!=='followups')try{sessionStorage.setItem('jdg_current_module',page)}catch{}
+  this.page=page;this.selected=null;this.selectedRegistry=null;this.selectedAvailability=null;
+  this.showMenu=false;this.closeQuickSearch();this.notice='';this.error='';
+  try{sessionStorage.setItem('jdg_current_module',page)}catch{}
   window.scrollTo(0,0);
-  if(page!=='followups')this.selected=null;
   if(page==='observations'&&!this.observationsLoaded)void this.loadObservations();
   if(page==='pastoral'&&!this.pastoralLoaded)void this.loadPastoral();
   if(page==='intercession'&&!this.intercessionLoaded)void this.loadIntercession();
-  if(page==='workspace'&&!this.workspaceLoaded)void this.loadWorkspace();
+  if(page==='followups'&&!this.workspaceLoaded)void this.loadWorkspace();
   if(page==='reports'&&!this.reportLoaded)void this.loadReports();
-
  }
 
  async loadWorkspace():Promise<void>{
@@ -349,6 +349,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   this.selected=d;
   this.selectedRegistry=null;
   this.page='followups';
+  try{sessionStorage.setItem('jdg_current_module','followups')}catch{}
   this.followups=[];
   this.fetchFollowups();
   if(this.admin)this.loadRegistry(d.id);
@@ -393,13 +394,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
    await this.api.updateRegistry(id,{
     marital_status_original:details.marital_status_original,
     spouse_name:details.spouse_name,
-    restrictions_observations:details.restrictions_observations,
-    available_wed_15:details.available_wed_15,
-    available_wed_20:details.available_wed_20,
-    available_sun_10:details.available_sun_10,
-    available_sun_19:details.available_sun_19,
-    only_first_sunday:details.only_first_sunday,
-    mornings_only:details.mornings_only
+    restrictions_observations:details.restrictions_observations
    });
    await this.loadRegistry(id);
    await this.reload();
@@ -449,7 +444,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
  }
   async assign(deaconId:string,groupId:string):Promise<void>{if(!groupId)return;await this.run(async()=>{await this.api.assign(groupId,deaconId);await this.reload()},'Grupo atualizado.')}
 
- async record():Promise<void>{if(!this.selected)return;await this.run(async()=>{await this.api.createFollowup({...this.draftFollowup,deacon_id:this.selected!.id,next_contact_on:this.draftFollowup.next_contact_on||null});this.showFollowup=false;this.draftFollowup={method:'mensagem',outcome:'contato_realizado',summary:'',next_contact_on:'',needs_pastoral_attention:false};await this.fetchFollowups();await this.reload()},'Acompanhamento registrado.')}
+ async record():Promise<void>{if(!this.selected)return;await this.run(async()=>{await this.api.createFollowup({...this.draftFollowup,deacon_id:this.selected!.id,next_contact_on:this.draftFollowup.next_contact_on||null});this.showFollowup=false;this.draftFollowup={method:'mensagem',outcome:'contato_realizado',summary:'',next_contact_on:'',needs_pastoral_attention:false};await this.fetchFollowups();await this.reload();this.workspaceLoaded=false;this.reportLoaded=false},'Acompanhamento registrado.')}
  async updateStatus(d:Deacon,status:string):Promise<void>{await this.run(async()=>{await this.api.updateDeacon(d.id,{status});await this.reload()},'Situação atualizada.')}
  private async run(action:()=>Promise<void>,success:string):Promise<void>{this.error='';this.notice='';this.busy=true;try{await action();this.notice=success}catch(e){this.error=this.msg(e)}finally{this.busy=false}}
  private msg(e:unknown):string{return e instanceof Error?e.message:'Não foi possível concluir a operação.'}
@@ -486,7 +481,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
  assignmentsForPost(draw:IntercessionDraw,post:'pastores'|'bateria'){
   return draw.assignments.filter(a=>a.service_post===post).sort((a,b)=>a.rotation_order-b.rotation_order);
  }
- showMinistryLeaders():void{this.goto('leadership')}
+ showMinistryLeaders():void{this.goto('groups')}
  openNewLeader():void{this.draftUser={name:'',email:'',password:'',role:'leader'};this.showNewUser=true}
  async loadPastoral():Promise<void>{
   if(!this.canManage)return;this.pastoralLoading=true;this.error='';
