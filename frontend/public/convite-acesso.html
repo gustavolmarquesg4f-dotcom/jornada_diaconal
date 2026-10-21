@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>Convite de acesso | Jornada Diaconal</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#24372f;background:#f5f8f4}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:24px}
+main{width:min(100%,480px);background:white;padding:clamp(24px,5vw,42px);border:1px solid #dce7df;border-radius:20px;box-shadow:0 20px 60px #21483315}
+header{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.mark{display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:#255e45;color:white;font-size:24px}
+h1{font-size:1.7rem;margin:0;letter-spacing:-.04em}header small{color:#789082;font-size:12px}
+p{line-height:1.65;color:#64766c}label{display:block;font-size:14px;font-weight:650;margin:19px 0 7px}
+input{border:1px solid #cbdace;border-radius:10px;padding:13px;width:100%;font:inherit}
+input:focus{outline:2px solid #4b9874;outline-offset:1px}
+button{border:0;border-radius:10px;background:#28724f;color:#fff;font-weight:750;padding:14px 20px;width:100%;margin-top:22px;cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}.message{border-radius:10px;background:#f1f5f2;padding:13px;margin:18px 0;font-size:14px;line-height:1.6}
+.message.bad{background:#fff1ef;color:#9c2c22}.message.good{background:#ecf8f0;color:#25613d}
+a{color:#275b45}footer{text-align:center;font-size:13px;margin-top:20px}
+</style><script src="config.js"></script>
+</head>
+<body><main>
+<header><span class="mark" aria-hidden="true">✦</span><div><h1>Jornada Diaconal</h1><small>Igreja de Deus no Guará 1</small></div></header>
+<h2>Ativar meu acesso</h2>
+<p>Crie sua senha pessoal para acompanhar o cuidado e o serviço do nosso diaconato. O convite só pode ser usado uma vez e expira em 24 horas.</p>
+<div id="message" class="message" role="status">Validando o link de convite...</div>
+<form id="activation" hidden>
+ <label for="password">Sua senha (12 a 128 caracteres)</label>
+ <input id="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+ <label for="confirmation">Confirme a senha</label>
+ <input id="confirmation" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+ <button id="submit" type="submit">Ativar meu acesso</button>
+</form>
+<footer><a href="./">Voltar à Jornada Diaconal</a></footer>
+</main>
+<script>
+(function () {
+  'use strict';
+  const message=document.getElementById('message');
+  const form=document.getElementById('activation');
+  const submit=document.getElementById('submit');
+  const token=new URLSearchParams(location.hash.replace(/^#/,'')).get('token')||'';
+  history.replaceState(null,'',location.pathname+location.search);
+  function feedback(text,type) {
+    message.textContent=text;message.className='message'+(type?' '+type:'');
+  }
+  const url=window.__DIACONATO_CONFIG__ && window.__DIACONATO_CONFIG__.apiUrl;
+  if (!/^[a-f0-9]{64}$/i.test(token)) {
+    feedback('Convite inválido ou ausente. Peça à liderança outro link.','bad');return;
+  }
+  if (!url || !/\/jornada-gestao-api\/?$/.test(url)) {
+    feedback('O serviço de ativação está indisponível. Procure a liderança.','bad');return;
+  }
+  const endpoint=url.replace(/\/jornada-gestao-api\/?$/,'/jornada-convites-api/auth/activate');
+  form.hidden=false;
+  feedback('Informe uma senha exclusiva de pelo menos 12 caracteres.','');
+  form.addEventListener('submit',async function(event) {
+    event.preventDefault();
+    const password=document.getElementById('password').value;
+    const confirmation=document.getElementById('confirmation').value;
+    if(password.length<12||password.length>128||password!==confirmation) {
+      feedback('As senhas precisam ser iguais e ter de 12 a 128 caracteres.','bad');return;
+    }
+    submit.disabled=true;feedback('Ativando seu acesso...','');
+    try{
+      const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},
+        cache:'no-store',referrerPolicy:'no-referrer',body:JSON.stringify({token,password})});
+      let data={};try{data=await res.json();}catch{}
+      if(!res.ok)throw Error(data.error||'Não foi possível ativar. Peça outro convite.');
+      form.reset();form.hidden=true;
+      feedback('Acesso ativado! Volte à tela inicial e entre com seu e-mail e senha.','good');
+    }catch(e){feedback((e&&e.message)||'Falha temporária ao ativar.','bad');}
+    finally{submit.disabled=false;}
+  });
+})();
+</script>
+</body></html>
