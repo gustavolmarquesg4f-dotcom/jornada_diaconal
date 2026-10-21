@@ -541,10 +541,10 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
  }
  get pickerCandidates():Deacon[]{
   const search=this.normalizeSearch(this.memberPickerSearch);
-  const digits=search.replace(/\\D/g,'');
+  const digits=search.replace(/\D/g,'');
   return this.unassigned.filter(person=>
     !search||this.normalizeSearch(person.full_name).includes(search)||
-      (digits.length>=3&&(person.phone||'').replace(/\\D/g,'').includes(digits))
+      (digits.length>=3&&(person.phone||'').replace(/\D/g,'').includes(digits))
   ).slice().sort((a,b)=>this.printCollator.compare(a.full_name,b.full_name));
  }
  get pickerVisibleCandidates():Deacon[]{
