@@ -8,6 +8,11 @@ export type Cohort = 'antigo'|'novo';
 export type DeaconStatus = 'active'|'away'|'inactive';
 export interface User { id: string; name: string; email: string; role: Role; active?: boolean; must_change_password?: boolean }
 export interface Deacon { id: string; full_name: string; cohort: Cohort; status: DeaconStatus; phone?: string; email?: string; availability?: string; group_id?: string; group_name?: string; last_contact?: string }
+export interface AvailabilityProfile {
+ deacon_id:string;available_wed_15:boolean;available_wed_20:boolean;
+ available_sun_10:boolean;available_sun_19:boolean;only_first_sunday:boolean;
+ mornings_only:boolean;updated_at:string|null;
+}
 export interface RegistryDetails {
  deacon_id:string;
  available_wed_15:boolean; available_wed_20:boolean;
@@ -121,7 +126,13 @@ export class ApiService {
  createUser(u:unknown):Promise<{item:User}>{return this.send('POST','/users',u)}
  async followups(deaconId:string):Promise<Followup[]>{return (await this.send<{items:Followup[]}>('GET',`/followups?deacon_id=${encodeURIComponent(deaconId)}`)).items}
  createFollowup(f:unknown):Promise<{id:string}>{return this.send('POST','/followups',f)}
- workspace():Promise<LeaderWorkspace>{
+ async availability(id:string):Promise<AvailabilityProfile>{
+  return (await this.send<{item:AvailabilityProfile}>('GET',`/deacons/${encodeURIComponent(id)}/availability`)).item;
+ }
+ async updateAvailability(id:string,flags:Partial<AvailabilityProfile>):Promise<AvailabilityProfile>{
+  return (await this.send<{item:AvailabilityProfile}>('PATCH',`/deacons/${encodeURIComponent(id)}/availability`,flags)).item;
+ }
+  workspace():Promise<LeaderWorkspace>{
    return this.send('GET','/workspace');
  }
  monthlyReport(month:string):Promise<MonthlyReport>{
