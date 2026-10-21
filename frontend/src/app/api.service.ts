@@ -132,6 +132,32 @@ export class ApiService {
 
  async users():Promise<User[]>{return (await this.send<{items:User[]}>('GET','/users')).items}
  createUser(u:unknown):Promise<{item:User}>{return this.send('POST','/users',u)}
+ private get invitesApiUrl():string{
+  return this.apiUrl.replace(/\/jornada-gestao-api$/, '/jornada-convites-api');
+ }
+ private async invitationRequest<T>(method:'GET'|'POST',path:string,body?:unknown):Promise<T>{
+  if(this.invitesApiUrl===this.apiUrl)throw Error('Serviço de convites ainda não foi configurado.');
+  try{
+   return await firstValueFrom(this.http.request<T>(method,this.invitesApiUrl+path,
+     {headers:this.headers(),body}).pipe(timeout({first:30000}))) as T;
+  }catch(e){
+   if(e instanceof TimeoutError)throw Error('O serviço de convites demorou a responder.');
+   if(e instanceof HttpErrorResponse)throw Error(e.error?.error||'O serviço de convites está indisponível.');
+   throw e;
+  }
+ }
+ invitationHealth():Promise<{ok:boolean;email_ready:boolean}>{
+  return this.invitationRequest('GET','/health');
+ }
+ pendingInvitations():Promise<{ids:string[]}>{
+  return this.invitationRequest('GET','/users/pending');
+ }
+ createUserWithInvitation(u:unknown):Promise<{item:User;email_sent:boolean;message:string}>{
+  return this.invitationRequest('POST','/users/invite',u);
+ }
+ resendInvitation(id:string):Promise<{email_sent:boolean;message:string}>{
+  return this.invitationRequest('POST',`/users/${encodeURIComponent(id)}/resend`,{});
+ }
  async followups(deaconId:string):Promise<Followup[]>{return (await this.send<{items:Followup[]}>('GET',`/followups?deacon_id=${encodeURIComponent(deaconId)}`)).items}
  createFollowup(f:unknown):Promise<{id:string}>{return this.send('POST','/followups',f)}
  async availability(id:string):Promise<AvailabilityProfile>{
