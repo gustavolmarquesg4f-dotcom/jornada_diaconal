@@ -39,17 +39,16 @@
     <div class="brand"><span class="brand-mark brand-ministry-icon" role="img" aria-label="Símbolo do Ministério dos Diáconos"></span><span>Jornada Diaconal<small>Ministério dos Diáconos</small></span></div>
     <div class="nav-heading">ÁREA DE TRABALHO</div>
     <nav class="navigation" aria-label="Menu principal">
-      <button title="Visão geral" aria-label="Visão geral" [class.active]="page==='dashboard'" [attr.aria-current]="page==='dashboard'?'page':null" (click)="goto('dashboard')"><span class="nav-icon">◫</span> Visão geral</button>
-      <button type="button" title="Meu Ministério" aria-label="Meu Ministério" [attr.aria-current]="page==='workspace'?'page':null" [class.active]="page==='workspace'" (click)="goto('workspace')"><span class="nav-icon">♡</span> Meu Ministério</button>
-      <button type="button" title="Relatórios" aria-label="Relatórios" [attr.aria-current]="page==='reports'?'page':null" [class.active]="page==='reports'" (click)="goto('reports')"><span class="nav-icon">▥</span> Relatórios e indicadores</button>
-      <button title="Diáconos" aria-label="Diáconos" [class.active]="page==='deacons'" [attr.aria-current]="page==='deacons'?'page':null" (click)="goto('deacons')"><span class="nav-icon">♙</span> Diáconos</button>
-      <button *ngIf="admin" title="Observações" aria-label="Observações" [class.active]="page==='observations'" [attr.aria-current]="page==='observations'?'page':null" (click)="goto('observations')"><span class="nav-icon">☷</span> Observações</button>
-      <button title="Liderança e grupos" aria-label="Liderança e grupos" [class.active]="page==='leadership'" [attr.aria-current]="page==='leadership'?'page':null" (click)="goto('leadership')"><span class="nav-icon">♧</span> Liderança e grupos</button>
-      <button *ngIf="canManage" title="Escala de intercessão" aria-label="Escala de intercessão" [class.active]="page==='intercession'" [attr.aria-current]="page==='intercession'?'page':null" (click)="goto('intercession')"><span class="nav-icon">✦</span> Escala de intercessão</button>
-      <button *ngIf="canManage" title="Agenda pastoral" aria-label="Agenda pastoral" [class.active]="page==='pastoral'" [attr.aria-current]="page==='pastoral'?'page':null" (click)="goto('pastoral')"><span class="nav-icon">▤</span> Agenda do Pr. Sato</button>
-      <button title="Grupos de cuidado" aria-label="Grupos de cuidado" [class.active]="page==='groups'" [attr.aria-current]="page==='groups'?'page':null" (click)="goto('groups')"><span class="nav-icon">▦</span> Grupos de cuidado</button>
-      <button title="Acompanhamento" aria-label="Acompanhamento" [class.active]="page==='followups'" [attr.aria-current]="page==='followups'?'page':null" (click)="goto('followups')"><span class="nav-icon">♡</span> Acompanhamento</button>
-      <button *ngIf="admin" title="Usuários e acesso" aria-label="Usuários e acesso" [class.active]="page==='settings'" [attr.aria-current]="page==='settings'?'page':null" (click)="goto('settings')"><span class="nav-icon">⚙</span> Usuários e acesso</button>
+      <button type="button" title="Visão geral" aria-label="Visão geral" [class.active]="page==='dashboard'" [attr.aria-current]="page==='dashboard'?'page':null" (click)="goto('dashboard')"><span class="nav-icon">◫</span> Visão geral</button>
+      <button type="button" title="Diáconos" aria-label="Diáconos" [class.active]="page==='deacons'" [attr.aria-current]="page==='deacons'?'page':null" (click)="goto('deacons')"><span class="nav-icon">♙</span> Diáconos</button>
+      <button type="button" title="Grupos e liderança" aria-label="Grupos e liderança" [class.active]="page==='groups'" [attr.aria-current]="page==='groups'?'page':null" (click)="goto('groups')"><span class="nav-icon">♧</span> Grupos e liderança</button>
+      <button type="button" title="Acompanhamento" aria-label="Acompanhamento" [class.active]="page==='followups'" [attr.aria-current]="page==='followups'?'page':null" (click)="goto('followups')"><span class="nav-icon">♡</span> Acompanhamento</button>
+      <button *ngIf="canManage" type="button" title="Escala de intercessão" aria-label="Escala de intercessão" [class.active]="page==='intercession'" [attr.aria-current]="page==='intercession'?'page':null" (click)="goto('intercession')"><span class="nav-icon">✦</span> Escala de intercessão</button>
+      <button *ngIf="canManage" type="button" title="Agenda do Pr. Sato" aria-label="Agenda do Pr. Sato" [class.active]="page==='pastoral'" [attr.aria-current]="page==='pastoral'?'page':null" (click)="goto('pastoral')"><span class="nav-icon">▤</span> Agenda do Pr. Sato</button>
+      <div class="nav-heading navigation-subheading">GESTÃO E ADMINISTRAÇÃO</div>
+      <button type="button" title="Relatórios" aria-label="Relatórios" [class.active]="page==='reports'" [attr.aria-current]="page==='reports'?'page':null" (click)="goto('reports')"><span class="nav-icon">▥</span> Relatórios</button>
+      <button *ngIf="admin" type="button" title="Observações reservadas" aria-label="Observações reservadas" [class.active]="page==='observations'" [attr.aria-current]="page==='observations'?'page':null" (click)="goto('observations')"><span class="nav-icon">☷</span> Observações reservadas</button>
+      <button *ngIf="admin" type="button" title="Usuários e acessos" aria-label="Usuários e acessos" [class.active]="page==='settings'" [attr.aria-current]="page==='settings'?'page':null" (click)="goto('settings')"><span class="nav-icon">⚙</span> Usuários e acessos</button>
     </nav>
     <div class="sidebar-note"><span class="note-icon">✦</span><p>Mais que uma escala.<strong>Uma caminhada de cuidado.</strong></p></div>
     <div class="user-block"><div class="avatar">{{(currentUser?.name||'L').charAt(0)}}</div><div class="user-details"><strong>{{currentUser?.name}}</strong><small>{{currentUser?.role==='admin'?'Administrador':currentUser?.role==='coordinator'?'Coordenação':'Responsável por grupo'}}</small></div><button class="exit" (click)="logout()" aria-label="Sair do sistema">↪</button></div>
@@ -89,12 +88,12 @@
 
 
 
-      <section *ngIf="page==='workspace'" class="workspace-section">
+      <section *ngIf="page==='followups' && !selected" class="workspace-section">
         <div class="page-heading">
           <div>
-            <span class="eyebrow">CENTRO DE TRABALHO · JORNADA DIACONAL</span>
-            <h1>Meu Ministério</h1>
-            <p>O que precisa da sua atenção, com acesso apenas aos diáconos sob sua responsabilidade.</p>
+            <span class="eyebrow">CUIDADO E CONTINUIDADE</span>
+            <h1>Acompanhamento</h1>
+            <p>Contatos pendentes e encaminhamentos. Selecione uma pessoa para registrar a conversa e o próximo retorno.</p>
           </div>
           <button type="button" class="outline" (click)="loadWorkspace()" [disabled]="workspaceLoading">
             {{workspaceLoading?'Atualizando...':'↻ Atualizar'}}
@@ -102,12 +101,6 @@
         </div>
         <div *ngIf="workspaceLoading" class="surface work-loading">Buscando suas informações de acompanhamento...</div>
         <ng-container *ngIf="workspace as data">
-          <div class="workspace-intro surface">
-            <div><span class="eyebrow">REDE DE CUIDADO</span><h2>{{currentUser?.role==='leader'?'Minha equipe':'Visão de acompanhamento'}}</h2>
-              <p>{{data.groups.length ? 'Escolha uma atividade abaixo para avançar no cuidado de cada pessoa.' : 'Os grupos ainda precisam ser definidos e vinculados pela coordenação. Enquanto isso, os cadastros disponíveis podem ser acompanhados.'}}</p>
-            </div>
-            <button class="outline" type="button" (click)="goto('groups')">Consultar grupos →</button>
-          </div>
           <div class="workspace-metrics">
             <button class="workspace-metric" type="button" (click)="workspaceFilter='due'" [class.active]="workspaceFilter==='due'">
               <span>Contatos a realizar</span><strong>{{data.totals.due}}</strong><small>Com data de retorno vencida ou para hoje</small>
@@ -143,22 +136,7 @@
               <button class="outline" type="button" (click)="goto('deacons')">Ver cadastros →</button>
             </div>
           </div>
-          <div class="workspace-next-grid">
-            <div class="surface">
-              <div class="surface-head"><h3>Grupos sob sua visão</h3><span class="pill">{{data.totals.groups}} GRUPOS</span></div>
-              <div *ngFor="let group of data.groups" class="workspace-group-line">
-                <strong>{{group.name}}</strong><span>{{group.leader_name||'Sem responsável'}} · {{group.members}}/{{group.target_size}} pessoas</span>
-              </div>
-              <p *ngIf="!data.groups.length" class="modal-hint">Nenhum grupo foi vinculado ao seu perfil. O administrador deverá designá-lo após aprovação pastoral.</p>
-            </div>
-            <div class="surface">
-              <div class="surface-head"><h3>Como trabalhar com este painel?</h3></div>
-              <div class="workspace-step"><span>1</span><p>Escolha uma pendência e entre em contato respeitosamente.</p></div>
-              <div class="workspace-step"><span>2</span><p>Registre apenas data, resultado e próximo retorno, sem confidências.</p></div>
-              <div class="workspace-step"><span>3</span><p>Quando precisar do pastor, sinalize a atenção pastoral no registro.</p></div>
-              <button class="outline" type="button" (click)="showHelp=true">Consultar orientações →</button>
-            </div>
-          </div>
+          <p class="workspace-context-note">A organização das equipes e a designação dos responsáveis acontecem em <button type="button" class="text-button" (click)="goto('groups')">Grupos e liderança →</button>. Aqui são realizados os contatos e os retornos.</p>
         </ng-container>
       </section>
 
@@ -416,42 +394,6 @@
             Mostrando {{filteredObservations.length}} de {{observations.length}} cadastros · Texto completo da fonte
           </div>
         </div>
-      </section>
-
-
-      <section *ngIf="page==='leadership'">
-        <div class="page-heading"><div>
-          <span class="eyebrow">REDE DE CUIDADO</span><h1>Liderança do diaconato</h1>
-          <p>Grupos menores, responsáveis de referência e orientação pastoral centralizada.</p>
-        </div><button *ngIf="admin" class="primary" type="button" (click)="openNewLeader()">+ Cadastrar líder</button></div>
-        <div class="ministry-hierarchy">
-          <div class="hierarchy-pastor"><span class="eyebrow">LIDERANÇA PASTORAL</span>
-            <h2>Pr. Sato</h2><p>Responsável geral pelo diaconato e pela orientação dos líderes dos grupos.</p>
-          </div>
-          <div class="leadership-stats">
-            <div><strong>{{groups.length}}</strong><span>Grupos criados</span></div>
-            <div><strong>{{dashboard.totals.without_group}}</strong><span>Diáconos sem grupo</span></div>
-          </div>
-        </div>
-        <div class="context-strip"><span>♡</span><div>
-          <strong>Proposta de piloto: 90 dias, 3–4 referências e 30–40 participantes.</strong>
-          <p>Em média 8–12 pessoas por líder, com contato próximo e encaminhamento pastoral quando necessário. A nomeação dos responsáveis depende da aprovação do Pr. Sato.</p>
-        </div></div>
-        <div class="group-cards">
-          <div class="group-card" *ngFor="let g of groups">
-            <div class="group-card-top"><div class="group-initial large">{{g.name.charAt(0)}}</div><span class="pill">{{g.members}} / {{g.target_size}}</span></div>
-            <h3>{{g.name}}</h3>
-            <p>Responsável: <strong>{{g.leader_name||'Aguardando designação'}}</strong></p>
-            <div class="capacity"><span [style.width.%]="capacityPercent(g)"></span></div>
-            <small>{{g.members}} pessoas vinculadas.</small>
-          </div>
-        </div>
-        <div *ngIf="!groups.length" class="surface empty-inline big-empty">
-          <span>♧</span><h3>Líderes e grupos ainda não designados</h3>
-          <p>Cadastre primeiro os líderes autorizados e configure os grupos menores.</p>
-          <button *ngIf="canManage" class="primary" type="button" (click)="goto('groups');showNewGroup=true">Criar primeiro grupo</button>
-        </div>
-        <button *ngIf="canManage && groups.length" class="outline" type="button" (click)="goto('groups')">Administrar grupos e vínculos →</button>
       </section>
 
 
@@ -744,10 +686,9 @@
         <div *ngIf="canManage && unassigned.length && groups.length" class="surface assignment"><div class="surface-head"><h3>Vincular diáconos a grupos</h3><span class="pill">{{unassigned.length}} SEM GRUPO</span></div><div *ngFor="let d of unassigned" class="assignment-row"><div class="person"><span class="person-circle">{{d.full_name.charAt(0)}}</span><strong>{{d.full_name}}</strong></div><select #chosen aria-label="Escolher grupo" [disabled]="busy"><option value="">Escolher grupo...</option><option *ngFor="let g of groups" [value]="g.id">{{g.name}} ({{g.members}}/{{g.target_size}})</option></select><button class="small-primary" (click)="assign(d.id,chosen.value)" [disabled]="busy || !chosen.value">Vincular</button></div></div>
       </section>
 
-      <section *ngIf="page==='followups'">
+      <section *ngIf="page==='followups' && selected">
         <div class="page-heading"><div><span class="eyebrow">PROXIMIDADE E CONTINUIDADE</span><h1>Acompanhamento</h1><p>Registre contatos objetivos, combinados e necessidades de encaminhamento.</p></div><button *ngIf="selected" class="primary" (click)="showFollowup=true">+ Registrar contato</button></div>
-        <div *ngIf="!selected" class="surface empty-inline big-empty"><span>♡</span><h3>Escolha um diácono para acompanhar</h3><p>Abra o cadastro e selecione uma pessoa. O acompanhamento será visível apenas à liderança autorizada.</p><button class="primary" (click)="goto('deacons')">Ver diáconos</button></div>
-        <div *ngIf="selected" class="columns profile-cols"><div class="surface profile-card"><div class="big-avatar">{{selected.full_name.charAt(0)}}</div><h2>{{selected.full_name}}</h2><span class="status-pill">{{statusLabel(selected.status)}}</span><div class="profile-info"><div><span>Turma</span><strong>{{cohortLabel(selected.cohort)}}</strong></div><div><span>Grupo</span><strong>{{selected.group_name||'Sem grupo definido'}}</strong></div><div><span>Telefone</span><strong>{{selected.phone||'Não informado'}}</strong></div><div><span>Disponibilidade</span><strong>{{selected.availability||'Ainda não informada'}}</strong></div></div><button class="outline full" (click)="goto('deacons')">← Voltar ao cadastro</button></div>
+        <div *ngIf="selected" class="columns profile-cols"><div class="surface profile-card"><div class="big-avatar">{{selected.full_name.charAt(0)}}</div><h2>{{selected.full_name}}</h2><span class="status-pill">{{statusLabel(selected.status)}}</span><div class="profile-info"><div><span>Turma</span><strong>{{cohortLabel(selected.cohort)}}</strong></div><div><span>Grupo</span><strong>{{selected.group_name||'Sem grupo definido'}}</strong></div><div><span>Telefone</span><strong>{{selected.phone||'Não informado'}}</strong></div><div><span>Disponibilidade</span><strong>{{selected.availability||'Ainda não informada'}}</strong></div></div><button class="outline full" type="button" (click)="goto('followups')">← Voltar às pendências</button></div>
           <div class="surface"><div class="surface-head"><h3>Histórico de contato</h3><span class="pill">{{followups.length}} REGISTROS</span></div><div *ngIf="!followups.length" class="empty-inline"><span>✎</span><strong>Sem registros ainda</strong><p>O primeiro contato pode ser uma conversa simples para conhecer a pessoa.</p></div><div *ngFor="let f of followups" class="timeline-item"><span class="timeline-dot"></span><div><div class="timeline-head"><strong>{{outcomeLabel(f.outcome)}}</strong><span>{{f.contacted_at | date:'dd/MM/yyyy'}}</span></div><p>{{f.summary||'Sem observações adicionais.'}}</p><small>Por {{f.author}} · {{f.method}}</small><div *ngIf="f.needs_pastoral_attention" class="referral">↗ Atenção pastoral solicitada</div></div></div></div></div>
       </section>
 
@@ -779,7 +720,7 @@
       </section>
 
       <section *ngIf="page==='followups' && selected && admin" class="surface" style="padding:24px;margin-top:22px;margin-bottom:26px">
-        <div class="surface-head"><div><span class="eyebrow">ACESSO RESTRITO AO ADMINISTRADOR</span><h3>Cadastro original · Disponibilidade e observações</h3><p style="margin:10px 0 0;color:#66798c;font-size:13px">Informações importadas da planilha Atmosfera 2026, incluindo registros familiares e observações pessoais. Trate com confidencialidade.</p></div></div>
+        <div class="surface-head"><div><span class="eyebrow">ACESSO RESTRITO AO ADMINISTRADOR</span><h3>Cadastro reservado · Família e observações</h3><p style="margin:10px 0 0;color:#66798c;font-size:13px">Informações importadas da planilha Atmosfera 2026, incluindo registros familiares e observações pessoais. Trate com confidencialidade.</p></div></div>
         <p *ngIf="registryLoading">Carregando informações do cadastro...</p>
         <p *ngIf="!registryLoading && !selectedRegistry">Esta pessoa não possui informações complementares importadas.</p>
         <div *ngIf="selectedRegistry" class="form-grid">
@@ -789,13 +730,6 @@
           <label>Nome do cônjuge
             <input name="registry_spouse" [(ngModel)]="selectedRegistry.spouse_name" placeholder="Não informado">
           </label>
-          <div class="span-2" style="margin-top:12px"><strong>Disponibilidade nos cultos</strong></div>
-          <label class="check-label"><input type="checkbox" name="wed15" [(ngModel)]="selectedRegistry.available_wed_15"> Quarta-feira, 15h</label>
-          <label class="check-label"><input type="checkbox" name="wed20" [(ngModel)]="selectedRegistry.available_wed_20"> Quarta-feira, 20h</label>
-          <label class="check-label"><input type="checkbox" name="sun10" [(ngModel)]="selectedRegistry.available_sun_10"> Domingo, 10h</label>
-          <label class="check-label"><input type="checkbox" name="sun19" [(ngModel)]="selectedRegistry.available_sun_19"> Domingo, 19h</label>
-          <label class="check-label"><input type="checkbox" name="firstsun" [(ngModel)]="selectedRegistry.only_first_sunday"> Apenas primeiro domingo</label>
-          <label class="check-label"><input type="checkbox" name="morningonly" [(ngModel)]="selectedRegistry.mornings_only"> Apenas pela manhã</label>
           <label class="span-2">Restrições e observações da planilha
             <textarea name="registry_notes" [(ngModel)]="selectedRegistry.restrictions_observations" rows="5" placeholder="Sem observações na planilha original"></textarea>
           </label>
