@@ -33,6 +33,20 @@ jobs:
           grep -q 'REVOKE ALL ON FUNCTION public.jdg_complete_user_invite' supabase/migrations/20261021_jornada_user_invites.sql
           test -f frontend/public/convite-acesso.html
           test -f frontend/public/ativar-acesso.html
+      - name: Verificar API implantada sem dados reais
+        run: |
+          set -euo pipefail
+          API="https://wscvdtrmplqokceaztrv.supabase.co/functions/v1/jornada-convites-api"
+          HEALTH=$(curl -fsS --retry 2 --max-time 20 "$API/health")
+          echo "$HEALTH" | grep -q '"ok":true'
+          STATUS=$(curl -sS -o /tmp/jdg-invites-protected -w "%{http_code}" --max-time 20 "$API/users/pending")
+          test "$STATUS" = "401"
+          STATUS=$(curl -sS -o /tmp/jdg-invites-create -w "%{http_code}" --max-time 20 \
+            -X POST -H "Content-Type: application/json" -d '{"name":"Sem sessão","email":"teste@example.invalid","role":"admin"}' "$API/users/invite")
+          test "$STATUS" = "401"
+          STATUS=$(curl -sS -o /tmp/jdg-invites-activate -w "%{http_code}" --max-time 20 \
+            -X POST -H "Content-Type: application/json" -d '{"token":"invalid","password":"invalid"}' "$API/auth/activate")
+          test "$STATUS" = "422"
       - name: Instalar dependências
         working-directory: frontend
         run: npm install --no-audit --no-fund
