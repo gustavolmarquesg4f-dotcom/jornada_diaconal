@@ -712,6 +712,12 @@
               {{leaderPreviewGroupId===g.id?'Fechar prévia':'Prévia da visão do líder'}}
             </button>
           </div>
+          <div *ngIf="admin" class="group-danger-actions">
+            <button type="button" class="group-archive-trigger" (click)="openDeleteGroup(g)" [disabled]="busy"
+              [attr.aria-label]="'Excluir grupo '+g.name">
+              <span aria-hidden="true">×</span> Excluir grupo
+            </button>
+          </div>
           <div class="group-leader-preview" *ngIf="canManage && leaderPreviewGroupId===g.id">
             <span class="eyebrow">SIMULAÇÃO VISUAL · NÃO ALTERA PERMISSÕES</span>
             <h4>O que o líder verá após receber acesso</h4>
@@ -932,6 +938,49 @@
           {{busy?'Salvando...':'Associar '+memberPickerSelected.length+' integrante(s)'}}
         </button>
       </div>
+    </div>
+  </div>
+</div>
+<div *ngIf="deleteGroupTarget as group" class="modal-backdrop group-delete-backdrop"
+     (click)="closeDeleteGroup()">
+  <div class="modal group-delete-modal" role="dialog" aria-modal="true"
+    aria-labelledby="group-delete-heading" (click)="$event.stopPropagation()">
+    <div class="modal-head">
+      <div>
+        <span class="eyebrow">ADMINISTRAÇÃO DE GRUPOS</span>
+        <h2 id="group-delete-heading">Excluir grupo</h2>
+        <p class="hint">Grupo: <strong>{{group.name}}</strong></p>
+      </div>
+      <button class="modal-close" type="button" aria-label="Fechar" (click)="closeDeleteGroup()" [disabled]="busy">×</button>
+    </div>
+    <div class="group-delete-notice">
+      <strong>Exclusão segura</strong>
+      <p>O grupo será retirado das listas e ficará inativo, mas seu registro histórico será preservado. Nenhum cadastro de diácono será excluído.</p>
+    </div>
+    <div *ngIf="group.members>0" class="group-delete-blocked" role="status">
+      <strong>Não é possível excluir este grupo ainda.</strong>
+      <p>Existem {{group.members}} integrante(s) vinculados. Transfira ou desvincule essas pessoas primeiro. Os acompanhamentos individuais serão mantidos.</p>
+      <button type="button" class="outline" (click)="expandedGroupId=group.id;closeDeleteGroup()">
+        Ver integrantes para desvincular
+      </button>
+    </div>
+    <ng-container *ngIf="group.members===0">
+      <label class="group-delete-confirm-label" for="confirm-group-name">
+        Para confirmar, digite exatamente: <strong>{{group.name}}</strong>
+      </label>
+      <input id="confirm-group-name" name="confirm-group-name" type="text"
+        [(ngModel)]="deleteGroupConfirmName" autocomplete="off" spellcheck="false"
+        [disabled]="busy" placeholder="Nome exato do grupo"
+        aria-label="Digite o nome exato do grupo para confirmar">
+      <p class="modal-hint">Se o responsável tiver uma conta de acesso, ela não será excluída. Apenas o vínculo com este grupo deixará de estar ativo.</p>
+    </ng-container>
+    <div *ngIf="deleteGroupError" class="modal-inline-error" role="alert">{{deleteGroupError}}</div>
+    <div class="modal-actions group-delete-buttons">
+      <button type="button" class="outline" (click)="closeDeleteGroup()" [disabled]="busy">Cancelar</button>
+      <button type="button" class="group-delete-confirm" (click)="archiveSelectedGroup()"
+        [disabled]="!canConfirmDeleteGroup">
+        {{busy?'Excluindo...':'Confirmar exclusão'}}
+      </button>
     </div>
   </div>
 </div>
