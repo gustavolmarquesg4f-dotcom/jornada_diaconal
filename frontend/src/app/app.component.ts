@@ -13,6 +13,7 @@ export class AppComponent implements OnInit {
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
  deacons:Deacon[]=[];groups:Group[]=[];users:User[]=[];followups:Followup[]=[];
  usersLoaded=false;usersLoading=false;
+ inviteEmailReady=false;inviteMode=false;invitePendingIds=new Set<string>();
  private deaconFilterCache:{source:Deacon[];search:string;filter:string;items:Deacon[]}|null=null;
  expandedGroupId:string|null=null;
  deleteGroupTarget:Group|null=null;deleteGroupConfirmName='';deleteGroupError='';
@@ -238,6 +239,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   this.dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
   this.deacons=[];this.groups=[];this.users=[];this.followups=[];
   this.usersLoaded=false;this.usersLoading=false;this.deaconFilterCache=null;
+  this.inviteEmailReady=false;this.inviteMode=false;this.invitePendingIds.clear();
   this.selected=null;this.selectedAvailability=null;this.selectedRegistry=null;
   this.observations=[];this.observationsLoaded=false;this.observationsLoading=false;
   this.workspace=null;this.workspaceLoaded=false;this.workspaceLoading=false;
@@ -307,8 +309,17 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
  async loadUsers(force=false):Promise<void>{
   if(!this.admin||this.usersLoading||(!force&&this.usersLoaded))return;
   this.usersLoading=true;
-  try{this.users=await this.api.users();this.usersLoaded=true;}
-  catch(e){this.error='Não foi possível consultar os usuários: '+this.msg(e);}
+  try{
+   this.users=await this.api.users();this.usersLoaded=true;
+   try{
+    const mail=await this.api.invitationHealth();
+    this.inviteEmailReady=!!mail.email_ready;
+    if(this.inviteEmailReady){
+     const pending=await this.api.pendingInvitations();
+     this.invitePendingIds=new Set(pending.ids);
+    }else this.invitePendingIds.clear();
+   }catch{this.inviteEmailReady=false;this.invitePendingIds.clear();}
+  }catch(e){this.error='Não foi possível consultar os usuários: '+this.msg(e);}
   finally{this.usersLoading=false;}
  }
  goto(page:Page):void{
@@ -523,21 +534,46 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
  async createUser():Promise<void>{
   if(!this.admin)return;
   if(!this.draftUser.name.trim()||!this.draftUser.email.trim()){
-    this.modalError='Nome e e-mail são obrigatórios.';return;
-  }
-  if(this.draftUser.password.length<12){
-    this.modalError='A senha provisória deve ter pelo menos 12 caracteres.';return;
+   this.modalError='Nome e e-mail são obrigatórios.';return;
   }
   if(this.draftUser.role==='leader'&&!this.draftUser.linked_deacon_id){
-    this.modalError='Escolha o diácono que terá acesso como líder de grupo.';return;
+   this.modalError='Escolha o diácono que terá acesso como líder de grupo.';return;
   }
-  await this.run(async()=>{
-   await this.api.createUser({...this.draftUser,
-    linked_deacon_id:this.draftUser.role==='leader'?(this.draftUser.linked_deacon_id||null):null});
-   this.showNewUser=false;
+  if(this.inviteMode&&!this.inviteEmailReady){
+   this.modalError='O envio de e-mails ainda não está configurado.';return;
+  }
+  if(!this.inviteMode&&this.draftUser.password.length<12){
+   this.modalError='A senha provisória deve ter pelo menos 12 caracteres.';return;
+  }
+  this.busy=true;this.error='';this.modalError='';this.notice='';
+  try{
+   const payload={...this.draftUser,
+    linked_deacon_id:this.draftUser.role==='leader'?(this.draftUser.linked_deacon_id||null):null};
+   let message:string;
+   if(this.inviteMode){
+    const result=await this.api.createUserWithInvitation({
+      name:payload.name,email:payload.email,role:payload.role,
+      linked_deacon_id:payload.linked_deacon_id
+    });
+    message=result.message;
+   }else{
+    await this.api.createUser(payload);
+    message='Acesso criado. Entregue a senha provisória por canal seguro e oriente a troca no primeiro login.';
+   }
+   this.showNewUser=false;this.inviteMode=false;
    this.draftUser={name:'',email:'',password:'',role:'leader',linked_deacon_id:''};
    await this.reload();
-  },'Acesso criado. A senha provisória deve ser entregue por canal seguro e alterada no primeiro login.');
+   this.notice=message;
+  }catch(e){this.modalError=this.msg(e)}
+  finally{this.busy=false;}
+ }
+ async resendUserInvite(id:string):Promise<void>{
+  if(!this.admin||!this.inviteEmailReady||this.busy)return;
+  await this.run(async()=>{
+    const result=await this.api.resendInvitation(id);
+    if(!result.email_sent)throw Error(result.message);
+    await this.loadUsers(true);
+   },'Convite reenviado. O link expira em 24 horas.');
  }
  async assignLeader():Promise<void>{
   if(!this.canManage)return;
@@ -772,6 +808,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   if(!this.admin)return;
   this.modalError='';
   this.draftUser={name:'',email:'',password:'',role:'leader',linked_deacon_id:''};
+  this.inviteMode=this.inviteEmailReady;
   this.showNewUser=true;
  }
  openLeaderAccess(group:Group):void{
@@ -780,6 +817,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   if(!person){this.error='Responsável não encontrado no cadastro.';return;}
   this.modalError='';
   this.draftUser={name:person.full_name,email:person.email||'',password:'',role:'leader',linked_deacon_id:person.id};
+  this.inviteMode=this.inviteEmailReady;
   this.showNewUser=true;
  }
  async loadPastoral():Promise<void>{
