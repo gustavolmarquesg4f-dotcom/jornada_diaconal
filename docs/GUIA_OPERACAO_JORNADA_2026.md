@@ -36,7 +36,7 @@ Criar **credenciais individuais apenas para quem precisa usar o sistema**. A lid
 ## 3. Sequência para começar
 
 1. Confirmar com o Pr. Sato quais pessoas serão líderes e qual será o grupo-piloto. Não atribuir automaticamente lideranças ou grupos.
-2. Em **Grupos e liderança**, criar ou abrir o grupo existente (ex.: Cuidado 1), escolher um diácono ativo como responsável e distribuir os integrantes. **Designar líder não exige e-mail nem senha.**
+2. Em **Grupos e liderança**, criar ou abrir o grupo existente (ex.: Cuidado 1), escolher um diácono ativo como responsável e distribuir os integrantes. **Designar líder não exige e-mail nem senha.** Para incluir pessoas, clicar em **+ Associar integrantes** no cartão do grupo, buscar os nomes, marcar as pessoas e confirmar a associação. A operação é conjunta: se houver conflito, nenhum integrante novo é associado naquele lote.
 3. Se o responsável precisar acessar o sistema, o administrador usa **Criar acesso para o líder**, informa o e-mail e uma senha provisória de 12+ caracteres, e o sistema vincula a conta ao grupo correspondente. Essa etapa é opcional e distinta da designação pastoral.
 4. Em **Acompanhamento**, cada responsável acompanha contatos a realizar, pessoas sem contato recente e encaminhamentos sinalizados.
 5. No **Acompanhamento** individual, registrar o contato objetivo, a próxima data e eventual necessidade de atenção pastoral.
@@ -44,6 +44,12 @@ Criar **credenciais individuais apenas para quem precisa usar o sistema**. A lid
 7. Em **Escala de intercessão**, sortear rascunho, conferir a distribuição de duas pessoas em cada uma das duas portas, confirmar individualmente e somente então publicar.
 8. Em **Agenda do Pr. Sato**, validar horários e prioridades com o pastor, convidar de forma voluntária e confirmar os agendamentos.
 9. Em **Relatórios e indicadores**, escolher mês e exportar os resultados agregados para a liderança.
+
+## Visão do líder
+
+Após a criação de uma conta individual de líder, a API associa o usuário ao(s) grupo(s) nos quais foi designado. O líder vê somente esses grupos e seus integrantes, pode consultar a lista **Minha equipe**, acessar **Acompanhamento**, registrar contatos e consultar relatórios do seu escopo.
+
+Não tem acesso à criação de grupos, à indicação de outros líderes, aos usuários administrativos ou às observações reservadas. O administrador pode verificar o layout usando **Prévia da visão do líder**, disponível em cada cartão de grupo. Essa prévia não se faz passar por outro usuário nem concede novas permissões.
 
 ## 4. Privacidade e comunicação
 
