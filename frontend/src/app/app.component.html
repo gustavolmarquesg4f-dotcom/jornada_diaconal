@@ -102,21 +102,27 @@
         <div *ngIf="workspaceLoading" class="surface work-loading">Buscando suas informações de acompanhamento...</div>
         <ng-container *ngIf="workspace as data">
           <div class="workspace-metrics">
-            <button class="workspace-metric" type="button" (click)="workspaceFilter='due'" [class.active]="workspaceFilter==='due'">
+            <button class="workspace-metric" type="button" (click)="selectWorkspaceFilter('due')" [class.active]="workspaceFilter==='due'">
               <span>Contatos a realizar</span><strong>{{data.totals.due}}</strong><small>Com data de retorno vencida ou para hoje</small>
             </button>
-            <button class="workspace-metric" type="button" (click)="workspaceFilter='without_contact'" [class.active]="workspaceFilter==='without_contact'">
+            <button class="workspace-metric" type="button" (click)="selectWorkspaceFilter('without_contact')" [class.active]="workspaceFilter==='without_contact'">
               <span>Sem contato recente</span><strong>{{data.totals.without_contact}}</strong><small>Ativos sem registro nos últimos 30 dias</small>
             </button>
-            <button class="workspace-metric" type="button" (click)="workspaceFilter='referrals'" [class.active]="workspaceFilter==='referrals'">
+            <button class="workspace-metric" type="button" (click)="selectWorkspaceFilter('referrals')" [class.active]="workspaceFilter==='referrals'">
               <span>Atenção pastoral sinalizada</span><strong>{{data.totals.pastoral_referrals}}</strong><small>Sinalização operacional, não diagnóstico</small>
             </button>
           </div>
           <div class="surface workspace-people">
+            <div class="workspace-search-tools">
+              <label for="workspace-search">Filtrar nomes nesta lista</label>
+              <input id="workspace-search" type="search" name="workspace-search"
+                [(ngModel)]="workspaceSearch" placeholder="Nome, telefone ou grupo">
+              <span>{{workspaceFilteredItems.length}} pessoas encontradas</span>
+            </div>
             <div class="surface-head"><div>
               <h3>{{workspaceFilter==='due'?'Próximos contatos':workspaceFilter==='without_contact'?'Retomar a aproximação':'Acompanhamentos sinalizados'}}</h3>
               <p>Priorize contato voluntário, com respeito e discrição. O botão WhatsApp prepara uma mensagem, mas não a envia.</p>
-            </div><span class="pill">{{visibleWorkspaceItems.length}} exibidos</span></div>
+            </div><span class="pill">{{visibleWorkspaceItems.length}} de {{workspaceFilteredItems.length}}</span></div>
             <div class="workspace-person" *ngFor="let person of visibleWorkspaceItems">
               <div class="workspace-person-main">
                 <span class="person-circle">{{person.full_name.charAt(0)}}</span>
@@ -130,6 +136,10 @@
                 <button type="button" class="outline" (click)="openWhatsapp(person)" [disabled]="!person.phone" title="Abre mensagem para revisão, sem enviá-la">Preparar WhatsApp</button>
               </div>
             </div>
+            <button *ngIf="visibleWorkspaceItems.length<workspaceFilteredItems.length" type="button"
+              class="outline workspace-more" (click)="workspaceVisibleLimit=workspaceVisibleLimit+20">
+              Carregar mais pessoas ({{workspaceFilteredItems.length-visibleWorkspaceItems.length}} restantes)
+            </button>
             <div *ngIf="!visibleWorkspaceItems.length" class="empty-inline">
               <span>✓</span><strong>Nenhum item nesta categoria</strong>
               <p>Use as outras categorias ou consulte os diáconos para iniciar um acompanhamento.</p>
