@@ -279,7 +279,31 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   const url='https://wa.me/55'+phone+'?text='+encodeURIComponent(message);
   window.open(url,'_blank','noopener,noreferrer');
  }
- exportMonthlyReport():void{
+
+ exportRosterCsv():void{
+  const selected=this.printSelection==='all'?this.deacons:
+    this.deacons.filter(d=>d.cohort===this.printSelection);
+  if(!selected.length){this.error='Nenhum cadastro para exportação.';return}
+  const people=selected.slice().sort((a,b)=>{
+    const cohortSort=(a.cohort==='antigo'?0:1)-(b.cohort==='antigo'?0:1);
+    return cohortSort||this.printCollator.compare(a.full_name,b.full_name);
+  });
+  const cols=['Nome completo','Turma','Situação',...(this.printWithPhone?['Telefone']:[])];
+  const rows=[cols,...people.map(d=>[d.full_name,d.cohort,this.statusLabel(d.status),
+    ...(this.printWithPhone?[d.phone||'']:[])])];
+  const escape=(value:string):string=>{
+    const escaped=/^[\s]*[=+@-]/.test(value)?"'"+value:value;
+    return '"'+escaped.replace(/"/g,'""')+'"';
+  };
+  const csv='\uFEFF'+rows.map(row=>row.map(escape).join(';')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download='diaconos_'+this.printSelection+'.csv';
+  document.body.appendChild(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+ }
+
+  exportMonthlyReport():void{
   const report=this.monthlyReport;
   if(!report){this.error='Carregue o relatório antes de exportar.';return}
   const lines:string[][]=[
@@ -382,7 +406,22 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
  }
 
  async fetchFollowups():Promise<void>{if(!this.selected)return;try{this.followups=await this.api.followups(this.selected.id)}catch(e){this.error=this.msg(e)}}
- async createDeacon():Promise<void>{await this.run(async()=>{await this.api.createDeacon(this.draftDeacon);this.showNewDeacon=false;this.draftDeacon={full_name:'',cohort:'antigo',status:'active',phone:'',email:'',availability:''};await this.reload()},'Diácono cadastrado com sucesso.')}
+ async createDeacon():Promise<void>{
+  const name=this.draftDeacon.full_name.trim();
+  const phone=this.draftDeacon.phone.replace(/\D/g,'');
+  if(name.length<3){this.error='Informe o nome completo, com pelo menos três caracteres.';return}
+  if(phone && ![10,11].includes(phone.length)){this.error='Telefone deve conter DDD e 10 ou 11 dígitos.';return}
+  const duplicate=this.deacons.some(person=>
+   this.normalizeSearch(person.full_name)===this.normalizeSearch(name)&&
+    (person.phone||'').replace(/\D/g,'')===phone);
+  if(duplicate){this.error='Esse nome e telefone já constam no sistema. Abra o cadastro existente.';return}
+  await this.run(async()=>{
+   await this.api.createDeacon({...this.draftDeacon,full_name:name});
+   this.showNewDeacon=false;
+   this.draftDeacon={full_name:'',cohort:'antigo',status:'active',phone:'',email:'',availability:''};
+   await this.reload();
+  },'Diácono cadastrado. Confirme a disponibilidade no perfil antes de incluí-lo nas escalas.');
+ }
  async createGroup():Promise<void>{await this.run(async()=>{await this.api.createGroup({...this.draftGroup,leader_id:this.draftGroup.leader_id||null});this.showNewGroup=false;this.draftGroup={name:'',target_size:10,leader_id:''};await this.reload()},'Grupo criado com sucesso.')}
  async createUser():Promise<void>{await this.run(async()=>{await this.api.createUser(this.draftUser);this.showNewUser=false;this.draftUser={name:'',email:'',password:'',role:'leader'};await this.reload()},'Responsável cadastrado.')}
  async changeLeader(groupId:string,leaderId:string):Promise<void>{await this.run(async()=>{await this.api.updateGroup(groupId,{leader_id:leaderId||null});await this.reload()},'Responsável atualizado.')}
