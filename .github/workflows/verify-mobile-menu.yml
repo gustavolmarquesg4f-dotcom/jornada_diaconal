@@ -25,3 +25,11 @@ jobs:
         run: npm install --no-save --no-package-lock playwright@1.56.1
       - name: Verificar gestos e navegação em tamanhos de iPhone
         run: node frontend/tests/mobile-navigation-check.mjs
+      - name: Instalar dependências Angular
+        working-directory: frontend
+        run: npm install --no-audit --no-fund
+      - name: Compilar para produção GitHub Pages
+        working-directory: frontend
+        run: npx ng build --configuration production --base-href "/jornada_diaconal/"
+      - name: Testar carregamento do aplicativo real em WebKit e Chromium
+        run: node frontend/tests/loading-ux-check.mjs
