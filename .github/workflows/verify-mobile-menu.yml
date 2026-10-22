@@ -1,0 +1,27 @@
+name: Testar menu mobile Jornada Diaconal
+
+on:
+  pull_request:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/verify-mobile-menu.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-menu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Instalar Playwright no ambiente de teste
+        run: npm install --no-save --no-package-lock playwright@1.56.1
+      - name: Instalar navegadores Chromium e WebKit (motor do Safari)
+        run: npx playwright install --with-deps chromium webkit
+      - name: Verificar gestos e navegação em tamanhos de iPhone
+        run: node frontend/tests/mobile-navigation-check.mjs
