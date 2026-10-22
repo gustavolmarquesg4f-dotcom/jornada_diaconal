@@ -138,6 +138,100 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
  .directory-overview span{font-size:10px}
  .surface{min-width:0}
 }
+/* HOTFIX iPhone: o menu recolhido do desktop nao pode ocultar as opcoes no mobile.
+   O backdrop nunca cobre a superficie clicavel da gaveta, mesmo se o Safari
+   resolver a ordem de composicao das camadas de forma diferente. */
+@media(max-width:900px){
+  .app-shell,.app-shell.nav-collapsed{display:block}
+  .app-shell .sidebar{
+    display:none;
+    position:fixed;
+    top:0;left:0;
+    width:min(340px,calc(100vw - 48px));
+    max-width:calc(100vw - 48px);
+    height:100vh;height:100dvh;
+    min-height:0;
+    z-index:1002;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+    touch-action:pan-y;
+    padding:64px 18px max(20px,env(safe-area-inset-bottom));
+    background:#fff;
+    isolation:auto;
+    box-shadow:12px 0 35px #04263728;
+  }
+  .app-shell .sidebar.mobile-open{display:flex;flex-direction:column}
+  .app-shell .sidebar-backdrop{
+    display:block;
+    position:fixed;
+    top:0;right:0;bottom:0;
+    left:min(340px,calc(100vw - 48px));
+    width:auto;height:auto;
+    z-index:1001;
+    background:#06324730;
+    border:0;
+    touch-action:manipulation;
+  }
+  .app-shell .sidebar-controls{
+    position:absolute;
+    top:max(12px,env(safe-area-inset-top));right:14px;
+    margin:0;z-index:2;
+  }
+  .app-shell .sidebar-mobile-close{
+    display:grid;place-items:center;
+    min-width:44px;min-height:44px;
+    font-size:25px;
+  }
+  .app-shell .sidebar-collapse-toggle{display:none}
+  .app-shell .sidebar>.brand,
+  .app-shell.nav-collapsed .sidebar>.brand{
+    display:flex;justify-content:flex-start;
+    padding:0 42px 0 0;
+    margin:0 0 24px;
+    min-height:51px;
+  }
+  .app-shell.nav-collapsed .sidebar>.brand>span:last-child,
+  .app-shell.nav-collapsed .nav-heading,
+  .app-shell.nav-collapsed .user-details,
+  .app-shell.nav-collapsed .exit{
+    display:block;
+  }
+  .app-shell .navigation{
+    display:flex;flex-direction:column;
+    gap:5px;overflow:visible;
+    flex-shrink:0;
+  }
+  .app-shell .navigation button,
+  .app-shell.nav-collapsed .navigation button{
+    display:flex;justify-content:flex-start;
+    align-items:center;gap:13px;
+    width:100%;min-height:48px;
+    flex-shrink:0;
+    font-size:13px;line-height:1.4;
+    padding:12px 15px;
+    text-align:left;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .app-shell .navigation .nav-icon,
+  .app-shell.nav-collapsed .navigation .nav-icon{
+    display:inline-block;font-size:20px;min-width:20px;
+    text-align:center;flex:none;
+  }
+  .app-shell .navigation-subheading,
+  .app-shell.nav-collapsed .navigation-subheading{
+    display:block;font-size:10px;
+  }
+  .app-shell .sidebar-note{display:none}
+  .app-shell .user-block{
+    margin-top:auto;
+    padding-top:16px;
+    flex-shrink:0;
+  }
+  .app-shell .app-top{z-index:5}
+}
+
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.app-shell,.navigation button,.directory-overview button{transition:none}}
 @page{size:A4;margin:15mm}
 @media print{
