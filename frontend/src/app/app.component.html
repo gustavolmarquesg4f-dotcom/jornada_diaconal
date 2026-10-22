@@ -1,4 +1,14 @@
-<div *ngIf="loading" class="loading-screen"><div class="loader"></div><p>Preparando a Jornada Diaconal...</p></div>
+<div *ngIf="loading" class="jd-loading-screen" role="status" aria-live="polite" aria-busy="true">
+  <div class="jd-loading-panel">
+    <img class="jd-loading-logo" src="marca-diaconos.webp" alt="" width="88" height="88">
+    <span class="jd-loading-kicker">MINISTÉRIO DOS DIÁCONOS · IDG GUARÁ 1</span>
+    <h1>Jornada Diaconal</h1>
+    <p class="jd-loading-motto">Cuidar de quem serve.</p>
+    <div class="jd-loading-track" aria-hidden="true"><span></span></div>
+    <p class="jd-loading-step">Verificando seu acesso com segurança...</p>
+    <p *ngIf="loadingSlow" class="jd-loading-slow">A conexão está mais lenta que o normal. Continuamos tentando.</p>
+  </div>
+</div>
 
 <div *ngIf="!loading && !api.authorized" class="login-layout">
   <div class="login-art">
@@ -61,7 +71,34 @@
   <span class="private-marker"><span class="live-dot"></span> Área reservada</span>
   <button type="button" class="refresh" (click)="refreshCurrentPage()" [disabled]="refreshing||busy" title="Atualizar esta seção" aria-label="Atualizar esta seção">{{refreshing?'…':'↻'}}</button>
   </div></header>
-    <main class="main-content">
+    <main class="main-content" [class.jd-hydrating]="dashboardLoading || dashboardLoadFailed">
+      <div *ngIf="dashboardLoading" class="jd-skeleton-dashboard" aria-busy="true" role="status" aria-label="Preparando informações do painel">
+        <div class="jd-skeleton-heading">
+          <img src="marca-diaconos.webp" alt="" class="jd-skeleton-logo" width="42" height="42">
+          <div><span class="jd-loading-kicker">JORNADA DIACONAL</span>
+          <h1>Preparando seu espaço de cuidado</h1>
+          <p class="jd-skeleton-status">Buscando as informações do seu painel...</p></div>
+        </div>
+        <div class="jd-skeleton-welcome" aria-hidden="true">
+          <div class="jd-skeleton-line jd-skeleton-line-short"></div>
+          <div class="jd-skeleton-line jd-skeleton-line-title"></div>
+          <div class="jd-skeleton-line jd-skeleton-line-middle"></div>
+        </div>
+        <div class="jd-skeleton-stats" aria-hidden="true">
+          <div class="jd-skeleton-card" *ngFor="let card of [1,2,3,4]"><div class="jd-skeleton-circle"></div><div class="jd-skeleton-line"></div><div class="jd-skeleton-line jd-skeleton-line-number"></div></div>
+        </div>
+        <div class="jd-skeleton-columns" aria-hidden="true">
+          <div class="jd-skeleton-card jd-skeleton-wide"><div class="jd-skeleton-line jd-skeleton-line-title"></div><div class="jd-skeleton-line"></div><div class="jd-skeleton-line jd-skeleton-line-middle"></div><div class="jd-skeleton-line"></div></div>
+          <div class="jd-skeleton-card jd-skeleton-wide"><div class="jd-skeleton-line jd-skeleton-line-title"></div><div class="jd-skeleton-circle"></div><div class="jd-skeleton-line jd-skeleton-line-middle"></div></div>
+        </div>
+        <p *ngIf="loadingSlow" class="jd-loading-slow" aria-live="polite">A consulta está demorando mais que o habitual. Seus dados permanecem protegidos.</p>
+      </div>
+      <div *ngIf="!dashboardLoading && dashboardLoadFailed" class="jd-loading-error" role="alert">
+        <span class="jd-loading-error-icon" aria-hidden="true">!</span>
+        <h2>Não conseguimos carregar suas informações.</h2>
+        <p>Verifique sua conexão. Você pode tentar novamente sem refazer o login.</p>
+        <button class="primary" type="button" (click)="loadInitialDashboard()">Tentar novamente</button>
+      </div>
       <div *ngIf="error" class="alert error dismissable" role="alert">{{error}} <button type="button" (click)="error=''" aria-label="Fechar mensagem de erro">×</button></div>
       <div *ngIf="notice" class="alert success dismissable" role="status">{{notice}} <button type="button" (click)="notice=''" aria-label="Fechar aviso">×</button></div>
 
