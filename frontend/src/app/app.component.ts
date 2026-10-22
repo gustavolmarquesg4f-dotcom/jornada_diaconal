@@ -7,7 +7,7 @@ type Page = 'dashboard'|'reports'|'deacons'|'observations'|'groups'|'intercessio
 @Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule],templateUrl:'./app.component.html'})
 export class AppComponent implements OnInit {
  api=inject(ApiService);
- loading=true;busy=false;refreshing=false;showQuickSearch=false;showHelp=false;quickQuery='';error='';notice='';page:Page='dashboard';
+ loading=true;dashboardLoading=false;dashboardLoadFailed=false;loadingSlow=false;private loadingFeedbackTimer:number|null=null;busy=false;refreshing=false;showQuickSearch=false;showHelp=false;quickQuery='';error='';notice='';page:Page='dashboard';
  email='';password='';changeOld='';changeNew='';changeNewConfirm='';showChangePassword=false;showMenu=false;showNewDeacon=false;showNewGroup=false;showNewUser=false;showAssignLeader=false;showFollowup=false;modalError='';sidebarCollapsed=false;showPrintPanel=false;printReady=false;printWithPhone=false;
  printSelection:'all'|'antigo'|'novo'='all';printGeneratedAt=new Date();
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
@@ -256,24 +256,66 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   this.showMenu=false;this.showHelp=false;this.closeQuickSearch();
   this.search='';this.observationSearch='';this.pastoralQueueSearch='';
   this.page='dashboard';this.notice='';this.error='';
+  this.dashboardLoading=false;this.dashboardLoadFailed=false;
+  this.finishLoadingFeedback();
+ }
+ private beginLoadingFeedback():void{
+  this.finishLoadingFeedback();
+  this.loadingSlow=false;
+  this.loadingFeedbackTimer=window.setTimeout(()=>{
+   if(this.loading||this.dashboardLoading)this.loadingSlow=true;
+  },5000);
+ }
+ private finishLoadingFeedback():void{
+  if(this.loadingFeedbackTimer!==null){
+   window.clearTimeout(this.loadingFeedbackTimer);
+   this.loadingFeedbackTimer=null;
+  }
+  this.loadingSlow=false;
+ }
+ async loadInitialDashboard():Promise<void>{
+  if(this.dashboardLoading)return;
+  this.dashboardLoading=true;
+  this.dashboardLoadFailed=false;
+  this.beginLoadingFeedback();
+  try{
+   await this.reload();
+   this.dashboardLoadFailed=!!this.error;
+   if(!this.dashboardLoadFailed&&this.page==='dashboard')this.restoreWorkspace();
+  }finally{
+   this.dashboardLoading=false;
+   this.finishLoadingFeedback();
+  }
  }
  async ngOnInit():Promise<void>{
-  if(this.api.authorized){
-   try{const u=await this.api.me();this.showChangePassword=!!u.must_change_password;
-      if(!this.showChangePassword){await this.reload();this.restoreWorkspace()}}
-   catch{this.api.clear();this.clearViewCache()}
+  // A tela estática de entrada é visível até o Angular iniciar.
+  window.requestAnimationFrame(()=>document.getElementById('jd-boot')?.remove());
+  this.beginLoadingFeedback();
+  try{
+   if(this.api.authorized){
+    try{
+     const u=await this.api.me();
+     this.showChangePassword=!!u.must_change_password;
+     if(!this.showChangePassword){
+      this.loading=false;
+      await this.loadInitialDashboard();
+     }
+    }catch{this.api.clear();this.clearViewCache()}
+   }
+  }finally{
+   this.loading=false;
+   if(!this.dashboardLoading)this.finishLoadingFeedback();
   }
-  this.loading=false;
  }
  async login():Promise<void>{
   this.busy=true;this.error='';
   try{const u=await this.api.login(this.email,this.password);this.password='';
    this.clearViewCache();
    this.showChangePassword=!!u.must_change_password;
-   if(!this.showChangePassword){await this.reload();this.restoreWorkspace()}
+   if(!this.showChangePassword)await this.loadInitialDashboard();
   }catch(e){this.error=this.msg(e)}finally{this.busy=false}
  }
- async changePassword():Promise<void>{this.error='';if(this.changeNew.length<12){this.error='A senha precisa ter pelo menos 12 caracteres.';return}if(this.changeNew!==this.changeNewConfirm){this.error='A confirmação da senha não confere.';return}this.busy=true;try{await this.api.changePassword(this.changeOld,this.changeNew);if(this.api.user)this.api.user.must_change_password=false;this.changeOld='';this.changeNew='';this.changeNewConfirm='';this.showChangePassword=false;this.notice='Senha atualizada com sucesso.';await this.reload()}catch(e){this.error=this.msg(e)}finally{this.busy=false}}
+ async changePassword():Promise<void>{this.error='';if(this.changeNew.length<12){this.error='A senha precisa ter pelo menos 12 caracteres.';return}if(this.changeNew!==this.changeNewConfirm){this.error='A confirmação da senha não confere.';return}this.busy=true;try{await this.api.changePassword(this.changeOld,this.changeNew);if(this.api.user)this.api.user.must_change_password=false;this.changeOld='';this.changeNew='';this.changeNewConfirm='';this.showChangePassword=false;this.notice='Senha atualizada com sucesso.';await this.loadInitialDashboard()}catch(e){this.error=this.msg(e)}finally{this.busy=false}}
  async logout():Promise<void>{
   try{await this.api.logout()}
   finally{
