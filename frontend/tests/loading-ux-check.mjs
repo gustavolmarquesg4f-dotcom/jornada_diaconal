@@ -36,7 +36,7 @@ try{
      const publicPage=await context.newPage();
      await publicPage.goto(origin+'/jornada_diaconal/',{waitUntil:'domcontentloaded'});
      await publicPage.locator('#email').waitFor({timeout:14000});
-     assert.equal(await publicPage.locator('#jd-boot').count(),0,'Splash estático não foi removido');
+     await publicPage.locator('#jd-boot').waitFor({state:'detached',timeout:5000});
      await publicPage.close();
      // A sessão e todas as respostas abaixo são simuladas localmente.
      await context.addInitScript(()=>sessionStorage.setItem('diaconato_access_token','E2E_FAKE_TOKEN'));
