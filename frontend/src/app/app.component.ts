@@ -1,9 +1,9 @@
 import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiService, User, Deacon, RegistryDetails, ObservationEntry, Group, Followup, Dashboard, IntercessionTemplate, IntercessionDraw, IntercessionCandidate, PastoralSlot, PastoralQueueItem, PastoralCareReason, PastoralCareStage, PastoralCarePerson, LeaderWorkspace, WorkspaceMember, MonthlyReport, ReadinessSummary, AuditEvent, AvailabilityProfile } from './api.service';
+import { ApiService, User, Deacon, RegistryDetails, ObservationEntry, Group, Followup, Dashboard, IntercessionTemplate, IntercessionDraw, IntercessionCandidate, PastoralSlot, PastoralQueueItem, PastoralCareReason, PastoralCareStage, PastoralCarePerson, LeaderWorkspace, WorkspaceMember, MonthlyReport, ReadinessSummary, AuditEvent, AvailabilityProfile, MinistryCandidate, MinistryCandidateRole, MinistryCandidateStage } from './api.service';
 
-type Page = 'dashboard'|'reports'|'deacons'|'observations'|'groups'|'intercession'|'pastoral'|'followups'|'settings';
+type Page = 'dashboard'|'reports'|'deacons'|'observations'|'groups'|'planning'|'intercession'|'pastoral'|'followups'|'settings';
 @Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule],templateUrl:'./app.component.html'})
 export class AppComponent implements OnInit {
  api=inject(ApiService);
@@ -13,6 +13,9 @@ export class AppComponent implements OnInit {
  dashboard:Dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
  deacons:Deacon[]=[];groups:Group[]=[];users:User[]=[];followups:Followup[]=[];
  usersLoaded=false;usersLoading=false;
+ ministryCandidates:MinistryCandidate[]=[];ministryLoaded=false;ministryLoading=false;ministrySaving=false;
+ ministryError='';ministryPersonId='';ministryRole:MinistryCandidateRole='care_leader';
+ ministryStage:MinistryCandidateStage='suggested';ministryNotes='';ministryFilter:'all'|MinistryCandidateRole='all';
  inviteEmailReady=false;inviteMode=false;invitePendingIds=new Set<string>();
  private deaconFilterCache:{source:Deacon[];search:string;filter:string;items:Deacon[]}|null=null;
  expandedGroupId:string|null=null;
@@ -66,7 +69,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
  get pageTitle():string{
   const labels:Record<Page,string>={
    dashboard:'Visão geral',reports:'Relatórios',deacons:'Diáconos',observations:'Observações',
-   groups:'Grupos e liderança',intercession:'Intercessão',
+   groups:'Grupos e liderança',planning:'Planejamento da equipe',intercession:'Intercessão',
    pastoral:'Agenda pastoral',followups:'Acompanhamento',settings:'Usuários e acesso'
   };
   return labels[this.page];
@@ -135,6 +138,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
    if(this.page==='intercession'&&this.canManage)await this.loadIntercession();
    if(this.page==='followups'&&!this.selected)await this.loadWorkspace();
    if(this.page==='reports')await this.loadReports();
+   if(this.page==='planning')await this.loadMinistryCandidates(true);
 
    if(this.page==='followups'&&this.selected){
      const recent=this.deacons.find(d=>d.id===this.selected?.id);
@@ -223,10 +227,10 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
    this.sidebarCollapsed=sessionStorage.getItem('jdg_compact_sidebar')==='yes';
    const stored=sessionStorage.getItem('jdg_current_module');
    const page=(stored==='workspace'?'followups':stored==='leadership'?'groups':stored) as Page|null;
-   const allowed:Page[]=['dashboard','followups','reports','deacons','observations','groups','intercession','pastoral','settings'];
+   const allowed:Page[]=['dashboard','followups','reports','deacons','observations','groups','planning','intercession','pastoral','settings'];
    if(page&&allowed.includes(page)&&
       !(page==='observations'&&!this.admin)&&!(page==='settings'&&!this.admin)&&
-      !((page==='pastoral'||page==='intercession')&&!this.canManage)){
+      !((page==='pastoral'||page==='intercession'||page==='planning')&&!this.canManage)){
      this.goto(page);
    }
   }catch{/* Preferências locais opcionais; nunca bloqueiam o login. */}
@@ -239,6 +243,8 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   this.dashboard={totals:{deacons:0,without_group:0,contacted_30_days:0,without_recent_contact:0},groups:[]};
   this.deacons=[];this.groups=[];this.users=[];this.followups=[];
   this.usersLoaded=false;this.usersLoading=false;this.deaconFilterCache=null;
+  this.ministryCandidates=[];this.ministryLoaded=false;this.ministryLoading=false;this.ministrySaving=false;
+  this.ministryError='';this.ministryPersonId='';this.ministryRole='care_leader';this.ministryStage='suggested';this.ministryNotes='';
   this.inviteEmailReady=false;this.inviteMode=false;this.invitePendingIds.clear();
   this.selected=null;this.selectedAvailability=null;this.selectedRegistry=null;
   this.observations=[];this.observationsLoaded=false;this.observationsLoading=false;
@@ -367,7 +373,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
  goto(page:Page):void{
   if(page==='observations'&&!this.admin){this.error='Esta área é exclusiva do administrador.';return}
   if(page==='settings'&&!this.admin){this.error='Esta área é exclusiva do administrador.';return}
-  if((page==='pastoral'||page==='intercession')&&!this.canManage){this.error='Esta área é exclusiva da coordenação.';return}
+  if((page==='pastoral'||page==='intercession'||page==='planning')&&!this.canManage){this.error='Esta área é exclusiva da coordenação.';return}
   this.page=page;this.selected=null;this.selectedRegistry=null;this.selectedAvailability=null;
   this.showMenu=false;this.closeQuickSearch();this.notice='';this.error='';
   try{sessionStorage.setItem('jdg_current_module',page)}catch{}
@@ -378,6 +384,87 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
   if(page==='followups'&&!this.workspaceLoaded)void this.loadWorkspace();
   if(page==='reports'&&!this.reportLoaded)void this.loadReports();
   if(page==='settings'&&!this.usersLoaded)void this.loadUsers();
+  if(page==='planning'&&!this.ministryLoaded)void this.loadMinistryCandidates();
+ }
+
+ readonly ministryRoles:{id:MinistryCandidateRole;name:string;goal:number;helper:string}[]=[
+  {id:'care_leader',name:'Líderes dos grupos de cuidado',goal:10,helper:'Pessoas para acompanhar os grupos de proximidade'},
+  {id:'secretary',name:'Secretaria',goal:1,helper:'Organização dos registros e comunicação'},
+  {id:'media',name:'Mídia',goal:1,helper:'Divulgações e comunicação visual'}
+ ];
+ readonly ministryStages:{id:MinistryCandidateStage;name:string}[]=[
+  {id:'suggested',name:'Em avaliação'},
+  {id:'contacting',name:'Em conversa'},
+  {id:'available',name:'Disponível'},
+  {id:'selected',name:'Validado para planejamento'}
+ ];
+ ministryRoleName(role:MinistryCandidateRole):string{
+  return this.ministryRoles.find(r=>r.id===role)?.name||role;
+ }
+ ministryStageName(stage:MinistryCandidateStage):string{
+  return this.ministryStages.find(s=>s.id===stage)?.name||stage;
+ }
+ ministryCount(role:MinistryCandidateRole):number{
+  return this.ministryCandidates.filter(c=>c.role===role).length;
+ }
+ ministryProgress(role:MinistryCandidateRole,goal:number):number{return Math.min(100,this.ministryCount(role)*100/goal)}
+ ministryReadyCount(role:MinistryCandidateRole):number{
+  return this.ministryCandidates.filter(c=>c.role===role&&c.stage==='selected').length;
+ }
+ get filteredMinistryCandidates():MinistryCandidate[]{
+  return this.ministryCandidates.filter(c=>this.ministryFilter==='all'||c.role===this.ministryFilter);
+ }
+ trackMinistryCandidate(_index:number,c:MinistryCandidate):string{return c.id}
+ async loadMinistryCandidates(force=false):Promise<void>{
+  if(!this.canManage||this.ministryLoading||(!force&&this.ministryLoaded))return;
+  this.ministryLoading=true;this.ministryError='';
+  try{
+   this.ministryCandidates=await this.api.ministryCandidates();
+   this.ministryLoaded=true;
+  }catch(e){this.ministryError='Não foi possível consultar as indicações: '+this.msg(e)}
+  finally{this.ministryLoading=false}
+ }
+ async createMinistryCandidate():Promise<void>{
+  if(!this.canManage||this.ministrySaving)return;
+  if(!this.eligibleLeaders.some(p=>p.id===this.ministryPersonId)){
+   this.ministryError='Selecione um diácono ativo.';return;
+  }
+  if(this.ministryCandidates.some(c=>c.deacon_id===this.ministryPersonId&&c.role===this.ministryRole)){
+   this.ministryError='Este diácono já está indicado para essa função.';return;
+  }
+  this.ministrySaving=true;this.ministryError='';this.notice='';
+  try{
+   await this.api.addMinistryCandidate({
+    deacon_id:this.ministryPersonId,role:this.ministryRole,stage:this.ministryStage,notes:this.ministryNotes
+   });
+   this.ministryPersonId='';this.ministryNotes='';this.ministryStage='suggested';
+   await this.loadMinistryCandidates(true);
+   if(!this.ministryError)this.notice='Indicação registrada. Nenhuma nomeação ou acesso ao sistema foi criado.';
+  }catch(e){this.ministryError=this.msg(e)}
+  finally{this.ministrySaving=false}
+ }
+ async updateMinistryCandidate(candidate:MinistryCandidate,stageValue:string,note:string):Promise<void>{
+  if(!this.canManage||this.ministrySaving)return;
+  const stage=this.ministryStages.find(s=>s.id===stageValue)?.id;
+  if(!stage||note.length>500){this.ministryError='Revise a etapa e limite as observações a 500 caracteres.';return}
+  this.ministrySaving=true;this.ministryError='';this.notice='';
+  try{
+   await this.api.updateMinistryCandidate(candidate.id,{stage,notes:note});
+   await this.loadMinistryCandidates(true);
+   if(!this.ministryError)this.notice='Acompanhamento da indicação atualizado.';
+  }catch(e){this.ministryError=this.msg(e)}
+  finally{this.ministrySaving=false}
+ }
+ async removeMinistryCandidate(candidate:MinistryCandidate):Promise<void>{
+  if(!this.canManage||this.ministrySaving)return;
+  if(!window.confirm('Retirar a indicação de '+candidate.full_name+' para '+this.ministryRoleName(candidate.role)+'?'))return;
+  this.ministrySaving=true;this.ministryError='';this.notice='';
+  try{
+   await this.api.deleteMinistryCandidate(candidate.id);
+   await this.loadMinistryCandidates(true);
+   if(!this.ministryError)this.notice='Indicação retirada. O cadastro do diácono permanece intacto.';
+  }catch(e){this.ministryError=this.msg(e)}
+  finally{this.ministrySaving=false}
  }
 
  async loadWorkspace():Promise<void>{

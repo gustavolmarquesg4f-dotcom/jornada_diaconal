@@ -86,6 +86,14 @@ export interface AuditEvent {
  id:number;event:string;target_id:string|null;created_at:string;actor:string;
 }
 export interface Dashboard { totals: {deacons:number;without_group:number;contacted_30_days:number;without_recent_contact:number};groups:Group[] }
+export type MinistryCandidateRole='care_leader'|'secretary'|'media';
+export type MinistryCandidateStage='suggested'|'contacting'|'available'|'selected';
+export interface MinistryCandidate {
+ id:string;deacon_id:string;full_name:string;deacon_active:boolean;
+ role:MinistryCandidateRole;stage:MinistryCandidateStage;notes:string;
+ created_at:string;updated_at:string;
+}
+
 @Injectable({providedIn:'root'})
 export class ApiService {
  private http=inject(HttpClient);
@@ -129,6 +137,37 @@ export class ApiService {
   return this.send('POST',`/groups/${encodeURIComponent(group)}/members/batch`,{deacon_ids:deacons});
  }
  unassign(group:string,deacon:string):Promise<{ok:boolean}>{return this.send('DELETE',`/groups/${encodeURIComponent(group)}/members/${encodeURIComponent(deacon)}`)}
+
+ private get ministryApiUrl():string{
+  const url=this.apiUrl.replace(/\/jornada-gestao-api$/,'/jornada-equipe-api');
+  if(url===this.apiUrl)throw Error('Serviço de planejamento ainda não foi configurado.');
+  return url;
+ }
+ private async ministryRequest<T>(method:'GET'|'POST'|'PATCH'|'DELETE',path:string,body?:unknown):Promise<T>{
+  try{return await firstValueFrom(this.http.request<T>(method,this.ministryApiUrl+path,{
+   headers:this.headers(),body
+  }).pipe(timeout({first:30000}))) as T}
+  catch(e){
+   if(e instanceof TimeoutError)throw Error('O planejamento demorou a responder. Tente novamente.');
+   if(e instanceof HttpErrorResponse){
+    if(e.status===401)this.clear();
+    throw Error(e.error?.error||'Falha de comunicação no planejamento ('+(e.status||'rede')+').');
+   }
+   throw e;
+  }
+ }
+ async ministryCandidates():Promise<MinistryCandidate[]>{
+  return (await this.ministryRequest<{items:MinistryCandidate[]}>('GET','/candidates')).items;
+ }
+ addMinistryCandidate(payload:{deacon_id:string;role:MinistryCandidateRole;stage:MinistryCandidateStage;notes:string}):Promise<{item:MinistryCandidate}>{
+  return this.ministryRequest('POST','/candidates',payload);
+ }
+ updateMinistryCandidate(id:string,payload:{stage:MinistryCandidateStage;notes:string}):Promise<{item:MinistryCandidate}>{
+  return this.ministryRequest('PATCH',`/candidates/${encodeURIComponent(id)}`,payload);
+ }
+ deleteMinistryCandidate(id:string):Promise<{ok:boolean}>{
+  return this.ministryRequest('DELETE',`/candidates/${encodeURIComponent(id)}`);
+ }
 
  async users():Promise<User[]>{return (await this.send<{items:User[]}>('GET','/users')).items}
  createUser(u:unknown):Promise<{item:User}>{return this.send('POST','/users',u)}
