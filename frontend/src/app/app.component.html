@@ -52,6 +52,7 @@
       <button type="button" title="Visão geral" aria-label="Visão geral" [class.active]="page==='dashboard'" [attr.aria-current]="page==='dashboard'?'page':null" (click)="goto('dashboard')"><span class="nav-icon">◫</span> Visão geral</button>
       <button type="button" title="Diáconos" aria-label="Diáconos" [class.active]="page==='deacons'" [attr.aria-current]="page==='deacons'?'page':null" (click)="goto('deacons')"><span class="nav-icon">♙</span> Diáconos</button>
       <button type="button" title="Grupos e liderança" aria-label="Grupos e liderança" [class.active]="page==='groups'" [attr.aria-current]="page==='groups'?'page':null" (click)="goto('groups')"><span class="nav-icon">♧</span> {{canManage?'Grupos e liderança':'Minha equipe'}}</button>
+      <button *ngIf="canManage" type="button" title="Planejamento da equipe" aria-label="Planejamento da equipe" [class.active]="page==='planning'" [attr.aria-current]="page==='planning'?'page':null" (click)="goto('planning')"><span class="nav-icon">✧</span> Planejamento da equipe</button>
       <button type="button" title="Acompanhamento" aria-label="Acompanhamento" [class.active]="page==='followups'" [attr.aria-current]="page==='followups'?'page':null" (click)="goto('followups')"><span class="nav-icon">♡</span> Acompanhamento</button>
       <button *ngIf="canManage" type="button" title="Escala de intercessão" aria-label="Escala de intercessão" [class.active]="page==='intercession'" [attr.aria-current]="page==='intercession'?'page':null" (click)="goto('intercession')"><span class="nav-icon">✦</span> Escala de intercessão</button>
       <button *ngIf="canManage" type="button" title="Agenda do Pr. Sato" aria-label="Agenda do Pr. Sato" [class.active]="page==='pastoral'" [attr.aria-current]="page==='pastoral'?'page':null" (click)="goto('pastoral')"><span class="nav-icon">▤</span> Agenda do Pr. Sato</button>
@@ -804,6 +805,96 @@
           <button type="button" class="primary" (click)="openMemberPicker(groups[0])" [disabled]="busy||!groups.length">
             Associar integrantes ao {{groups[0].name}}
           </button>
+        </div>
+      </section>
+
+      <section *ngIf="page==='planning' && canManage" class="jd-ministry-planning">
+        <div class="page-heading">
+          <div><span class="eyebrow">ORGANIZAÇÃO DO MINISTÉRIO</span>
+            <h1>Planejamento da equipe</h1>
+            <p>Registre possíveis responsáveis antes de definir os grupos de cuidado e as funções de apoio.</p>
+          </div>
+          <button type="button" class="outline" (click)="loadMinistryCandidates(true)" [disabled]="ministryLoading||ministrySaving">
+            {{ministryLoading?'Consultando...':'↻ Atualizar indicações'}}
+          </button>
+        </div>
+        <div class="jd-ministry-disclaimer" role="note">
+          <strong>Etapa de planejamento, não de nomeação.</strong>
+          <span>Indicar alguém não cria um grupo, não concede acesso ao sistema nem confirma a pessoa em uma função ministerial.</span>
+        </div>
+        <div class="jd-ministry-targets" aria-label="Metas do planejamento">
+          <div *ngFor="let role of ministryRoles" class="jd-ministry-target">
+            <span class="jd-ministry-kicker">{{role.name}}</span>
+            <strong><span>{{ministryCount(role.id)}}</span><small> / {{role.goal}} indicados</small></strong>
+            <div class="jd-ministry-track" aria-hidden="true">
+              <span [style.width.%]="Math.min(100,ministryCount(role.id)*100/role.goal)"></span>
+            </div>
+            <p>{{role.helper}}</p>
+            <small>{{ministryReadyCount(role.id)}} validado(s) no planejamento</small>
+          </div>
+        </div>
+        <p *ngIf="ministryLoading" class="jd-ministry-feedback" role="status">Carregando as indicações da equipe...</p>
+        <p *ngIf="ministryError" class="alert error jd-ministry-feedback" role="alert">{{ministryError}}</p>
+        <div class="jd-ministry-layout">
+          <form (ngSubmit)="createMinistryCandidate()" #ministryForm="ngForm" class="surface jd-ministry-form">
+            <div class="surface-head"><div><h3>Adicionar possível integrante</h3><p>Escolha alguém do cadastro de diáconos ativos.</p></div></div>
+            <label for="ministry-person">Pessoa</label>
+            <select id="ministry-person" name="ministry-person" [(ngModel)]="ministryPersonId" required>
+              <option value="">Selecione um diácono</option>
+              <option *ngFor="let person of eligibleLeaders" [value]="person.id">{{person.full_name}}</option>
+            </select>
+            <label for="ministry-role">Área de atuação</label>
+            <select id="ministry-role" name="ministry-role" [(ngModel)]="ministryRole" required>
+              <option *ngFor="let item of ministryRoles" [value]="item.id">{{item.name}}</option>
+            </select>
+            <label for="ministry-stage">Situação da indicação</label>
+            <select id="ministry-stage" name="ministry-stage" [(ngModel)]="ministryStage" required>
+              <option *ngFor="let stage of ministryStages" [value]="stage.id">{{stage.name}}</option>
+            </select>
+            <label for="ministry-notes">Observação de planejamento (opcional)</label>
+            <textarea id="ministry-notes" name="ministry-notes" [(ngModel)]="ministryNotes" maxlength="500" rows="3"
+              placeholder="Ex.: conversar sobre disponibilidade e interesse. Não registre informações íntimas."></textarea>
+            <button class="primary full" type="submit" [disabled]="!ministryForm.valid||ministrySaving||ministryLoading">
+              {{ministrySaving?'Salvando...':'+ Registrar indicação'}}
+            </button>
+          </form>
+          <div class="surface jd-ministry-list">
+            <div class="jd-ministry-list-head">
+              <div><h3>Pessoas indicadas</h3><p>Acompanhe as conversas e a disponibilidade.</p></div>
+              <label for="ministry-filter" class="jd-ministry-filter">Mostrar
+                <select id="ministry-filter" [(ngModel)]="ministryFilter" name="ministry-filter">
+                  <option value="all">Todas as áreas</option>
+                  <option *ngFor="let role of ministryRoles" [value]="role.id">{{role.name}}</option>
+                </select>
+              </label>
+            </div>
+            <div *ngIf="!ministryLoading && !filteredMinistryCandidates.length" class="jd-ministry-empty">
+              Nenhuma indicação registrada nesta seleção. Você pode começar pelos possíveis líderes dos grupos de cuidado.
+            </div>
+            <div *ngFor="let candidate of filteredMinistryCandidates;trackBy:trackMinistryCandidate" class="jd-ministry-item">
+              <div class="jd-ministry-person">
+                <span class="jd-ministry-avatar" aria-hidden="true">{{candidate.full_name.charAt(0)}}</span>
+                <div><strong>{{candidate.full_name}}</strong>
+                  <small>{{ministryRoleName(candidate.role)}}</small>
+                  <small *ngIf="!candidate.deacon_active" class="jd-ministry-inactive">Cadastro não está ativo</small>
+                </div>
+              </div>
+              <div class="jd-ministry-edit">
+                <label>Etapa
+                  <select #candidateStage [value]="candidate.stage" [disabled]="ministrySaving">
+                    <option *ngFor="let stage of ministryStages" [value]="stage.id">{{stage.name}}</option>
+                  </select>
+                </label>
+                <label>Observação
+                  <textarea #candidateNotes [value]="candidate.notes" maxlength="500" rows="2" [disabled]="ministrySaving" placeholder="Sem observações"></textarea>
+                </label>
+              </div>
+              <div class="jd-ministry-item-actions">
+                <button type="button" class="outline" [disabled]="ministrySaving" (click)="updateMinistryCandidate(candidate,candidateStage.value,candidateNotes.value)">Salvar alterações</button>
+                <button type="button" class="text-button" [disabled]="ministrySaving" (click)="removeMinistryCandidate(candidate)">Retirar indicação</button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
