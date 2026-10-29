@@ -65,7 +65,7 @@ try{
      await page.locator('#ministry-person').selectOption(person.id);
      await page.locator('#ministry-role').selectOption('media');
      await page.getByRole('button',{name:/Registrar indicação/}).click();
-     await page.getByText('Pessoa Exemplo',{exact:true}).waitFor({timeout:10000});
+     await page.locator('.jd-ministry-person strong').filter({hasText:'Pessoa Exemplo'}).waitFor({timeout:10000});
      assert.equal(records.length,1);
      await page.locator('.jd-ministry-edit select').selectOption('available');
      await page.getByRole('button',{name:'Salvar alterações'}).click();
