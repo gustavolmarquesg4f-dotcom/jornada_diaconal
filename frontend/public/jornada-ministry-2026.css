@@ -1,0 +1,51 @@
+/* Planejamento ministerial - telas responsivas, sem afetar outros modulos. */
+.jd-ministry-planning{min-width:0}
+.jd-ministry-disclaimer{
+ display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;margin:0 0 18px;
+ border:1px solid #cce7ed;background:#eef9fb;padding:15px 17px;
+ border-radius:12px;color:#245d6c;font-size:12px;line-height:1.6
+}
+.jd-ministry-disclaimer strong{color:#064c61}
+.jd-ministry-targets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-bottom:20px}
+.jd-ministry-target{border:1px solid #dce9ee;background:#fff;border-radius:14px;padding:19px;min-width:0}
+.jd-ministry-kicker{font-size:12px;color:#476f7d;font-weight:800;line-height:1.4;display:block;min-height:34px}
+.jd-ministry-target strong{display:block;font-size:34px;color:#0b657a;line-height:1.2;margin:6px 0 12px}
+.jd-ministry-target strong small{font-size:13px;color:#8299a2;font-weight:650}
+.jd-ministry-track{height:7px;border-radius:99px;background:#e0edf0;overflow:hidden}
+.jd-ministry-track>span{display:block;height:100%;background:#0798a9;border-radius:99px;transition:width .2s ease}
+.jd-ministry-target p{margin:12px 0 8px;color:#6f8992;font-size:12px;line-height:1.5}
+.jd-ministry-target>small{color:#23798a;font-size:11px;font-weight:750}
+.jd-ministry-layout{display:grid;grid-template-columns:minmax(270px,.8fr) minmax(0,1.45fr);gap:18px;align-items:start}
+.jd-ministry-form{display:flex;flex-direction:column;gap:9px;min-width:0}
+.jd-ministry-form .surface-head{margin-bottom:9px}
+.jd-ministry-form .surface-head p,.jd-ministry-list-head p{margin:6px 0 0;color:#718c95;font-size:12px;line-height:1.5}
+.jd-ministry-form label{font-size:12px;color:#3d6675;font-weight:750;margin-top:6px}
+.jd-ministry-form select,.jd-ministry-form textarea,.jd-ministry-filter select,.jd-ministry-edit select,.jd-ministry-edit textarea{
+ display:block;width:100%;min-width:0;max-width:100%;padding:11px 12px;
+ border:1px solid #cadee6;background:#fff;border-radius:9px;color:#174b5e;font:inherit;font-size:13px;min-height:43px
+}
+.jd-ministry-form textarea,.jd-ministry-edit textarea{resize:vertical;line-height:1.5}
+.jd-ministry-form button{margin-top:12px;min-height:45px}
+.jd-ministry-list{min-width:0}
+.jd-ministry-list-head{display:flex;align-items:start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.jd-ministry-list-head h3{margin:0;color:#1b5164}
+.jd-ministry-filter{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:750;color:#647f89}
+.jd-ministry-filter select{width:auto;max-width:210px}
+.jd-ministry-empty{border:1px dashed #bfdde4;border-radius:12px;background:#f7fbfc;padding:24px;color:#668390;font-size:13px;line-height:1.6}
+.jd-ministry-item{padding:17px 0;border-top:1px solid #e5eef1}
+.jd-ministry-person{display:flex;gap:11px;align-items:center;min-width:0;margin-bottom:13px}
+.jd-ministry-avatar{width:39px;height:39px;display:grid;place-items:center;border-radius:11px;background:#dbf4f8;color:#0a7f94;font-size:18px;font-weight:850;flex:none}
+.jd-ministry-person>div{min-width:0}
+.jd-ministry-person strong{font-size:13px;color:#174e60;display:block;overflow-wrap:anywhere}
+.jd-ministry-person small{display:block;font-size:11px;color:#748d97;margin-top:4px}
+.jd-ministry-person .jd-ministry-inactive{color:#a44c35}
+.jd-ministry-edit{display:grid;grid-template-columns:minmax(155px,.65fr) minmax(0,1.35fr);gap:12px}
+.jd-ministry-edit label{font-size:11px;font-weight:750;color:#68828c;min-width:0}
+.jd-ministry-edit select,.jd-ministry-edit textarea{margin-top:6px}
+.jd-ministry-item-actions{display:flex;gap:13px;align-items:center;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}
+.jd-ministry-item-actions button{min-height:42px;font-size:12px}
+.jd-ministry-feedback{margin:0 0 18px}
+@media(max-width:1020px){.jd-ministry-layout{grid-template-columns:1fr}}
+@media(max-width:700px){.jd-ministry-targets{grid-template-columns:1fr}.jd-ministry-kicker{min-height:0}.jd-ministry-target{padding:15px}.jd-ministry-target strong{font-size:28px}.jd-ministry-edit{grid-template-columns:1fr}.jd-ministry-item-actions{justify-content:stretch}.jd-ministry-item-actions button{flex:1 1 160px}.jd-ministry-form,.jd-ministry-list{padding:18px}}
+@media(prefers-reduced-motion:reduce){.jd-ministry-track>span{transition:none}}
+@media print{.jd-ministry-form,.jd-ministry-item-actions{display:none}}
