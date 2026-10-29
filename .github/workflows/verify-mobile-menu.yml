@@ -33,3 +33,5 @@ jobs:
         run: npx ng build --configuration production --base-href "/jornada_diaconal/"
       - name: Testar carregamento do aplicativo real em WebKit e Chromium
         run: node frontend/tests/loading-ux-check.mjs
+      - name: Testar planejamento ministerial responsivo e sem acessar dados reais
+        run: node frontend/tests/ministry-planning-check.mjs
