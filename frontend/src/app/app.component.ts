@@ -407,6 +407,7 @@ filter:'all'|'antigo'|'novo'|'unassigned'='all';
  ministryCount(role:MinistryCandidateRole):number{
   return this.ministryCandidates.filter(c=>c.role===role).length;
  }
+ ministryProgress(role:MinistryCandidateRole,goal:number):number{return Math.min(100,this.ministryCount(role)*100/goal)}
  ministryReadyCount(role:MinistryCandidateRole):number{
   return this.ministryCandidates.filter(c=>c.role===role&&c.stage==='selected').length;
  }
