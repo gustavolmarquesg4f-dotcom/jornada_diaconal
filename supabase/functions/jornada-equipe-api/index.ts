@@ -29,7 +29,7 @@ function enumValue<T extends string>(value:unknown,allowed:readonly T[],label:st
 }
 function notes(value:unknown):string{
  if(value===undefined||value===null)return "";
- if(typeof value!=="string"||value.length>500)invalid(422,"Observação deve ter até 500 caracteres.");
+ if(typeof value!=="string"||value.length>500)throw new ApiError(422,"Observação deve ter até 500 caracteres.");
  return value.trim();
 }
 async function json(req:Request):Promise<Record<string,unknown>>{
@@ -56,7 +56,7 @@ async function sha256(raw:string){
 async function authorize(req:Request){
  const bearer=req.headers.get("authorization")||"";
  const match=/^Bearer ([a-f0-9]{64})$/i.exec(bearer);
- if(!match)invalid(401,"É necessário entrar no sistema.");
+ if(!match)throw new ApiError(401,"É necessário entrar no sistema.");
  const hash=await sha256(match[1]);
  const sessions=await db("jdg_sessions?token_hash=eq."+hash+"&expires_at=gt."+encodeURIComponent(new Date().toISOString())+"&select=user_id&limit=1");
  if(!sessions?.length)invalid(401,"Sessão expirada.");
