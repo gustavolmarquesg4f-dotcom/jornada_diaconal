@@ -1,0 +1,46 @@
+name: Validar planejamento da equipe diaconal
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'supabase/functions/jornada-equipe-api/**'
+      - 'supabase/migrations/20261029_jornada_ministry_candidates.sql'
+      - 'frontend/**'
+      - '.github/workflows/verify-ministry-planning.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Verificar tipos da funcao Deno
+        run: deno check supabase/functions/jornada-equipe-api/index.ts
+      - name: Garantir controles de autorizacao
+        run: |
+          set -euo pipefail
+          grep -q 'u.role!=="admin"&&u.role!=="coordinator"' supabase/functions/jornada-equipe-api/index.ts
+          grep -q 'jdg_sessions?token_hash' supabase/functions/jornada-equipe-api/index.ts
+          grep -q 'ENABLE ROW LEVEL SECURITY' supabase/migrations/20261029_jornada_ministry_candidates.sql
+          grep -q 'REVOKE ALL' supabase/migrations/20261029_jornada_ministry_candidates.sql
+          grep -q 'ON DELETE RESTRICT' supabase/migrations/20261029_jornada_ministry_candidates.sql
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar Angular
+        working-directory: frontend
+        run: npm install --no-audit --no-fund
+      - name: Compilar em modo producao
+        working-directory: frontend
+        run: npx ng build --configuration production --base-href "/jornada_diaconal/"
+      - name: Verificar recursos produzidos
+        run: |
+          set -euo pipefail
+          DIST=frontend/dist/jornada-diaconal-web/browser
+          test -f "$DIST/jornada-ministry-2026.css"
+          grep -q 'jornada-ministry-2026.css' "$DIST/index.html"
