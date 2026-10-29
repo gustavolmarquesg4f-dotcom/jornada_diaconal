@@ -827,7 +827,7 @@
             <span class="jd-ministry-kicker">{{role.name}}</span>
             <strong><span>{{ministryCount(role.id)}}</span><small> / {{role.goal}} indicados</small></strong>
             <div class="jd-ministry-track" aria-hidden="true">
-              <span [style.width.%]="Math.min(100,ministryCount(role.id)*100/role.goal)"></span>
+              <span [style.width.%]="ministryProgress(role.id,role.goal)"></span>
             </div>
             <p>{{role.helper}}</p>
             <small>{{ministryReadyCount(role.id)}} validado(s) no planejamento</small>
